@@ -1,9 +1,10 @@
+import glob
 import os
 from datetime import datetime
 from pathlib import Path
-from git import Repo
 
 import tomli
+from git import Repo
 from invoke import task
 
 # Run from project root directory
@@ -34,7 +35,8 @@ def format(ctx):
         f"clang-format -i {' '.join(glob.glob('src/*.h'))}",
         f"clang-format -i {' '.join(glob.glob('src/*.cpp'))}",
         f"clang-format -i {' '.join(glob.glob('tests/*.cpp'))}",
-        "pandoc -s -o README.md README.rst"):
+        "pandoc -s -o README.md README.rst",
+    ):
         ctx.run(cmd, echo=True)
 
 
@@ -48,9 +50,7 @@ def check(ctx):
 @task
 def test(ctx):
     """Run tests"""
-    for cmd in (
-        "pytest --cov --junitxml=build/reports/tests.xml",
-    ):
+    for cmd in ("pytest --cov --junitxml=build/reports/tests.xml",):
         ctx.run(cmd, echo=True)
 
 

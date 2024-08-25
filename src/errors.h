@@ -8,9 +8,8 @@
 // We don't have user input so OK with non literal format strings
 #pragma GCC diagnostic ignored "-Wformat-security"
 
-
 template <typename... Args>
-inline void error(int category, char const* const message, Args... args) {
+inline void error(int category, char const *const message, Args... args) {
   printk(message, args...);
   printk("\n");
   k_sleep(K_SECONDS(2));

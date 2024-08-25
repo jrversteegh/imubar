@@ -10,9 +10,9 @@ struct Vector3 {
   Number z;
 };
 
-
 void initialize_sensors();
 Vector3 get_acceleration();
+Vector3 get_rotation();
 Vector3 get_magfield();
 
 #endif

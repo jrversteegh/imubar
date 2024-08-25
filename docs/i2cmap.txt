@@ -1,0 +1,21 @@
+root@navigator:~# i2cdetect -y 0
+     0  1  2  3  4  5  6  7  8  9  a  b  c  d  e  f
+00:                         -- -- -- -- -- -- -- -- 
+10: -- -- -- -- -- -- -- -- -- 19 -- -- 1c -- 1e -- 
+20: -- -- -- -- -- -- -- -- 28 -- -- -- -- -- -- -- 
+30: -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- 
+40: -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- 
+50: -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- 
+60: -- -- -- -- -- -- -- -- -- 69 6a 6b -- -- -- -- 
+70: -- -- -- -- -- -- -- 77 
+
+0: 19: ADAFRUIT 10DOF - LSM303DLHC: accel
+0: 1c: SPARKFUN SEN13762 - LSM9DS1: magn
+0: 1e: ADAFRUIT 10DOF - LSM303DLHC: magn
+0: 1f: ADAFRUIT 9DOF - FXOS8700CQ: accel/magn
+0: 21: ADAFRUIT 9DOF - FXAS21002C: gyro
+0: 28: ADAFRUIT IMU - BNO055: accel/gyro/mag - fusion
+0: 69: SPARKFUN SEN13944 - MPU9250: accel/gyro/magn
+0: 6a: SPARKFUN SEN13762 - LSM9DS1: accel/gyro
+0  6b: ADAFRUIT 10DOF - L3GD20H: gyro
+0: 77: ADAFRUIT 10DOF - BMP180: press/temp
