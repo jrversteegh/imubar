@@ -9,8 +9,16 @@
 #include "sensors.h"
 
 #define MPU9250_0 DT_NODELABEL(mpu9250_0)
+#define FXOS8700_0 DT_NODELABEL(fxos8700_0)
+#define FXAS21002_0 DT_NODELABEL(fxas21002_0)
+#define LSM303ACCEL_0 DT_NODELABEL(lsm303accel_0)
+#define LSM303MAGN_0 DT_NODELABEL(lsm303magn_0)
 
 static device const *const imu_mpu9250 = DEVICE_DT_GET(MPU9250_0);
+static device const *const imu_fxos8700 = DEVICE_DT_GET(FXOS8700_0);
+static device const *const imu_fxas21002 = DEVICE_DT_GET(FXAS21002_0);
+static device const *const imu_lsm303accel = DEVICE_DT_GET(LSM303ACCEL_0);
+static device const *const imu_lsm303magn = DEVICE_DT_GET(LSM303MAGN_0);
 
 struct None {};
 
@@ -64,5 +72,17 @@ Vector3 get_rotation() {
 void initialize_sensors() {
   if (!device_is_ready(imu_mpu9250)) {
     error(2, "MPU9250 not ready.");
+  }
+  if (!device_is_ready(imu_fxos8700)) {
+    error(2, "FXOS8700 not ready.");
+  }
+  if (!device_is_ready(imu_fxas21002)) {
+    error(2, "FXAS21002 not ready.");
+  }
+  if (!device_is_ready(imu_lsm303accel)) {
+    error(2, "LSM303 accel not ready.");
+  }
+  if (!device_is_ready(imu_lsm303magn)) {
+    error(2, "LSM303 magn not ready.");
   }
 }
