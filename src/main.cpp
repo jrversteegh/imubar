@@ -30,7 +30,7 @@ static void button_pressed(const device *dev, gpio_callback *cb,
 void get_sensors(bool print) {
   auto acceleration = get_acceleration();
   if (print)
-    printk("A: %7.4f, %7.4f, %7.4f  ", acceleration.x, acceleration.y,
+    printk("A: %8.4f, %8.4f, %8.4f  ", acceleration.x, acceleration.y,
            acceleration.z);
 
   auto rotation = get_rotation();

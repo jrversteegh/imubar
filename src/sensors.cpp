@@ -58,7 +58,7 @@ static Vector3 read_sensor(device const *sensor, sensor_channel channel) {
 }
 
 Vector3 get_acceleration() {
-  return read_sensor(imu_mpu9250, SENSOR_CHAN_ACCEL_XYZ);
+  return read_sensor(imu_lsm303accel, SENSOR_CHAN_ACCEL_XYZ);
 }
 
 Vector3 get_magfield() {
