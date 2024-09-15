@@ -36,6 +36,11 @@
         accel-fs = <2>;
         accel-dlpf = "5.05";
 	};
+
+    bno055_0: bno055@28 {
+		compatible = "bosch,bno055";
+		reg = <0x28>;
+    };
 };
 
 &i2c2 {

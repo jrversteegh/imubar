@@ -1,0 +1,8 @@
+menuconfig BNO055                                                                                    
+        bool "BNO055 9DOF sensor with built-in fusion"                                                
+        default y                                                                                    
+        depends on DT_HAS_BOSCH_BNO055_ENABLED                                                       
+        select I2C                                                                                   
+        help                                                                                         
+          Enable driver for BNO055 I2C-based triaxial accelerometer sensor                           
+          family.

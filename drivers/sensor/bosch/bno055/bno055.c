@@ -14,6 +14,8 @@
 
 #include "bno055.h"
 
+lala
+
 LOG_MODULE_REGISTER(BNO055, CONFIG_SENSOR_LOG_LEVEL);
 
 static int bno055_sample_fetch(const struct device *dev,

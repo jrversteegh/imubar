@@ -66,7 +66,7 @@ def update_revision(ctx):
 @task(update_revision)
 def build(ctx):
     """Build"""
-    for cmd in ("west build .",):
+    for cmd in ("west build -p auto .",):
         ctx.run(cmd, echo=True)
 
 

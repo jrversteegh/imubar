@@ -1,0 +1,3 @@
+rsource "bosch/Kconfig"
+rsource "tdk/Kconfig"
+rsource "st/Kconfig"
