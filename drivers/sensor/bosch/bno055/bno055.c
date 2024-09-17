@@ -14,167 +14,208 @@
 
 #include "bno055.h"
 
-lala
 
 LOG_MODULE_REGISTER(BNO055, CONFIG_SENSOR_LOG_LEVEL);
 
+static int read_i2c(const struct device *dev, const uint8_t reg_addr, uint8_t * buf, const uint32_t num_bytes) {
+  const struct bno055_config *config = dev->config;
+  if (i2c_burst_read_dt(&config->i2c, reg_addr, buf, num_bytes) < 0) {
+    LOG_DBG("Could not BNO055 data");
+    return -EIO;
+  }
+  return 0;
+}
+
+static int read_i2c_byte(const struct device *dev, const uint8_t reg_addr, uint8_t * buf) {
+  const struct bno055_config *config = dev->config;
+  if (i2c_reg_read_byte_dt(&config->i2c, reg_addr, buf) < 0) {
+    LOG_DBG("Could not BNO055 data");
+    return -EIO;
+  }
+  return 0;
+}
+
 static int bno055_sample_fetch(const struct device *dev,
-			       enum sensor_channel chan)
+    const enum sensor_channel chan)
 {
-	struct bno055_data *drv_data = dev->data;
-	const struct bno055_config *config = dev->config;
-	uint8_t buf[6];
-	uint8_t lsb;
+  struct bno055_data *data = dev->data;
 
-	__ASSERT_NO_MSG(chan == SENSOR_CHAN_ALL);
+  switch (chan) {
+    case SENSOR_CHAN_ALL:
+      return read_i2c(dev, BNO055_ACCEL_DATA_X_LSB_ADDR, (uint8_t*)&data->sample, sizeof(data->sample));
+      // Don't read temperature with "ALL". That should be done explicitly since we do not care about it much
+    case SENSOR_CHAN_ACCEL_X:                                                                    
+      return read_i2c(dev, BNO055_ACCEL_DATA_X_LSB_ADDR, (uint8_t*)&data->sample.accel.x, sizeof(data->sample.accel.x));
+    case SENSOR_CHAN_ACCEL_Y:                                                                    
+      return read_i2c(dev, BNO055_ACCEL_DATA_Y_LSB_ADDR, (uint8_t*)&data->sample.accel.y, sizeof(data->sample.accel.y));
+    case SENSOR_CHAN_ACCEL_Z:                                                                    
+      return read_i2c(dev, BNO055_ACCEL_DATA_Z_LSB_ADDR, (uint8_t*)&data->sample.accel.z, sizeof(data->sample.accel.z));
+    case SENSOR_CHAN_ACCEL_XYZ:              
+      return read_i2c(dev, BNO055_ACCEL_DATA_X_LSB_ADDR, (uint8_t*)&data->sample.accel, sizeof(data->sample.accel));
+    case SENSOR_CHAN_GYRO_X:                                                                     
+      return read_i2c(dev, BNO055_GYRO_DATA_X_LSB_ADDR, (uint8_t*)&data->sample.gyro.x, sizeof(data->sample.gyro.x));
+    case SENSOR_CHAN_GYRO_Y:                                                                     
+      return read_i2c(dev, BNO055_GYRO_DATA_Y_LSB_ADDR, (uint8_t*)&data->sample.gyro.y, sizeof(data->sample.gyro.y));
+    case SENSOR_CHAN_GYRO_Z:                                                                     
+      return read_i2c(dev, BNO055_GYRO_DATA_Z_LSB_ADDR, (uint8_t*)&data->sample.gyro.z, sizeof(data->sample.gyro.z));
+    case SENSOR_CHAN_GYRO_XYZ:                                                                   
+      return read_i2c(dev, BNO055_GYRO_DATA_X_LSB_ADDR, (uint8_t*)&data->sample.gyro, sizeof(data->sample.gyro));
+    case SENSOR_CHAN_MAGN_X:                                                                    
+      return read_i2c(dev, BNO055_MAG_DATA_X_LSB_ADDR, (uint8_t*)&data->sample.magn.x, sizeof(data->sample.magn.x));
+    case SENSOR_CHAN_MAGN_Y:                                                                    
+      return read_i2c(dev, BNO055_MAG_DATA_Y_LSB_ADDR, (uint8_t*)&data->sample.magn.y, sizeof(data->sample.magn.y));
+    case SENSOR_CHAN_MAGN_Z:                                                                    
+      return read_i2c(dev, BNO055_MAG_DATA_Z_LSB_ADDR, (uint8_t*)&data->sample.magn.z, sizeof(data->sample.magn.z));
+    case SENSOR_CHAN_MAGN_XYZ:              
+      return read_i2c(dev, BNO055_MAG_DATA_X_LSB_ADDR, (uint8_t*)&data->sample.magn, sizeof(data->sample.magn));
+    case SENSOR_CHAN_DIE_TEMP:
+      return read_i2c_byte(dev, BNO055_TEMP_ADDR, (uint8_t*)&data->temp);
+    default:
+      LOG_DBG("Unsupported sensor channel");
+      return -EIO;
+    }
 
-	/*
-	 * since all accel data register addresses are consecutive,
-	 * a burst read can be used to read all the samples
-	 */
-	if (i2c_burst_read_dt(&config->i2c,
-			      BNO055_REG_ACCEL_X_LSB, buf, 6) < 0) {
-		LOG_DBG("Could not read accel axis data");
-		return -EIO;
-	}
-
-	lsb = (buf[0] & BNO055_ACCEL_LSB_MASK) >> BNO055_ACCEL_LSB_SHIFT;
-	drv_data->x_sample = (((int8_t)buf[1]) << BNO055_ACCEL_LSB_BITS) | lsb;
-
-	lsb = (buf[2] & BNO055_ACCEL_LSB_MASK) >> BNO055_ACCEL_LSB_SHIFT;
-	drv_data->y_sample = (((int8_t)buf[3]) << BNO055_ACCEL_LSB_BITS) | lsb;
-
-	lsb = (buf[4] & BNO055_ACCEL_LSB_MASK) >> BNO055_ACCEL_LSB_SHIFT;
-	drv_data->z_sample = (((int8_t)buf[5]) << BNO055_ACCEL_LSB_BITS) | lsb;
-
-	if (i2c_reg_read_byte_dt(&config->i2c,
-				 BNO055_REG_TEMP,
-				 (uint8_t *)&drv_data->temp_sample) < 0) {
-		LOG_DBG("Could not read temperature data");
-		return -EIO;
-	}
-
-	return 0;
+  return 0;
 }
 
-static void bno055_channel_accel_convert(struct sensor_value *val,
-					int64_t raw_val)
-{
-	/*
-	 * accel_val = (sample * BNO055_PMU_FULL_RAGE) /
-	 *             (2^data_width * 10^6)
-	 */
-	raw_val = (raw_val * BNO055_PMU_FULL_RANGE) /
-		  (1 << (8 + BNO055_ACCEL_LSB_BITS));
-	val->val1 = raw_val / 1000000;
-	val->val2 = raw_val % 1000000;
-
-	/* normalize val to make sure val->val2 is positive */
-	if (val->val2 < 0) {
-		val->val1 -= 1;
-		val->val2 += 1000000;
-	}
+struct sensor_value get_sensor_value(const uint16_t value, const int16_t multiplier, const int32_t divisor) {
+  uint32_t tmp = value * multiplier / divisor;
+  struct sensor_value result = {
+    .val1 = tmp / 1000000,
+    .val2 = tmp % 1000000
+  };
+  return result;
 }
+
+static void get_acceleration(const struct device *dev, const uint16_t accel, struct sensor_value *val) {
+  val->val1 = accel;
+}
+
+static void get_acceleration_vec(const struct device *dev, const bno055_vec accel, struct sensor_value *val) {
+  for (int i = 0; i < 3; ++i) {
+     val->val1 = accel.components[i];
+     ++val;
+  }
+}
+
+static void get_gyro(const struct device *dev, const uint16_t gyro, struct sensor_value *val) {
+  val->val1 = gyro;
+}
+
+static void get_gyro_vec(const struct device *dev, const bno055_vec gyro, struct sensor_value *val) {
+  for (int i = 0; i < 3; ++i) {
+     val->val1 = gyro.components[i];
+     ++val;
+  }
+}
+
+static void get_magn(const struct device *dev, const uint16_t magn, struct sensor_value *val) {
+  val->val1 = magn;
+}
+
+static void get_magn_vec(const struct device *dev, const bno055_vec magn, struct sensor_value *val) {
+  for (int i = 0; i < 3; ++i) {
+     val->val1 = magn.components[i];
+     ++val;
+  }
+}
+
 
 static int bno055_channel_get(const struct device *dev,
-			      enum sensor_channel chan,
-			      struct sensor_value *val)
+    enum sensor_channel chan,
+    struct sensor_value *val)
 {
-	struct bno055_data *drv_data = dev->data;
+  struct bno055_data *data = dev->data;
 
-	/*
-	 * See datasheet "Sensor data" section for
-	 * more details on processing sample data.
-	 */
-	if (chan == SENSOR_CHAN_ACCEL_X) {
-		bno055_channel_accel_convert(val, drv_data->x_sample);
-	} else if (chan == SENSOR_CHAN_ACCEL_Y) {
-		bno055_channel_accel_convert(val, drv_data->y_sample);
-	} else if (chan == SENSOR_CHAN_ACCEL_Z) {
-		bno055_channel_accel_convert(val, drv_data->z_sample);
-	} else if (chan == SENSOR_CHAN_ACCEL_XYZ) {
-		bno055_channel_accel_convert(val, drv_data->x_sample);
-		bno055_channel_accel_convert(val + 1, drv_data->y_sample);
-		bno055_channel_accel_convert(val + 2, drv_data->z_sample);
-	} else if (chan == SENSOR_CHAN_DIE_TEMP) {
-		/* temperature_val = 23 + sample / 2 */
-		val->val1 = (drv_data->temp_sample >> 1) + 23;
-		val->val2 = 500000 * (drv_data->temp_sample & 1);
-		return 0;
-	} else {
-		return -ENOTSUP;
-	}
+  switch (chan) {
+    case SENSOR_CHAN_ACCEL_X:                                                                    
+      get_acceleration(dev, data->sample.accel.x, val);
+    case SENSOR_CHAN_ACCEL_Y:                                                                    
+      get_acceleration(dev, data->sample.accel.y, val);
+    case SENSOR_CHAN_ACCEL_Z:                                                                    
+      get_acceleration(dev, data->sample.accel.z, val);
+    case SENSOR_CHAN_ACCEL_XYZ:              
+      get_acceleration_vec(dev, data->sample.accel, val);
+    case SENSOR_CHAN_GYRO_X:                                                                     
+      get_gyro(dev, data->sample.gyro.x, val);
+    case SENSOR_CHAN_GYRO_Y:                                                                     
+      get_gyro(dev, data->sample.gyro.y, val);
+    case SENSOR_CHAN_GYRO_Z:                                                                     
+      get_gyro(dev, data->sample.gyro.z, val);
+    case SENSOR_CHAN_GYRO_XYZ:                                                                   
+      get_gyro_vec(dev, data->sample.gyro, val);
+    case SENSOR_CHAN_MAGN_X:                                                                    
+      get_magn(dev, data->sample.magn.x, val);
+    case SENSOR_CHAN_MAGN_Y:                                                                    
+      get_magn(dev, data->sample.magn.y, val);
+    case SENSOR_CHAN_MAGN_Z:                                                                    
+      get_magn(dev, data->sample.magn.z, val);
+    case SENSOR_CHAN_MAGN_XYZ:              
+      get_magn_vec(dev, data->sample.magn, val);
+    case SENSOR_CHAN_DIE_TEMP:
+      *val = get_sensor_value(data->temp, 1, 1);
+    default:
+      LOG_DBG("Unsupported sensor channel");
+      return -ENOTSUP;
+  }
 
-	return 0;
+  return 0;
 }
 
 static const struct sensor_driver_api bno055_driver_api = {
 #if CONFIG_BNO055_TRIGGER
-	.attr_set = bno055_attr_set,
-	.trigger_set = bno055_trigger_set,
+  .attr_set = bno055_attr_set,
+  .trigger_set = bno055_trigger_set,
 #endif
-	.sample_fetch = bno055_sample_fetch,
-	.channel_get = bno055_channel_get,
+  .sample_fetch = bno055_sample_fetch,
+  .channel_get = bno055_channel_get,
 };
 
 int bno055_init(const struct device *dev)
 {
-	const struct bno055_config *config = dev->config;
-	uint8_t id = 0U;
+  const struct bno055_config *config = dev->config;
+  uint8_t id = 0U;
 
-	if (!device_is_ready(config->i2c.bus)) {
-		LOG_ERR("I2C bus device not ready");
-		return -ENODEV;
-	}
+  if (!device_is_ready(config->i2c.bus)) {
+    LOG_ERR("I2C bus device not ready");
+    return -ENODEV;
+  }
 
-	/* read device ID */
-	if (i2c_reg_read_byte_dt(&config->i2c,
-				 BNO055_REG_CHIP_ID, &id) < 0) {
-		LOG_DBG("Could not read chip id");
-		return -EIO;
-	}
+  /* read device ID */
+  if (i2c_reg_read_byte_dt(&config->i2c,
+         BNO055_CHIP_ID_ADDR, &id) < 0) {
+    LOG_DBG("Could not read chip id");
+    return -EIO;
+  }
 
-	if (id != BNO055_CHIP_ID) {
-		LOG_DBG("Unexpected chip id (%x)", id);
-		return -EIO;
-	}
-
-	if (i2c_reg_write_byte_dt(&config->i2c,
-				  BNO055_REG_PMU_BW, BNO055_PMU_BW) < 0) {
-		LOG_DBG("Could not set data filter bandwidth");
-		return -EIO;
-	}
-
-	/* set g-range */
-	if (i2c_reg_write_byte_dt(&config->i2c,
-				  BNO055_REG_PMU_RANGE, BNO055_PMU_RANGE) < 0) {
-		LOG_DBG("Could not set data g-range");
-		return -EIO;
-	}
+  if (id != BNO055_CHIP_ID) {
+    LOG_DBG("Unexpected chip id (%x)", id);
+    return -EIO;
+  }
 
 #ifdef CONFIG_BNO055_TRIGGER
-	if (config->int1_gpio.port) {
-		if (bno055_init_interrupt(dev) < 0) {
-			LOG_DBG("Could not initialize interrupts");
-			return -EIO;
-		}
-	}
+  if (config->int1_gpio.port) {
+    if (bno055_init_interrupt(dev) < 0) {
+      LOG_DBG("Could not initialize interrupts");
+      return -EIO;
+    }
+  }
 #endif
 
-	return 0;
+  return 0;
 }
 
-#define BNO055_DEFINE(inst)									\
-	static struct bno055_data bno055_data_##inst;						\
-												\
-	static const struct bno055_config bno055_config##inst = {				\
-		.i2c = I2C_DT_SPEC_INST_GET(inst),						\
-		IF_ENABLED(CONFIG_BNO055_TRIGGER,						\
-			   (.int1_gpio = GPIO_DT_SPEC_INST_GET_OR(inst, int1_gpios, { 0 }),))	\
-	};											\
-												\
-	SENSOR_DEVICE_DT_INST_DEFINE(inst, bno055_init, NULL, &bno055_data_##inst,		\
-			      &bno055_config##inst, POST_KERNEL,				\
-			      CONFIG_SENSOR_INIT_PRIORITY, &bno055_driver_api);			\
+#define BNO055_DEFINE(inst)                                                  \
+  static struct bno055_data bno055_data_##inst;                              \
+                                                                             \
+  static const struct bno055_config bno055_config##inst = {                  \
+    .i2c = I2C_DT_SPEC_INST_GET(inst),                                       \
+    IF_ENABLED(CONFIG_BNO055_TRIGGER,                                        \
+         (.int1_gpio = GPIO_DT_SPEC_INST_GET_OR(inst, int1_gpios, { 0 }),))  \
+  };                                                                         \
+                                                                             \
+  SENSOR_DEVICE_DT_INST_DEFINE(inst, bno055_init, NULL, &bno055_data_##inst, \
+            &bno055_config##inst, POST_KERNEL,                               \
+            CONFIG_SENSOR_INIT_PRIORITY, &bno055_driver_api);                \
 
 DT_INST_FOREACH_STATUS_OKAY(BNO055_DEFINE)
