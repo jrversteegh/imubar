@@ -28,6 +28,13 @@ static void button_pressed(const device *dev, gpio_callback *cb,
 }
 
 void get_sensors(bool print) {
+  auto sensors = get_sensors();
+  for (auto& sensor: sensors) {
+    auto accel = read_sensor(sensor, SENSOR_CHAN_ACCEL_XYZ);
+    auto gyro = read_sensor(sensor, SENSOR_CHAN_GYRO_XYZ);
+    auto magn = read_sensor(sensor, SENSOR_CHAN_MAGN_XYZ);
+  }
+  /*
   auto acceleration = get_acceleration();
   if (print)
     printk("A: %8.4f, %8.4f, %8.4f  ", acceleration.x, acceleration.y,
@@ -40,6 +47,7 @@ void get_sensors(bool print) {
   auto mag_field = get_magfield();
   if (print)
     printk("M: %7.4f, %7.4f, %7.4f\n", mag_field.x, mag_field.y, mag_field.z);
+    */
 }
 
 static void initialize_buttons() {

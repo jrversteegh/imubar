@@ -205,6 +205,11 @@
 #define BNO055_THREAD_PRIORITY 10
 #define BNO055_THREAD_STACKSIZE_UNIT 1024
 
+#define BNO055_ACCEL_LSB_PER_MS 100
+#define BNO055_GYRO_LSB_PER_RPS 900
+#define BNO055_MAGN_LSB_PER_GS 1600
+#define BNO055_TEMP_LSB_PER_C 1
+
 typedef union {
   int16_t components[3];
   struct {
@@ -256,16 +261,10 @@ struct bno055_config {
 #endif
 };
 
-int bno055_attr_set(const struct device *dev,
-    enum sensor_channel chan,
-    enum sensor_attribute attr,
-    const struct sensor_value *val);
-
 #ifdef CONFIG_BNO055_TRIGGER
 int bno055_trigger_set(const struct device *dev,
     const struct sensor_trigger *trig,
     sensor_trigger_handler_t handler);
-
 
 int bno055_init_interrupt(const struct device *dev);
 #endif

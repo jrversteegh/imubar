@@ -1,4 +1,6 @@
 #include <type_traits>
+#include <string>
+
 #include <zephyr/device.h>
 #include <zephyr/drivers/gpio.h>
 #include <zephyr/drivers/sensor.h>
@@ -13,12 +15,14 @@
 #define FXAS21002_0 DT_NODELABEL(fxas21002_0)
 #define LSM303ACCEL_0 DT_NODELABEL(lsm303accel_0)
 #define LSM303MAGN_0 DT_NODELABEL(lsm303magn_0)
+#define BNO055_0 DT_NODELABEL(bno055_0)
 
 static device const *const imu_mpu9250 = DEVICE_DT_GET(MPU9250_0);
 static device const *const imu_fxos8700 = DEVICE_DT_GET(FXOS8700_0);
 static device const *const imu_fxas21002 = DEVICE_DT_GET(FXAS21002_0);
 static device const *const imu_lsm303accel = DEVICE_DT_GET(LSM303ACCEL_0);
 static device const *const imu_lsm303magn = DEVICE_DT_GET(LSM303MAGN_0);
+static device const *const imu_bno055 = DEVICE_DT_GET(BNO055_0);
 
 struct None {};
 
@@ -35,7 +39,18 @@ template <> inline double sensor_value_to<double>(sensor_value const &value) {
   return sensor_value_to_double(&value);
 }
 
-static Vector3 read_sensor(device const *sensor, sensor_channel channel) {
+std::vector<device const *> get_sensors() {
+  return {
+    imu_mpu9250,
+    imu_fxos8700,
+    imu_fxas21002,
+    imu_lsm303accel,
+    imu_lsm303magn,
+    imu_bno055,
+  };
+}
+
+Vector3 read_sensor(device const *sensor, sensor_channel channel) {
   struct sensor_value values[3];
   Vector3 result{};
 
@@ -51,23 +66,31 @@ static Vector3 read_sensor(device const *sensor, sensor_channel channel) {
     return result;
   }
 
-  result.x = -sensor_value_to<decltype(result.x)>(values[2]);
-  result.y = sensor_value_to<decltype(result.y)>(values[0]);
-  result.z = sensor_value_to<decltype(result.z)>(values[1]);
+  result.x = sensor_value_to<decltype(result.x)>(values[0]);
+  result.y = sensor_value_to<decltype(result.y)>(values[1]);
+  result.z = sensor_value_to<decltype(result.z)>(values[2]);
   return result;
 }
 
-Vector3 get_acceleration() {
-  return read_sensor(imu_lsm303accel, SENSOR_CHAN_ACCEL_XYZ);
-}
+struct Imu {
+  Vector3 get_acceleration() {
+    return read_sensor(imu_lsm303accel, SENSOR_CHAN_ACCEL_XYZ);
+  }
 
-Vector3 get_magfield() {
-  return read_sensor(imu_mpu9250, SENSOR_CHAN_MAGN_XYZ);
-}
+  Vector3 get_magfield() {
+    return read_sensor(imu_mpu9250, SENSOR_CHAN_MAGN_XYZ);
+  }
 
-Vector3 get_rotation() {
-  return read_sensor(imu_mpu9250, SENSOR_CHAN_GYRO_XYZ);
-}
+  Vector3 get_rotation() {
+    return read_sensor(imu_mpu9250, SENSOR_CHAN_GYRO_XYZ);
+  }
+private:
+  std::string name_ = "";
+  device const* const accel_device_ = nullptr;
+  device const* const gyr_device_ = nullptr;
+  device const* const magn_device_ = nullptr;
+};
+
 
 void initialize_sensors() {
   if (!device_is_ready(imu_mpu9250)) {
@@ -84,5 +107,8 @@ void initialize_sensors() {
   }
   if (!device_is_ready(imu_lsm303magn)) {
     error(2, "LSM303 magn not ready.");
+  }
+  if (!device_is_ready(imu_bno055)) {
+    error(2, "BNO055 not ready.");
   }
 }

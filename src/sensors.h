@@ -1,6 +1,8 @@
 #ifndef IMUBAR_SENSORS_H__
 #define IMUBAR_SENSORS_H__
 
+#include <vector>
+
 #include "functions.h"
 #include "geometry.h"
 
@@ -10,9 +12,9 @@ struct Vector3 {
   Number z;
 };
 
-void initialize_sensors();
-Vector3 get_acceleration();
-Vector3 get_rotation();
-Vector3 get_magfield();
+extern void initialize_sensors();
+extern std::vector<device const *> get_sensors();
+extern Vector3 read_sensor(device const *sensor, sensor_channel channel);
+
 
 #endif

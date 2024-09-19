@@ -9,14 +9,14 @@ using Number = float;
 static constexpr Number pi = std::numbers::pi_v<Number>;
 
 inline Number angle_mod(Number const angle) {
-  Number result = std::fmod(angle, 360.0);
-  return result < 0.0 ? result + 360.0 : result;
+  Number result = std::fmod(angle, Number{360.0});
+  return result < Number{0.0} ? result + Number{360.0} : result;
 }
 
 inline Number angle_mod_signed(Number const angle) {
-  Number result = std::fmod(angle, 360.0);
-  return result < -180.0   ? result + 360.0
-         : result >= 180.0 ? result - 360.0
+  Number result = std::fmod(angle, Number{360.0});
+  return result < Number{-180.0}   ? result + Number{360.0}
+         : result >= Number{180.0} ? result - Number{360.0}
                            : result;
 }
 
