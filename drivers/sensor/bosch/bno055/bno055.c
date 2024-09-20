@@ -171,7 +171,7 @@ static int bno055_attr_set(const struct device *dev, enum sensor_channel chan,
 }
 
 
-static int bno055_attr_get(const struct device *dev, enum sensor_channel chan,                       
+static int bno055_attr_get(const struct device *dev, enum sensor_channel chan,
                            enum sensor_attribute attr, struct sensor_value *val)
 {
   return -ENOTSUP;
@@ -222,17 +222,23 @@ int bno055_init(const struct device *dev)
   return 0;
 }
 
+#if defined(CONFIG_BNO055_TRIGGER)
+#define BNO055_TRIGGER_CFG(inst) \
+        .interrupt = GPIO_DT_SPEC_INST_GET(inst, int_gpios),
+#else
+#define BNO055_TRIGGER_CFG(inst)
+#endif
+
 #define BNO055_DEFINE(inst)                                                  \
   static struct bno055_data bno055_data_##inst;                              \
                                                                              \
   static const struct bno055_config bno055_config##inst = {                  \
     .i2c = I2C_DT_SPEC_INST_GET(inst),                                       \
-    IF_ENABLED(CONFIG_BNO055_TRIGGER,                                        \
-         (.int1_gpio = GPIO_DT_SPEC_INST_GET_OR(inst, int1_gpios, { 0 }),))  \
+    BNO055_TRIGGER_CFG(inst)                                                 \
   };                                                                         \
                                                                              \
   SENSOR_DEVICE_DT_INST_DEFINE(inst, bno055_init, NULL, &bno055_data_##inst, \
             &bno055_config##inst, POST_KERNEL,                               \
-            CONFIG_SENSOR_INIT_PRIORITY, &bno055_driver_api);                \
+            CONFIG_SENSOR_INIT_PRIORITY, &bno055_driver_api);
 
 DT_INST_FOREACH_STATUS_OKAY(BNO055_DEFINE)

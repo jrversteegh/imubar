@@ -21,10 +21,10 @@ set(BOARD_ROOT ${CMAKE_SOURCE_DIR})
 # Add custom drivers directory
 add_subdirectory(drivers)
 
-
 #set(SHIELD kitronik_crb_5693)
 
 project(imubar)
 
+set(driver_sources drivers/sensor/bosch/bno055/bno055.c)
 FILE(GLOB app_sources src/*.cpp)
-target_sources(app PRIVATE ${app_sources})
+target_sources(app PRIVATE ${app_sources} ${driver_sources})
