@@ -79,7 +79,7 @@ static int bno055_sample_fetch(const struct device *dev,
 }
 
 struct sensor_value get_sensor_value(const uint16_t value, const int32_t divisor) {
-  uint32_t tmp = value * 1000000 / divisor;
+  uint32_t tmp = (uint64_t)value * 1000000 / divisor;
   struct sensor_value result = {
     .val1 = tmp / 1000000,
     .val2 = tmp % 1000000
@@ -130,30 +130,43 @@ static int bno055_channel_get(const struct device *dev,
   switch (chan) {
     case SENSOR_CHAN_ACCEL_X:
       get_acceleration(dev, data->sample.accel.x, val);
+      break;
     case SENSOR_CHAN_ACCEL_Y:
       get_acceleration(dev, data->sample.accel.y, val);
+      break;
     case SENSOR_CHAN_ACCEL_Z:
       get_acceleration(dev, data->sample.accel.z, val);
+      break;
     case SENSOR_CHAN_ACCEL_XYZ:
       get_acceleration_vec(dev, data->sample.accel, val);
+      break;
     case SENSOR_CHAN_GYRO_X:
       get_gyro(dev, data->sample.gyro.x, val);
+      break;
     case SENSOR_CHAN_GYRO_Y:
       get_gyro(dev, data->sample.gyro.y, val);
+      break;
     case SENSOR_CHAN_GYRO_Z:
       get_gyro(dev, data->sample.gyro.z, val);
+      break;
     case SENSOR_CHAN_GYRO_XYZ:
       get_gyro_vec(dev, data->sample.gyro, val);
+      break;
     case SENSOR_CHAN_MAGN_X:
       get_magn(dev, data->sample.magn.x, val);
+      break;
     case SENSOR_CHAN_MAGN_Y:
       get_magn(dev, data->sample.magn.y, val);
+      break;
     case SENSOR_CHAN_MAGN_Z:
       get_magn(dev, data->sample.magn.z, val);
+      break;
     case SENSOR_CHAN_MAGN_XYZ:
       get_magn_vec(dev, data->sample.magn, val);
+      break;
     case SENSOR_CHAN_DIE_TEMP:
       *val = get_sensor_value(data->temp, BNO055_TEMP_LSB_PER_C);
+      break;
     default:
       LOG_DBG("Unsupported sensor channel");
       return -ENOTSUP;
