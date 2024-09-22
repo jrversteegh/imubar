@@ -34,7 +34,7 @@ def format(ctx):
         "isort .",
         f"clang-format -i {' '.join(glob.glob('src/*.h'))}",
         f"clang-format -i {' '.join(glob.glob('src/*.cpp'))}",
-        f"clang-format -i {' '.join(glob.glob('tests/*.cpp'))}",
+        f"clang-format -i {' '.join(glob.glob('drivers/sensor/*/*/*.[ch]'))}",
         "pandoc -s -o README.md README.rst",
     ):
         ctx.run(cmd, echo=True)

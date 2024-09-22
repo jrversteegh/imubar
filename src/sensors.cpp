@@ -1,6 +1,6 @@
 #include <memory>
-#include <type_traits>
 #include <string>
+#include <type_traits>
 
 #include <zephyr/device.h>
 #include <zephyr/drivers/gpio.h>
@@ -42,12 +42,8 @@ template <> inline double sensor_value_to<double>(sensor_value const &value) {
 
 std::vector<device const *> get_sensors() {
   return {
-    imu_mpu9250,
-    imu_fxos8700,
-    imu_fxas21002,
-    imu_lsm303accel,
-    imu_lsm303magn,
-    imu_bno055,
+      imu_mpu9250,     imu_fxos8700,   imu_fxas21002,
+      imu_lsm303accel, imu_lsm303magn, imu_bno055,
   };
 }
 
@@ -78,8 +74,6 @@ Vector3 read_sensor(device const *sensor, sensor_channel channel) {
   return result;
 }
 
-
-
 void initialize_sensors() {
   if (!device_is_ready(imu_mpu9250)) {
     error(2, "MPU9250 not ready.");
@@ -101,14 +95,17 @@ void initialize_sensors() {
   }
 }
 
-
-std::vector<std::unique_ptr<Imu>>& get_imus() {
+std::vector<std::unique_ptr<Imu>> &get_imus() {
   static std::vector<std::unique_ptr<Imu>> imus{};
   if (imus.size() == 0) {
-    imus.push_back(std::make_unique<Imu>( "adafruit_nxp_fx", imu_fxos8700, imu_fxas21002, imu_fxos8700));
-    imus.push_back(std::make_unique<Imu>( "sparkfun_mpu9250", imu_mpu9250, imu_mpu9250, imu_mpu9250));
-    imus.push_back(std::make_unique<Imu>( "adafruit_lsm_l3", imu_lsm303accel, nullptr, imu_lsm303magn));
-    imus.push_back(std::make_unique<Imu>( "adafruit_bno055", imu_bno055, imu_bno055, imu_bno055));
+    imus.push_back(std::make_unique<Imu>("adafruit_nxp_fx", imu_fxos8700,
+                                         imu_fxas21002, imu_fxos8700));
+    imus.push_back(std::make_unique<Imu>("sparkfun_mpu9250", imu_mpu9250,
+                                         imu_mpu9250, imu_mpu9250));
+    imus.push_back(std::make_unique<Imu>("adafruit_lsm_l3", imu_lsm303accel,
+                                         nullptr, imu_lsm303magn));
+    imus.push_back(std::make_unique<Imu>("adafruit_bno055", imu_bno055,
+                                         imu_bno055, imu_bno055));
   }
   return imus;
 }

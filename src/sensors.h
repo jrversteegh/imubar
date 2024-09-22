@@ -21,19 +21,15 @@ struct Vector3 {
 
 extern void initialize_sensors();
 extern std::vector<device const *> get_sensors();
-extern void fetch_sensor(device const *sensor, sensor_channel channel = SENSOR_CHAN_ALL);
+extern void fetch_sensor(device const *sensor,
+                         sensor_channel channel = SENSOR_CHAN_ALL);
 extern Vector3 read_sensor(device const *sensor, sensor_channel channel);
 
 struct Imu {
-  Imu(std::string name,
-      device const* const accel_device,
-      device const* const gyro_device,
-      device const* const magn_device):
-    name_(name),
-    accel_device_(accel_device),
-    gyro_device_(gyro_device),
-    magn_device_(magn_device) {
-  }
+  Imu(std::string name, device const *const accel_device,
+      device const *const gyro_device, device const *const magn_device)
+      : name_(name), accel_device_(accel_device), gyro_device_(gyro_device),
+        magn_device_(magn_device) {}
 
   int64_t fetch() {
     fetch_sensor(accel_device_);
@@ -47,9 +43,7 @@ struct Imu {
     return time_;
   }
 
-  std::string get_name() {
-    return name_;
-  }
+  std::string get_name() { return name_; }
 
   Vector3 get_acceleration() {
     return read_sensor(accel_device_, SENSOR_CHAN_ACCEL_XYZ);
@@ -63,19 +57,16 @@ struct Imu {
     return read_sensor(magn_device_, SENSOR_CHAN_MAGN_XYZ);
   }
 
-  int64_t get_time() {
-    return time_;
-  }
+  int64_t get_time() { return time_; }
 
 private:
   std::string name_ = "";
-  device const* const accel_device_ = nullptr;
-  device const* const gyro_device_ = nullptr;
-  device const* const magn_device_ = nullptr;
+  device const *const accel_device_ = nullptr;
+  device const *const gyro_device_ = nullptr;
+  device const *const magn_device_ = nullptr;
   int64_t time_ = 0;
 };
 
-extern std::vector<std::unique_ptr<Imu>>& get_imus();
-
+extern std::vector<std::unique_ptr<Imu>> &get_imus();
 
 #endif

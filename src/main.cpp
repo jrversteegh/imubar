@@ -28,11 +28,11 @@ static void button_pressed(const device *dev, gpio_callback *cb,
 }
 
 void get_imus(bool print) {
-  auto& imus = get_imus();
+  auto &imus = get_imus();
   if (print) {
-      printk("%8.3f\n", k_uptime_get() / 1000.0);
+    printk("%8.3f\n", k_uptime_get() / 1000.0);
   }
-  for (auto& imu: imus) {
+  for (auto &imu : imus) {
     auto name = imu->get_name();
     double uptime = imu->fetch() / 1000.0;
     auto accel = imu->get_acceleration();
@@ -41,13 +41,16 @@ void get_imus(bool print) {
     if (print) {
       printk("%8.3f  ", uptime);
       printk("%20.20s  ", name.c_str());
-      printk("A: %8.4f, %8.4f, %8.4f  ", static_cast<double>(accel.x), static_cast<double>(accel.y), static_cast<double>(accel.z));
-      printk("R: %7.4f, %7.4f, %7.4f  ", static_cast<double>(gyro.x), static_cast<double>(gyro.y), static_cast<double>(gyro.z));
-      printk("M: %7.4f, %7.4f, %7.4f\n", static_cast<double>(magn.x), static_cast<double>(magn.y), static_cast<double>(magn.z));
+      printk("A: %8.4f, %8.4f, %8.4f  ", static_cast<double>(accel.x),
+             static_cast<double>(accel.y), static_cast<double>(accel.z));
+      printk("R: %7.4f, %7.4f, %7.4f  ", static_cast<double>(gyro.x),
+             static_cast<double>(gyro.y), static_cast<double>(gyro.z));
+      printk("M: %7.4f, %7.4f, %7.4f\n", static_cast<double>(magn.x),
+             static_cast<double>(magn.y), static_cast<double>(magn.z));
     }
   }
   if (print) {
-      printk("%8.3f\n---\n", k_uptime_get() / 1000.0);
+    printk("%8.3f\n---\n", k_uptime_get() / 1000.0);
   }
 }
 
