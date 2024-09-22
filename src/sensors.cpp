@@ -1,3 +1,4 @@
+#include <memory>
 #include <type_traits>
 #include <string>
 
@@ -50,19 +51,24 @@ std::vector<device const *> get_sensors() {
   };
 }
 
+void fetch_sensor(device const *sensor, sensor_channel channel) {
+  if (sensor == nullptr)
+    return;
+  auto ret = sensor_sample_fetch(sensor);
+  if (ret < 0 && ret != -EBADMSG) {
+    error(2, "Sensor fetch error: %d", ret);
+  }
+}
+
 Vector3 read_sensor(device const *sensor, sensor_channel channel) {
+  if (sensor == nullptr)
+    return Vector3{};
   struct sensor_value values[3];
   Vector3 result{};
 
-  auto ret = sensor_sample_fetch(sensor);
-  if (ret < 0 && ret != -EBADMSG) {
-    error(2, "Sensor sample update error: %d", ret);
-    return result;
-  }
-
-  ret = sensor_channel_get(sensor, channel, values);
+  auto ret = sensor_channel_get(sensor, channel, values);
   if (ret < 0) {
-    error(2, "Cannot read sensor channels: %d", ret);
+    error(2, "Cannot read sensor: %d", ret);
     return result;
   }
 
@@ -72,24 +78,6 @@ Vector3 read_sensor(device const *sensor, sensor_channel channel) {
   return result;
 }
 
-struct Imu {
-  Vector3 get_acceleration() {
-    return read_sensor(imu_lsm303accel, SENSOR_CHAN_ACCEL_XYZ);
-  }
-
-  Vector3 get_magfield() {
-    return read_sensor(imu_mpu9250, SENSOR_CHAN_MAGN_XYZ);
-  }
-
-  Vector3 get_rotation() {
-    return read_sensor(imu_mpu9250, SENSOR_CHAN_GYRO_XYZ);
-  }
-private:
-  std::string name_ = "";
-  device const* const accel_device_ = nullptr;
-  device const* const gyr_device_ = nullptr;
-  device const* const magn_device_ = nullptr;
-};
 
 
 void initialize_sensors() {
@@ -111,4 +99,16 @@ void initialize_sensors() {
   if (!device_is_ready(imu_bno055)) {
     error(2, "BNO055 not ready.");
   }
+}
+
+
+std::vector<std::unique_ptr<Imu>>& get_imus() {
+  static std::vector<std::unique_ptr<Imu>> imus{};
+  if (imus.size() == 0) {
+    imus.push_back(std::make_unique<Imu>( "adafruit_nxp_fx", imu_fxos8700, imu_fxas21002, imu_fxos8700));
+    imus.push_back(std::make_unique<Imu>( "sparkfun_mpu9250", imu_mpu9250, imu_mpu9250, imu_mpu9250));
+    imus.push_back(std::make_unique<Imu>( "adafruit_lsm_l3", imu_lsm303accel, nullptr, imu_lsm303magn));
+    imus.push_back(std::make_unique<Imu>( "adafruit_bno055", imu_bno055, imu_bno055, imu_bno055));
+  }
+  return imus;
 }

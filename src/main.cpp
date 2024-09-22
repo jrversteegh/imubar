@@ -27,27 +27,28 @@ static void button_pressed(const device *dev, gpio_callback *cb,
   }
 }
 
-void get_sensors(bool print) {
-  auto sensors = get_sensors();
-  for (auto& sensor: sensors) {
-    auto accel = read_sensor(sensor, SENSOR_CHAN_ACCEL_XYZ);
-    auto gyro = read_sensor(sensor, SENSOR_CHAN_GYRO_XYZ);
-    auto magn = read_sensor(sensor, SENSOR_CHAN_MAGN_XYZ);
+void get_imus(bool print) {
+  auto& imus = get_imus();
+  if (print) {
+      printk("%8.3f\n", k_uptime_get() / 1000.0);
   }
-  /*
-  auto acceleration = get_acceleration();
-  if (print)
-    printk("A: %8.4f, %8.4f, %8.4f  ", acceleration.x, acceleration.y,
-           acceleration.z);
-
-  auto rotation = get_rotation();
-  if (print)
-    printk("R: %7.4f, %7.4f, %7.4f  ", rotation.x, rotation.y, rotation.z);
-
-  auto mag_field = get_magfield();
-  if (print)
-    printk("M: %7.4f, %7.4f, %7.4f\n", mag_field.x, mag_field.y, mag_field.z);
-    */
+  for (auto& imu: imus) {
+    auto name = imu->get_name();
+    double uptime = imu->fetch() / 1000.0;
+    auto accel = imu->get_acceleration();
+    auto gyro = imu->get_rotation();
+    auto magn = imu->get_magfield();
+    if (print) {
+      printk("%8.3f  ", uptime);
+      printk("%20.20s  ", name.c_str());
+      printk("A: %8.4f, %8.4f, %8.4f  ", static_cast<double>(accel.x), static_cast<double>(accel.y), static_cast<double>(accel.z));
+      printk("R: %7.4f, %7.4f, %7.4f  ", static_cast<double>(gyro.x), static_cast<double>(gyro.y), static_cast<double>(gyro.z));
+      printk("M: %7.4f, %7.4f, %7.4f\n", static_cast<double>(magn.x), static_cast<double>(magn.y), static_cast<double>(magn.z));
+    }
+  }
+  if (print) {
+      printk("%8.3f\n---\n", k_uptime_get() / 1000.0);
+  }
 }
 
 static void initialize_buttons() {
@@ -98,14 +99,13 @@ int main(void) {
   while (true) {
     if (gpio_pin_get_dt(&sw0_gpio)) {
     }
-    get_sensors(i % 10 == 0);
+    get_imus(i % 100 == 0);
 
     if (i % 100 == 0) {
       toggle_led();
     }
 
     ++i;
-    k_sleep(K_MSEC(5));
   }
 
   printk("IMUBar done.\n");
