@@ -12,7 +12,6 @@
 #include <zephyr/drivers/i2c.h>
 #include <zephyr/kernel.h>
 #include <zephyr/sys/util.h>
-#include <zephyr/types.h>
 
 /* Defines taken from BNO055 linux driver: bno055.h -> */
 
@@ -25,7 +24,7 @@
 /* PAGE0 REGISTER DEFINITION START*/
 #define BNO055_CHIP_ID_ADDR (0x00)
 #define BNO055_ACCEL_REV_ID_ADDR (0x01)
-#define BNO055_MAG_REV_ID_ADDR (0x02)
+#define BNO055_MAGN_REV_ID_ADDR (0x02)
 #define BNO055_GYRO_REV_ID_ADDR (0x03)
 #define BNO055_SW_REV_ID_LSB_ADDR (0x04)
 #define BNO055_SW_REV_ID_MSB_ADDR (0x05)
@@ -40,12 +39,12 @@
 #define BNO055_ACCEL_DATA_Z_MSB_ADDR (0X0D)
 
 /*Mag data register*/
-#define BNO055_MAG_DATA_X_LSB_ADDR (0X0E)
-#define BNO055_MAG_DATA_X_MSB_ADDR (0X0F)
-#define BNO055_MAG_DATA_Y_LSB_ADDR (0X10)
-#define BNO055_MAG_DATA_Y_MSB_ADDR (0X11)
-#define BNO055_MAG_DATA_Z_LSB_ADDR (0X12)
-#define BNO055_MAG_DATA_Z_MSB_ADDR (0X13)
+#define BNO055_MAGN_DATA_X_LSB_ADDR (0X0E)
+#define BNO055_MAGN_DATA_X_MSB_ADDR (0X0F)
+#define BNO055_MAGN_DATA_Y_LSB_ADDR (0X10)
+#define BNO055_MAGN_DATA_Y_MSB_ADDR (0X11)
+#define BNO055_MAGN_DATA_Z_LSB_ADDR (0X12)
+#define BNO055_MAGN_DATA_Z_MSB_ADDR (0X13)
 
 /*Gyro data registers*/
 #define BNO055_GYRO_DATA_X_LSB_ADDR (0X14)
@@ -146,12 +145,12 @@
 #define BNO055_ACCEL_OFFSET_Z_MSB_ADDR (0X5A)
 
 /* Magnetometer Offset registers*/
-#define BNO055_MAG_OFFSET_X_LSB_ADDR (0X5B)
-#define BNO055_MAG_OFFSET_X_MSB_ADDR (0X5C)
-#define BNO055_MAG_OFFSET_Y_LSB_ADDR (0X5D)
-#define BNO055_MAG_OFFSET_Y_MSB_ADDR (0X5E)
-#define BNO055_MAG_OFFSET_Z_LSB_ADDR (0X5F)
-#define BNO055_MAG_OFFSET_Z_MSB_ADDR (0X60)
+#define BNO055_MAGN_OFFSET_X_LSB_ADDR (0X5B)
+#define BNO055_MAGN_OFFSET_X_MSB_ADDR (0X5C)
+#define BNO055_MAGN_OFFSET_Y_LSB_ADDR (0X5D)
+#define BNO055_MAGN_OFFSET_Y_MSB_ADDR (0X5E)
+#define BNO055_MAGN_OFFSET_Z_LSB_ADDR (0X5F)
+#define BNO055_MAGN_OFFSET_Z_MSB_ADDR (0X60)
 
 /* Gyroscope Offset registers*/
 #define BNO055_GYRO_OFFSET_X_LSB_ADDR (0X61)
@@ -164,19 +163,19 @@
 /* Radius registers*/
 #define BNO055_ACCEL_RADIUS_LSB_ADDR (0X67)
 #define BNO055_ACCEL_RADIUS_MSB_ADDR (0X68)
-#define BNO055_MAG_RADIUS_LSB_ADDR (0X69)
-#define BNO055_MAG_RADIUS_MSB_ADDR (0X6A)
+#define BNO055_MAGN_RADIUS_LSB_ADDR (0X69)
+#define BNO055_MAGN_RADIUS_MSB_ADDR (0X6A)
 
 /* PAGE0 REGISTERS DEFINITION END*/
 /* PAGE1 REGISTERS DEFINITION START*/
 /* Configuration registers*/
 #define BNO055_ACCEL_CONFIG_ADDR (0X08)
-#define BNO055_MAG_CONFIG_ADDR (0X09)
+#define BNO055_MAGN_CONFIG_ADDR (0X09)
 #define BNO055_GYRO_CONFIG_ADDR (0X0A)
 #define BNO055_GYRO_MODE_CONFIG_ADDR (0X0B)
 #define BNO055_ACCEL_SLEEP_CONFIG_ADDR (0X0C)
 #define BNO055_GYRO_SLEEP_CONFIG_ADDR (0X0D)
-#define BNO055_MAG_SLEEP_CONFIG_ADDR (0x0E)
+#define BNO055_MAGN_SLEEP_CONFIG_ADDR (0x0E)
 
 /* Interrupt registers*/
 #define BNO055_INT_MASK_ADDR (0X0F)
@@ -211,11 +210,11 @@
 #define BNO055_TEMP_LSB_PER_C 1
 
 typedef union {
-  int16_t components[3];
+  uint16_t components[3];
   struct {
-    int16_t x;
-    int16_t y;
-    int16_t z;
+    uint16_t x;
+    uint16_t y;
+    uint16_t z;
   };
 } bno055_vec;
 
@@ -223,14 +222,14 @@ typedef union {
   bno055_vec vectors[3];
   struct {
     bno055_vec accel;
-    bno055_vec gyro;
     bno055_vec magn;
+    bno055_vec gyro;
   };
 } bno055_ninedof;
 
 struct bno055_data {
   bno055_ninedof sample;
-  int8_t temp;
+  uint8_t temp;
 
   const struct device *dev;
 #ifdef CONFIG_BNO055_TRIGGER
@@ -267,5 +266,194 @@ int bno055_trigger_set(const struct device *dev,
 
 int bno055_init_interrupt(const struct device *dev);
 #endif
+
+union opr_mode {
+  uint8_t byte;
+  struct {
+    uint8_t unused : 4;
+    uint8_t operation_mode : 4;
+  } config;
+};
+
+enum opr_mode_operation_mode_values {
+  operation_mode_config_mode = 0,
+  // Non-fusion modes
+  operation_mode_accel_only = 1,
+  operation_mode_magn_only = 2,
+  operation_mode_gyro_only = 3,
+  operation_mode_accel_magn = 4,
+  operation_mode_accel_gyro = 5,
+  operation_mode_gyro_magn = 6,
+  operation_mode_accel_gyro_magn = 7,
+  // Fusion modes
+  operation_mode_imu = 8,
+  operation_mode_compass = 9,
+  operation_mode_m4g = 10,
+  operation_mode_ndof_fmc_off = 11,
+  operation_mode_ndof = 12,
+};
+
+union pwr_mode {
+  uint8_t byte;
+  struct {
+    uint8_t unused : 6;
+    uint8_t power_mode : 2;
+  } config;
+};
+
+enum pwr_mode_power_mode_values {
+  power_mode_normal = 0,
+  power_mode_low = 1,
+  power_mode_suspend = 2
+};
+
+union axi_map_config {
+  uint8_t byte;
+  struct {
+    uint8_t unused : 2;
+    uint8_t z_axis : 2;
+    uint8_t y_axis : 2;
+    uint8_t x_axis : 2;
+  } config;
+};
+
+enum axis_map_values {
+  axis_map_x_axis = 0,
+  axis_map_y_axis = 1,
+  axis_map_z_axis = 2
+};
+
+union axi_map_sign {
+  uint8_t byte;
+  struct {
+    uint8_t unused : 5;
+    uint8_t z_axis_sign : 1;
+    uint8_t y_axis_sign : 1;
+    uint8_t x_axis_sign : 1;
+  } config;
+};
+
+enum axis_map_sign_values { axis_sign_positive = 0, axis_sign_negative = 1 };
+
+/* Accel config */
+
+union accel_config {
+  uint8_t byte;
+  struct {
+    uint8_t accel_power_mode : 3;
+    uint8_t accel_bandwidth : 3;
+    uint8_t accel_range : 2;
+
+  } config;
+};
+
+enum accel_config_power_mode_values {
+  accel_config_power_mode_normal = 0,
+  accel_config_power_mode_suspend = 1,
+  accel_config_power_mode_low_power1 = 2,
+  accel_config_power_mode_standby = 3,
+  accel_config_power_mode_low_power2 = 4
+};
+
+enum accel_config_bandwidth_values {
+  accel_config_bandwidth_8Hz = 0,
+  accel_config_bandwidth_16Hz = 1,
+  accel_config_bandwidth_31Hz = 2,
+  accel_config_bandwidth_62Hz = 3,
+  accel_config_bandwidth_125Hz = 4,
+  accel_config_bandwidth_250Hz = 5,
+  accel_config_bandwidth_500Hz = 6,
+  accel_config_bandwidth_1000Hz = 7
+};
+
+enum accel_config_range_values {
+  accel_config_range_2g = 0,
+  accel_config_range_4g = 1,
+  accel_config_range_8g = 2,
+  accel_config_range_16g = 3
+};
+
+/* Magn config */
+
+union magn_config {
+  uint8_t byte;
+  struct {
+    uint8_t unused : 1;
+    uint8_t magn_power_mode : 2;
+    uint8_t magn_operation_mode : 2;
+    uint8_t magn_data_rate : 3;
+  } config;
+};
+
+enum magn_config_power_mode_values {
+  magn_config_power_mode_normal = 0,
+  magn_config_power_mode_sleep = 1,
+  magn_config_power_mode_suspend = 2,
+  magn_config_power_mode_force = 2
+};
+
+enum magn_config_operation_mode_values {
+  magn_config_operation_low_power = 0,
+  magn_config_operation_regular = 1,
+  magn_config_operation_enhanced = 2,
+  magn_config_operation_high_accuracy = 3
+};
+
+enum magn_config_data_rate {
+  magn_config_data_rate_2Hz = 0,
+  magn_config_data_rate_6Hz = 1,
+  magn_config_data_rate_8Hz = 2,
+  magn_config_data_rate_10Hz = 3,
+  magn_config_data_rate_15Hz = 4,
+  magn_config_data_rate_20Hz = 5,
+  magn_config_data_rate_25Hz = 6,
+  magn_config_data_rate_30Hz = 7
+};
+
+/* Gyro config */
+
+union gyro_config {
+  uint8_t byte;
+  struct {
+    uint8_t unused : 2;
+    uint8_t gyro_bandwidth : 3;
+    uint8_t gyro_range : 3;
+  } config;
+};
+
+enum gyro_config_bandwidth_values {
+  gyro_mode_bandwidth_523Hz = 0,
+  gyro_mode_bandwidth_230Hz = 1,
+  gyro_mode_bandwidth_116Hz = 2,
+  gyro_mode_bandwidth_47Hz = 3,
+  gyro_mode_bandwidth_23Hz = 4,
+  gyro_mode_bandwidth_12Hz = 5,
+  gyro_mode_bandwidth_64Hz = 6,
+  gyro_mode_bandwidth_32Hz = 7
+};
+
+enum gyro_config_range_values {
+  gyro_mode_range_2000dps = 0,
+  gyro_mode_range_1000dps = 1,
+  gyro_mode_range_500dps = 2,
+  gyro_mode_range_250dps = 3,
+  gyro_mode_range_125dps = 4
+};
+
+union gyro_mode_config {
+  uint8_t byte;
+  struct {
+    uint8_t unused : 5;
+    uint8_t gyro_power_mode : 3;
+  } config;
+};
+
+enum gyro_mode_config_operation_mode_values {
+  gyro_mode_config_normal = 0,
+  gyro_mode_config_fast_power_up = 1,
+  gyro_mode_config_deep_suspend = 2,
+  gyro_mode_config_suspend = 3,
+  gyro_mode_config_advanced_powersave = 4
+};
 
 #endif /* ZEPHYR_DRIVERS_SENSOR_BNO055_BNO055_H_ */

@@ -11,6 +11,7 @@
 #include <zephyr/init.h>
 #include <zephyr/logging/log.h>
 #include <zephyr/sys/__assert.h>
+#include <zephyr/sys/byteorder.h>
 
 #include "bno055.h"
 
@@ -20,7 +21,7 @@ static int read_i2c(const struct device *dev, const uint8_t reg_addr,
                     uint8_t *buf, const uint32_t num_bytes) {
   const struct bno055_config *config = dev->config;
   if (i2c_burst_read_dt(&config->i2c, reg_addr, buf, num_bytes) < 0) {
-    LOG_DBG("Could not BNO055 data");
+    LOG_DBG("Could not read BNO055 data");
     return -EIO;
   }
   return 0;
@@ -30,7 +31,25 @@ static int read_i2c_byte(const struct device *dev, const uint8_t reg_addr,
                          uint8_t *buf) {
   const struct bno055_config *config = dev->config;
   if (i2c_reg_read_byte_dt(&config->i2c, reg_addr, buf) < 0) {
-    LOG_DBG("Could not BNO055 data");
+    LOG_DBG("Could not read BNO055 data");
+    return -EIO;
+  }
+  return 0;
+}
+
+static int write_i2c_byte(const struct device *dev, const uint8_t page,
+                          const uint8_t reg_addr, const uint8_t data) {
+  const struct bno055_config *config = dev->config;
+  static uint8_t addr_page = 0;
+  if (page != addr_page) {
+    if (i2c_reg_write_byte_dt(&config->i2c, BNO055_PAGE_ID_ADDR, page) < 0) {
+      LOG_DBG("Could not write BNO055 data");
+      return -EIO;
+    }
+    addr_page = page;
+  }
+  if (i2c_reg_write_byte_dt(&config->i2c, reg_addr, data) < 0) {
+    LOG_DBG("Could not write BNO055 data");
     return -EIO;
   }
   return 0;
@@ -77,19 +96,19 @@ static int bno055_sample_fetch(const struct device *dev,
     return read_i2c(dev, BNO055_GYRO_DATA_X_LSB_ADDR,
                     (uint8_t *)&data->sample.gyro, sizeof(data->sample.gyro));
   case SENSOR_CHAN_MAGN_X:
-    return read_i2c(dev, BNO055_MAG_DATA_X_LSB_ADDR,
+    return read_i2c(dev, BNO055_MAGN_DATA_X_LSB_ADDR,
                     (uint8_t *)&data->sample.magn.x,
                     sizeof(data->sample.magn.x));
   case SENSOR_CHAN_MAGN_Y:
-    return read_i2c(dev, BNO055_MAG_DATA_Y_LSB_ADDR,
+    return read_i2c(dev, BNO055_MAGN_DATA_Y_LSB_ADDR,
                     (uint8_t *)&data->sample.magn.y,
                     sizeof(data->sample.magn.y));
   case SENSOR_CHAN_MAGN_Z:
-    return read_i2c(dev, BNO055_MAG_DATA_Z_LSB_ADDR,
+    return read_i2c(dev, BNO055_MAGN_DATA_Z_LSB_ADDR,
                     (uint8_t *)&data->sample.magn.z,
                     sizeof(data->sample.magn.z));
   case SENSOR_CHAN_MAGN_XYZ:
-    return read_i2c(dev, BNO055_MAG_DATA_X_LSB_ADDR,
+    return read_i2c(dev, BNO055_MAGN_DATA_X_LSB_ADDR,
                     (uint8_t *)&data->sample.magn, sizeof(data->sample.magn));
   case SENSOR_CHAN_DIE_TEMP:
     return read_i2c_byte(dev, BNO055_TEMP_ADDR, (uint8_t *)&data->temp);
@@ -101,9 +120,11 @@ static int bno055_sample_fetch(const struct device *dev,
   return 0;
 }
 
-struct sensor_value get_sensor_value(const uint16_t value,
-                                     const int32_t divisor) {
-  uint32_t tmp = (uint64_t)value * 1000000 / divisor;
+static struct sensor_value get_sensor_value(const uint16_t value,
+                                            const int32_t divisor) {
+  int64_t val = (int16_t)sys_le16_to_cpu(value);
+
+  int32_t tmp = val * 1000000 / divisor;
   struct sensor_value result = {.val1 = tmp / 1000000, .val2 = tmp % 1000000};
   return result;
 }
@@ -146,6 +167,19 @@ static void get_magn_vec(const struct device *dev, const bno055_vec magn,
     *val = get_sensor_value(magn.components[i], BNO055_MAGN_LSB_PER_GS);
     ++val;
   }
+}
+
+static int set_operation_mode(const struct device *dev, const uint8_t mode) {
+  static uint8_t current_mode = 0;
+  int result = 0;
+  if (mode != current_mode) {
+    result = write_i2c_byte(dev, 0, BNO055_OPR_MODE_ADDR, mode);
+    if (result == 0) {
+      current_mode = mode;
+    }
+    k_sleep(K_MSEC(20));
+  }
+  return result;
 }
 
 static int bno055_channel_get(const struct device *dev,
@@ -252,7 +286,7 @@ int bno055_init(const struct device *dev) {
   }
 #endif
 
-  return 0;
+  return set_operation_mode(dev, operation_mode_accel_gyro_magn);
 }
 
 #if defined(CONFIG_BNO055_TRIGGER)
