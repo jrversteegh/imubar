@@ -456,7 +456,33 @@ int bno055_init(const struct device *dev) {
   }
 #endif
 
+#ifdef CONFIG_BNO055_OPERATION_MODE_ACCEL_ONLY
+  return set_operation_mode(dev, operation_mode_accel_only);
+#elif defined CONFIG_BNO055_OPERATION_MODE_MAGN_ONLY
+  return set_operation_mode(dev, operation_mode_magn_only);
+#elif defined CONFIG_BNO055_OPERATION_MODE_GYRO_ONLY
+  return set_operation_mode(dev, operation_mode_gyro_only);
+#elif defined CONFIG_BNO055_OPERATION_MODE_ACCEL_MAGN
+  return set_operation_mode(dev, operation_mode_accel_magn);
+#elif defined CONFIG_BNO055_OPERATION_MODE_ACCEL_GYRO
+  return set_operation_mode(dev, operation_mode_accel_gyro);
+#elif defined CONFIG_BNO055_OPERATION_MODE_GYRO_MAGN
+  return set_operation_mode(dev, operation_mode_gyro_magn);
+#elif defined CONFIG_BNO055_OPERATION_MODE_ACCEL_GYRO_MAGN
   return set_operation_mode(dev, operation_mode_accel_gyro_magn);
+#elif defined CONFIG_BNO055_OPERATION_MODE_IMU
+  return set_operation_mode(dev, operation_mode_imu);
+#elif defined CONFIG_BNO055_OPERATION_MODE_COMPASS
+  return set_operation_mode(dev, operation_mode_compass);
+#elif defined CONFIG_BNO055_OPERATION_MODE_M4G
+  return set_operation_mode(dev, operation_mode_m4g);
+#elif defined CONFIG_BNO055_OPERATION_MODE_NDOF_FMC_OFF
+  return set_operation_mode(dev, operation_mode_ndof_fmc_off);
+#elif defined CONFIG_BNO055_OPERATION_MODE_NDOF
+  return set_operation_mode(dev, operation_mode_ndof);
+#else
+#error "No BNO055 operation mode set"
+#endif
 }
 
 #if defined(CONFIG_BNO055_TRIGGER)
