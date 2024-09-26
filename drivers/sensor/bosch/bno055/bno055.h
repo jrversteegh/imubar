@@ -204,7 +204,8 @@
 #define BNO055_THREAD_PRIORITY 10
 #define BNO055_THREAD_STACKSIZE_UNIT 1024
 
-#define BNO055_ACCEL_LSB_PER_MS 100
+/* These converions are indepent of sensor range !? */
+#define BNO055_ACCEL_LSB_PER_MS2 100
 #define BNO055_GYRO_LSB_PER_RPS 900
 #define BNO055_MAGN_LSB_PER_GS 1600
 #define BNO055_TEMP_LSB_PER_C 1
@@ -276,7 +277,7 @@ union opr_mode {
 };
 
 enum opr_mode_operation_mode_values {
-  operation_mode_config_mode = 0,
+  operation_mode_config = 0,
   // Non-fusion modes
   operation_mode_accel_only = 1,
   operation_mode_magn_only = 2,
@@ -306,6 +307,43 @@ enum pwr_mode_power_mode_values {
   power_mode_low = 1,
   power_mode_suspend = 2
 };
+
+union unit_sel {
+  uint8_t byte;
+  struct {
+    uint8_t angle_order : 1;
+    uint8_t unused1 : 2;
+    uint8_t temperature : 1;
+    uint8_t unused2 : 1;
+    uint8_t euler_angles : 1;
+    uint8_t angular_rate : 1;
+    uint8_t acceleration : 1;
+  } config;
+};
+
+enum unit_sel_angle_order_values {
+  angle_order_windows = 0,
+  angle_order_android = 1
+};
+
+enum unit_sel_temperature_values {
+  temperature_celcius = 0,
+  temperature_fahrenheit = 1
+};
+
+enum unit_sel_euler_angles_values {
+  euler_angles_degrees = 0,
+  euler_angles_radians = 1
+};
+
+enum unit_sel_angular_rate_values {
+  angular_rate_dps = 0,
+  angular_rate_rps = 1
+};
+
+enum unit_sel_acceleration_values { acceleration_ms2 = 0, acceleration_mg = 1 };
+
+/* Axis mapping */
 
 union axi_map_config {
   uint8_t byte;
@@ -389,7 +427,7 @@ enum magn_config_power_mode_values {
   magn_config_power_mode_normal = 0,
   magn_config_power_mode_sleep = 1,
   magn_config_power_mode_suspend = 2,
-  magn_config_power_mode_force = 2
+  magn_config_power_mode_force = 3
 };
 
 enum magn_config_operation_mode_values {

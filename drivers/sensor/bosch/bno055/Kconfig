@@ -1,8 +1,266 @@
-menuconfig BNO055                                                                                    
-        bool "BNO055 9DOF sensor with built-in fusion"                                                
-        default y                                                                                    
-        depends on DT_HAS_BOSCH_BNO055_ENABLED                                                       
-        select I2C                                                                                   
-        help                                                                                         
-          Enable driver for BNO055 I2C-based triaxial accelerometer sensor                           
+menuconfig BNO055
+        bool "BNO055 9DOF sensor with built-in fusion"
+        default y
+        depends on DT_HAS_BOSCH_BNO055_ENABLED
+        select I2C
+        help
+          Enable driver for BNO055 I2C-based triaxial accelerometer sensor
           family.
+
+if BNO055
+
+choice
+        prompt "Trigger mode"
+        default BNO055_TRIGGER_NONE
+        help
+          Specify the type of triggering to be used by the driver.
+
+config BNO055_TRIGGER_NONE
+        bool "No trigger"
+
+config BNO055_TRIGGER_GLOBAL_THREAD
+        bool "Use global thread"
+        select BNO055_TRIGGER
+
+config BNO055_TRIGGER_OWN_THREAD
+        bool "Use own thread"
+        select BNO055_TRIGGER
+endchoice
+
+
+config BNO055_TRIGGER
+        bool
+
+config BNO055_THREAD_PRIORITY
+        int "Own thread priority"
+        depends on BNO055_TRIGGER_OWN_THREAD
+        default 10
+        help
+          The priority of the thread used for handling interrupts.
+
+config BNO055_THREAD_STACK_SIZE
+        int "Own thread stack size"
+        depends on BNO055_TRIGGER_OWN_THREAD
+        default 1024
+        help
+          The thread stack size.
+
+choice
+        prompt "Operation mode"
+        default BNO055_OPERATION_MODE_ACCEL_GYRO_MAGN
+        help
+          Specify operation mode and enabled sensors
+
+config BNO055_OPERATION_MODE_ACCEL_ONLY
+        bool "Accelerometer only"
+
+config BNO055_OPERATION_MODE_MAGN_ONLY
+        bool "Magnetometer only"
+
+config BNO055_OPERATION_MODE_GYRO_ONLY
+        bool "Magnetometer only"
+
+config BNO055_OPERATION_MODE_ACCEL_MAGN
+        bool "Accelerometer and magnetometer"
+
+config BNO055_OPERATION_MODE_ACCEL_GYRO
+        bool "Accelerometer and gyro"
+
+config BNO055_OPERATION_MODE_GYRO_MAGN
+        bool "Gyro and magnetometer"
+
+config BNO055_OPERATION_MODE_ACCEL_GYRO_MAGN
+        bool "All sensors"
+
+config BNO055_OPERATION_MODE_IMU
+        bool "Fusion IMU"
+
+config BNO055_OPERATION_MODE_COMPASS
+        bool "Fusion Compass"
+
+config BNO055_OPERATION_MODE_M4G
+        bool "Fusion M4G"
+
+config BNO055_OPERATION_MODE_NDOF_FMC_OFF
+        bool "Fusion NDOF FMC off"
+
+config BNO055_OPERATION_MODE_NDOF
+        bool "Fusion NDOF"
+
+endchoice
+
+choice
+        prompt "Accelerometer range setting"
+        depends on  BNO055_OPERATION_MODE_ACCEL_ONLY || BNO055_OPERATION_MODE_ACCEL_MAGN || BNO055_OPERATION_MODE_ACCEL_GYRO || BNO055_OPERATION_MODE_ACCEL_GYRO_MAGN
+        default BNO055_ACCEL_RANGE_4G
+
+
+config BNO055_ACCEL_RANGE_2G
+        bool "2G"
+
+config BNO055_ACCEL_RANGE_4G
+        bool "4G"
+
+config BNO055_ACCEL_RANGE_8G
+        bool "8G"
+
+config BNO055_ACCEL_RANGE_16G
+        bool "16G"
+
+endchoice
+
+choice
+        prompt "Accelerometer bandwidth"
+        depends on  BNO055_OPERATION_MODE_ACCEL_ONLY || BNO055_OPERATION_MODE_ACCEL_MAGN || BNO055_OPERATION_MODE_ACCEL_GYRO || BNO055_OPERATION_MODE_ACCEL_GYRO_MAGN
+        default BNO055_ACCEL_BANDWIDTH_125HZ
+
+
+config BNO055_ACCEL_BANDWIDTH_8HZ
+        bool "8 Hz"
+
+config BNO055_ACCEL_BANDWIDTH_16HZ
+        bool "16 Hz"
+
+config BNO055_ACCEL_BANDWIDTH_31HZ
+        bool "31 Hz"
+
+config BNO055_ACCEL_BANDWIDTH_63HZ
+        bool "62 Hz"
+
+config BNO055_ACCEL_BANDWIDTH_125HZ
+        bool "125 Hz"
+
+config BNO055_ACCEL_BANDWIDTH_250HZ
+        bool "250 Hz"
+
+config BNO055_ACCEL_BANDWIDTH_500HZ
+        bool "500 Hz"
+
+config BNO055_ACCEL_BANDWIDTH_1000HZ
+        bool "1000 Hz"
+
+endchoice
+
+choice
+        prompt "Gyro range"
+        depends on  BNO055_OPERATION_MODE_GYRO_ONLY || BNO055_OPERATION_MODE_GYRO_MAGN || BNO055_OPERATION_MODE_ACCEL_GYRO || BNO055_OPERATION_MODE_ACCEL_GYRO_MAGN
+        default BNO055_GYRO_RANGE_500DPS
+
+config BNO055_GYRO_RANGE_125DPS
+        bool "125 dps"
+
+config BNO055_GYRO_RANGE_250DPS
+        bool "250 dps"
+
+config BNO055_GYRO_RANGE_500DPS
+        bool "500 dps"
+
+config BNO055_GYRO_RANGE_1000DPS
+        bool "1000 dps"
+
+config BNO055_GYRO_RANGE_2000DPS
+        bool "2000 dps"
+
+endchoice
+
+choice
+        prompt "Gyro bandwidth"
+        depends on  BNO055_OPERATION_MODE_GYRO_ONLY || BNO055_OPERATION_MODE_GYRO_MAGN || BNO055_OPERATION_MODE_ACCEL_GYRO || BNO055_OPERATION_MODE_ACCEL_GYRO_MAGN
+        default BNO055_GYRO_BANDWIDTH_116HZ
+
+config BNO055_GYRO_BANDWIDTH_12HZ
+        bool "12 Hz"
+
+config BNO055_GYRO_BANDWIDTH_23HZ
+        bool "23 Hz"
+
+config BNO055_GYRO_BANDWIDTH_32HZ
+        bool "32 Hz"
+
+config BNO055_GYRO_BANDWIDTH_47HZ
+        bool "47 Hz"
+
+config BNO055_GYRO_BANDWIDTH_64HZ
+        bool "64 Hz"
+
+config BNO055_GYRO_BANDWIDTH_116HZ
+        bool "116 Hz"
+
+config BNO055_GYRO_BANDWIDTH_230HZ
+        bool "230 Hz"
+
+config BNO055_GYRO_BANDWIDTH_523HZ
+        bool "523 Hz"
+
+endchoice
+
+choice
+        prompt "Magnetometer operation mode"
+        depends on  BNO055_OPERATION_MODE_MAGN_ONLY || BNO055_OPERATION_MODE_GYRO_MAGN || BNO055_OPERATION_MODE_ACCEL_MAGN || BNO055_OPERATION_MODE_ACCEL_GYRO_MAGN
+        default BNO055_MAGN_OPERATION_MODE_REGULAR
+
+config BNO055_MAGN_OPERATION_MODE_LOW_POWER
+        bool "Low power"
+
+config BNO055_MAGN_OPERATION_MODE_REGULAR
+        bool "Regular"
+
+config BNO055_MAGN_OPERATION_MODE_ENHANCED_REGULAR
+        bool "Enhanced regular"
+
+config BNO055_MAGN_OPERATION_MODE_HIGH_ACCURACY
+        bool "High accuracy"
+
+endchoice
+
+choice
+        prompt "Magnetometer power mode"
+        depends on  BNO055_OPERATION_MODE_MAGN_ONLY || BNO055_OPERATION_MODE_GYRO_MAGN || BNO055_OPERATION_MODE_ACCEL_MAGN || BNO055_OPERATION_MODE_ACCEL_GYRO_MAGN
+        default BNO055_MAGN_POWER_MODE_NORMAL
+
+config BNO055_MAGN_POWER_MODE_NORMAL
+        bool "Normal"
+
+config BNO055_MAGN_POWER_MODE_SLEEP
+        bool "Sleep"
+
+config BNO055_MAGN_POWER_MODE_SUSPEND
+        bool "Suspend"
+
+config BNO055_MAGN_POWER_MODE_FORCE_MODE
+        bool "Force mode"
+
+endchoice
+
+choice
+        prompt "Magnetometer data rate"
+        depends on  BNO055_OPERATION_MODE_MAGN_ONLY || BNO055_OPERATION_MODE_GYRO_MAGN || BNO055_OPERATION_MODE_ACCEL_MAGN || BNO055_OPERATION_MODE_ACCEL_GYRO_MAGN
+        default BNO055_MAGN_DATA_RATE_10HZ
+
+config BNO055_MAGN_DATA_RATE_2HZ
+        bool "2 Hz"
+
+config BNO055_MAGN_DATA_RATE_6HZ
+        bool "6 Hz"
+
+config BNO055_MAGN_DATA_RATE_8HZ
+        bool "8 Hz"
+
+config BNO055_MAGN_DATA_RATE_10HZ
+        bool "10 Hz"
+
+config BNO055_MAGN_DATA_RATE_15HZ
+        bool "15 Hz"
+
+config BNO055_MAGN_DATA_RATE_20HZ
+        bool "20 Hz"
+
+config BNO055_MAGN_DATA_RATE_25HZ
+        bool "25 Hz"
+
+config BNO055_MAGN_DATA_RATE_30HZ
+        bool "30 Hz"
+
+endchoice
+
+endif  # if BNO055

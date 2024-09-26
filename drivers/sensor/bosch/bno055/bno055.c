@@ -131,14 +131,14 @@ static struct sensor_value get_sensor_value(const uint16_t value,
 
 static void get_acceleration(const struct device *dev, const uint16_t accel,
                              struct sensor_value *val) {
-  *val = get_sensor_value(accel, BNO055_ACCEL_LSB_PER_MS);
+  *val = get_sensor_value(accel, BNO055_ACCEL_LSB_PER_MS2);
 }
 
 static void get_acceleration_vec(const struct device *dev,
                                  const bno055_vec accel,
                                  struct sensor_value *val) {
   for (int i = 0; i < 3; ++i) {
-    *val = get_sensor_value(accel.components[i], BNO055_ACCEL_LSB_PER_MS);
+    *val = get_sensor_value(accel.components[i], BNO055_ACCEL_LSB_PER_MS2);
     ++val;
   }
 }
@@ -180,6 +180,155 @@ static int set_operation_mode(const struct device *dev, const uint8_t mode) {
     k_sleep(K_MSEC(20));
   }
   return result;
+}
+
+static int set_unit_selection(const struct device *dev) {
+  int result = 0;
+  if ((result = set_operation_mode(dev, operation_mode_config)) != 0) {
+    return result;
+  };
+  union unit_sel usel = {.config = {.angle_order = angle_order_android,
+                                    .temperature = temperature_celcius,
+                                    .euler_angles = euler_angles_radians,
+                                    .angular_rate = angular_rate_rps,
+                                    .acceleration = acceleration_ms2}};
+  return write_i2c_byte(dev, 0, BNO055_UNIT_SEL_ADDR, usel.byte);
+}
+
+static int set_accel_config(const struct device *dev) {
+  int result = 0;
+  if ((result = set_operation_mode(dev, operation_mode_config)) != 0) {
+    return result;
+  };
+  union accel_config a_conf = {
+      .config = {.accel_power_mode = accel_config_power_mode_normal,
+#ifdef CONFIG_BNO055_ACCEL_BANDWIDTH_8HZ
+                 .accel_bandwidth = accel_config_bandwidth_8Hz,
+#elif defined CONFIG_BNO055_ACCEL_BANDWIDTH_16HZ
+                 .accel_bandwidth = accel_config_bandwidth_16Hz,
+#elif defined CONFIG_BNO055_ACCEL_BANDWIDTH_31HZ
+                 .accel_bandwidth = accel_config_bandwidth_31Hz,
+#elif defined CONFIG_BNO055_ACCEL_BANDWIDTH_63HZ
+                 .accel_bandwidth = accel_config_bandwidth_63Hz,
+#elif defined CONFIG_BNO055_ACCEL_BANDWIDTH_125HZ
+      .accel_bandwidth = accel_config_bandwidth_125Hz,
+#elif defined CONFIG_BNO055_ACCEL_BANDWIDTH_250HZ
+      .accel_bandwidth = accel_config_bandwidth_250Hz,
+#elif defined CONFIG_BNO055_ACCEL_BANDWIDTH_500HZ
+      .accel_bandwidth = accel_config_bandwidth_500Hz,
+#elif defined CONFIG_BNO055_ACCEL_BANDWIDTH_1000HZ
+      .accel_bandwidth = accel_config_bandwidth_1000Hz,
+#else
+#error "No accel bandwidth selected"
+#endif
+#ifdef CONFIG_BNO055_ACCEL_RANGE_2G
+                 .accel_range = accel_config_range_2g
+#elif defined CONFIG_BNO055_ACCEL_RANGE_4G
+                 .accel_range = accel_config_range_4g
+#elif defined CONFIG_BNO055_ACCEL_RANGE_8G
+                 .accel_range = accel_config_range_8g
+#elif defined CONFIG_BNO055_ACCEL_RANGE_16G
+                 .accel_range = accel_config_range_16g
+#else
+#error "No accel range selected"
+#endif
+      }};
+  return write_i2c_byte(dev, 1, BNO055_ACCEL_CONFIG_ADDR, a_conf.byte);
+}
+
+static int set_gyro_config(const struct device *dev) {
+  int result = 0;
+  if ((result = set_operation_mode(dev, operation_mode_config)) != 0) {
+    return result;
+  };
+  union gyro_config g_conf = {.config = {
+#ifdef CONFIG_BNO055_GYRO_BANDWIDTH_12HZ
+                                  .gyro_bandwidth = gyro_mode_bandwidth_12Hz,
+#elif defined CONFIG_BNO055_GYRO_BANDWIDTH_23HZ
+                                  .gyro_bandwidth = gyro_mode_bandwidth_23Hz,
+#elif defined CONFIG_BNO055_GYRO_BANDWIDTH_32HZ
+                                  .gyro_bandwidth = gyro_mode_bandwidth_32Hz,
+#elif defined CONFIG_BNO055_GYRO_BANDWIDTH_47HZ
+                                  .gyro_bandwidth = gyro_mode_bandwidth_47Hz,
+#elif defined CONFIG_BNO055_GYRO_BANDWIDTH_64HZ
+                                  .gyro_bandwidth = gyro_mode_bandwidth_64Hz,
+#elif defined CONFIG_BNO055_GYRO_BANDWIDTH_116HZ
+                                  .gyro_bandwidth = gyro_mode_bandwidth_116Hz,
+#elif defined CONFIG_BNO055_GYRO_BANDWIDTH_230HZ
+                                  .gyro_bandwidth = gyro_mode_bandwidth_230Hz,
+#elif defined CONFIG_BNO055_GYRO_BANDWIDTH_523HZ
+                                  .gyro_bandwidth = gyro_mode_bandwidth_523Hz,
+#else
+#error "No gyro bandwidth selected"
+#endif
+
+#ifdef CONFIG_BNO055_GYRO_RANGE_125DPS
+                                  .gyro_range = gyro_mode_range_125dps
+#elif defined CONFIG_BNO055_GYRO_RANGE_250DPS
+                                  .gyro_range = gyro_mode_range_250dps
+#elif defined CONFIG_BNO055_GYRO_RANGE_500DPS
+                                  .gyro_range = gyro_mode_range_500dps
+#elif defined CONFIG_BNO055_GYRO_RANGE_1000DPS
+                                  .gyro_range = gyro_mode_range_1000dps
+#elif defined CONFIG_BNO055_GYRO_RANGE_2000DPS
+                                  .gyro_range = gyro_mode_range_2000dps
+#else
+#error "No gyro range selected"
+#endif
+                              }};
+  return write_i2c_byte(dev, 1, BNO055_GYRO_CONFIG_ADDR, g_conf.byte);
+}
+
+static int set_magn_config(const struct device *dev) {
+  int result = 0;
+  if ((result = set_operation_mode(dev, operation_mode_config)) != 0) {
+    return result;
+  };
+  union magn_config m_conf = {
+      .config = {
+#ifdef CONFIG_BNO055_MAGN_POWER_MODE_NORMAL
+          .magn_power_mode = magn_config_power_mode_normal,
+#elif defined CONFIG_BNO055_MAGN_POWER_MODE_SLEEP
+          .magn_power_mode = magn_config_power_mode_sleep,
+#elif defined CONFIG_BNO055_MAGN_POWER_MODE_SUSPEND
+          .magn_power_mode = magn_config_power_mode_suspend,
+#elif defined CONFIG_BNO055_MAGN_POWER_MODE_FORCE_MODE
+          .magn_power_mode = magn_config_power_mode_force,
+#else
+#error "Magn power mode not defined"
+#endif
+#ifdef CONFIG_BNO055_MAGN_OPERATION_MODE_LOW_POWER
+          .magn_operation_mode = magn_config_operation_low_power,
+#elif defined CONFIG_BNO055_MAGN_OPERATION_MODE_REGULAR
+          .magn_operation_mode = magn_config_operation_regular,
+#elif defined CONFIG_BNO055_MAGN_OPERATION_MODE_ENHANCED_REGULAR
+          .magn_operation_mode = magn_config_operation_enhanced,
+#elif defined CONFIG_BNO055_MAGN_OPERATION_MODE_HIGH_ACCURACY
+          .magn_operation_mode = magn_config_operation_high_accuracy,
+#else
+#error "Magn operation mode not defined"
+#endif
+#ifdef CONFIG_BNO055_MAGN_DATA_RATE_2HZ
+          .magn_data_rate = magn_config_data_rate_2Hz
+#elif defined CONFIG_BNO055_MAGN_DATA_RATE_6HZ
+          .magn_data_rate = magn_config_data_rate_6Hz
+#elif defined CONFIG_BNO055_MAGN_DATA_RATE_8HZ
+          .magn_data_rate = magn_config_data_rate_8Hz,
+#elif defined CONFIG_BNO055_MAGN_DATA_RATE_10HZ
+          .magn_data_rate = magn_config_data_rate_10Hz
+#elif defined CONFIG_BNO055_MAGN_DATA_RATE_15HZ
+          .magn_data_rate = magn_config_data_rate_15Hz
+#elif defined CONFIG_BNO055_MAGN_DATA_RATE_20HZ
+          .magn_data_rate = magn_config_data_rate_20Hz
+#elif defined CONFIG_BNO055_MAGN_DATA_RATE_25HZ
+          .magn_data_rate = magn_config_data_rate_25Hz
+#elif defined CONFIG_BNO055_MAGN_DATA_RATE_30HZ
+          .magn_data_rate = magn_config_data_rate_30Hz
+#else
+#error "Magn data rate not defined"
+#endif
+      }};
+  return write_i2c_byte(dev, 1, BNO055_MAGN_CONFIG_ADDR, m_conf.byte);
 }
 
 static int bno055_channel_get(const struct device *dev,
@@ -260,6 +409,7 @@ static const struct sensor_driver_api bno055_driver_api = {
 int bno055_init(const struct device *dev) {
   const struct bno055_config *config = dev->config;
   uint8_t id = 0U;
+  int result = 0;
 
   if (!device_is_ready(config->i2c.bus)) {
     LOG_ERR("I2C bus device not ready");
@@ -275,6 +425,26 @@ int bno055_init(const struct device *dev) {
   if (id != BNO055_CHIP_ID) {
     LOG_DBG("Unexpected chip id (%x)", id);
     return -EIO;
+  }
+
+  if ((result = set_unit_selection(dev)) != 0) {
+    LOG_DBG("Failed to set unit selection");
+    return result;
+  }
+
+  if ((result = set_accel_config(dev)) != 0) {
+    LOG_DBG("Failed to accelerometer configuration");
+    return result;
+  }
+
+  if ((result = set_gyro_config(dev)) != 0) {
+    LOG_DBG("Failed to configure gyro");
+    return result;
+  }
+
+  if ((result = set_magn_config(dev)) != 0) {
+    LOG_DBG("Failed to configure magnetometer");
+    return result;
   }
 
 #ifdef CONFIG_BNO055_TRIGGER
