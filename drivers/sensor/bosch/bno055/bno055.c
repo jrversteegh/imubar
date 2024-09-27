@@ -171,13 +171,15 @@ static void get_magn_vec(const struct device *dev, const bno055_vec magn,
 
 static int set_operation_mode(const struct device *dev, const uint8_t mode) {
   static uint8_t current_mode = 0;
+  static bool initialized = false;
   int result = 0;
-  if (mode != current_mode) {
+  if (mode != current_mode || !initialized) {
     result = write_i2c_byte(dev, 0, BNO055_OPR_MODE_ADDR, mode);
     if (result == 0) {
       current_mode = mode;
+      initialized = true;
     }
-    k_sleep(K_MSEC(20));
+    k_sleep(K_MSEC(25));
   }
   return result;
 }
@@ -411,6 +413,9 @@ int bno055_init(const struct device *dev) {
   uint8_t id = 0U;
   int result = 0;
 
+  /* Sensor can take time to boot up wait a second before initializing */
+  k_sleep(K_MSEC(1000));
+
   if (!device_is_ready(config->i2c.bus)) {
     LOG_ERR("I2C bus device not ready");
     return -ENODEV;
@@ -426,6 +431,8 @@ int bno055_init(const struct device *dev) {
     LOG_DBG("Unexpected chip id (%x)", id);
     return -EIO;
   }
+
+  set_operation_mode(dev, operation_mode_config);
 
   if ((result = set_unit_selection(dev)) != 0) {
     LOG_DBG("Failed to set unit selection");
