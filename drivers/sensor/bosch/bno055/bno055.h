@@ -271,8 +271,8 @@ int bno055_init_interrupt(const struct device *dev);
 union opr_mode {
   uint8_t byte;
   struct {
-    uint8_t unused : 4;
     uint8_t operation_mode : 4;
+    uint8_t unused : 4;
   } config;
 };
 
@@ -297,8 +297,8 @@ enum opr_mode_operation_mode_values {
 union pwr_mode {
   uint8_t byte;
   struct {
-    uint8_t unused : 6;
     uint8_t power_mode : 2;
+    uint8_t unused : 6;
   } config;
 };
 
@@ -311,13 +311,13 @@ enum pwr_mode_power_mode_values {
 union unit_sel {
   uint8_t byte;
   struct {
-    uint8_t angle_order : 1;
-    uint8_t unused1 : 2;
-    uint8_t temperature : 1;
-    uint8_t unused2 : 1;
-    uint8_t euler_angles : 1;
-    uint8_t angular_rate : 1;
     uint8_t acceleration : 1;
+    uint8_t angular_rate : 1;
+    uint8_t euler_angles : 1;
+    uint8_t unused2 : 1;
+    uint8_t temperature : 1;
+    uint8_t unused1 : 2;
+    uint8_t angle_order : 1;
   } config;
 };
 
@@ -348,10 +348,10 @@ enum unit_sel_acceleration_values { acceleration_ms2 = 0, acceleration_mg = 1 };
 union axi_map_config {
   uint8_t byte;
   struct {
-    uint8_t unused : 2;
-    uint8_t z_axis : 2;
-    uint8_t y_axis : 2;
     uint8_t x_axis : 2;
+    uint8_t y_axis : 2;
+    uint8_t z_axis : 2;
+    uint8_t unused : 2;
   } config;
 };
 
@@ -364,10 +364,10 @@ enum axis_map_values {
 union axi_map_sign {
   uint8_t byte;
   struct {
-    uint8_t unused : 5;
-    uint8_t z_axis_sign : 1;
-    uint8_t y_axis_sign : 1;
     uint8_t x_axis_sign : 1;
+    uint8_t y_axis_sign : 1;
+    uint8_t z_axis_sign : 1;
+    uint8_t unused : 5;
   } config;
 };
 
@@ -378,10 +378,9 @@ enum axis_map_sign_values { axis_sign_positive = 0, axis_sign_negative = 1 };
 union accel_config {
   uint8_t byte;
   struct {
-    uint8_t accel_power_mode : 3;
-    uint8_t accel_bandwidth : 3;
     uint8_t accel_range : 2;
-
+    uint8_t accel_bandwidth : 3;
+    uint8_t accel_power_mode : 3;
   } config;
 };
 
@@ -416,10 +415,10 @@ enum accel_config_range_values {
 union magn_config {
   uint8_t byte;
   struct {
-    uint8_t unused : 1;
-    uint8_t magn_power_mode : 2;
-    uint8_t magn_operation_mode : 2;
     uint8_t magn_data_rate : 3;
+    uint8_t magn_operation_mode : 2;
+    uint8_t magn_power_mode : 2;
+    uint8_t unused : 1;
   } config;
 };
 
@@ -453,9 +452,9 @@ enum magn_config_data_rate {
 union gyro_config {
   uint8_t byte;
   struct {
-    uint8_t unused : 2;
-    uint8_t gyro_bandwidth : 3;
     uint8_t gyro_range : 3;
+    uint8_t gyro_bandwidth : 3;
+    uint8_t unused : 2;
   } config;
 };
 
@@ -481,8 +480,8 @@ enum gyro_config_range_values {
 union gyro_mode_config {
   uint8_t byte;
   struct {
-    uint8_t unused : 5;
     uint8_t gyro_power_mode : 3;
+    uint8_t unused : 5;
   } config;
 };
 
