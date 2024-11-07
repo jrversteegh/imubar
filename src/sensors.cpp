@@ -7,12 +7,12 @@
 #include <zephyr/drivers/sensor.h>
 #include <zephyr/kernel.h>
 #include <zephyr/logging/log.h>
-LOG_MODULE_DECLARE(imubar);
 
 #include "errors.h"
 #include "geometry.h"
 #include "sensors.h"
 
+LOG_MODULE_DECLARE(imubar);
 
 #define MPU9250_0 DT_NODELABEL(mpu9250_0)
 #define FXOS8700_0 DT_NODELABEL(fxos8700_0)
@@ -50,13 +50,20 @@ std::vector<device const *> get_sensors() {
   };
 }
 
-void fetch_sensor(device const *sensor, sensor_channel channel) {
+int fetch_sensor(device const *sensor, sensor_channel channel) {
   if (sensor == nullptr)
-    return;
+    return 0;
   auto ret = sensor_sample_fetch(sensor);
-  if (ret < 0 && ret != -EBADMSG) {
-    error(2, "Sensor fetch error: %d", ret);
+  if (ret < 0) {
+    switch (ret) {
+    case -EBADMSG:
+      LOG_ERR("I2C communication error: %d", ret);
+      break;
+    default:
+      LOG_ERR("Sensor fetch error: %d", ret);
+    }
   }
+  return ret;
 }
 
 Vector3 read_sensor(device const *sensor, sensor_channel channel) {

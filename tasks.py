@@ -69,6 +69,7 @@ def build(ctx):
     for cmd in ("west build -p auto .",):
         ctx.run(cmd, echo=True)
 
+
 @task
 def rebuild(ctx):
     """Build"""

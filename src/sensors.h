@@ -18,8 +18,8 @@ struct Vector3 {
 
 extern void initialize_sensors();
 extern std::vector<device const *> get_sensors();
-extern void fetch_sensor(device const *sensor,
-                         sensor_channel channel = SENSOR_CHAN_ALL);
+extern int fetch_sensor(device const *sensor,
+                        sensor_channel channel = SENSOR_CHAN_ALL);
 extern Vector3 read_sensor(device const *sensor, sensor_channel channel);
 
 struct Imu {
@@ -41,16 +41,28 @@ struct Imu {
   }
 
   int64_t fetch() {
-    fetch_sensor(accel_device_, accel_channel_);
+    fetch_imu_sensor(accel_device_, accel_channel_);
     if (fetch_gyro_) {
-      fetch_sensor(gyro_device_, gyro_channel_);
+      fetch_imu_sensor(gyro_device_, gyro_channel_);
     }
     if (fetch_magn_ && (fetch_counter_ % magn_rate_divisor_ == 0)) {
-      fetch_sensor(magn_device_, magn_channel_);
+      fetch_imu_sensor(magn_device_, magn_channel_);
     }
     time_ = k_uptime_get();
     ++fetch_counter_;
     return time_;
+  }
+
+  void fetch_imu_sensor(device const *sensor, sensor_channel channel) {
+    if (int ret = fetch_sensor(sensor, channel) < 0) {
+      ++error_counter_;
+      if (error_counter_ > 10) {
+        error(2, "Permanent failure fetching from device: %s, code %d",
+              name_.c_str(), ret);
+      }
+    } else {
+      error_counter_ = 0;
+    }
   }
 
   std::string get_name() { return name_; }
@@ -82,6 +94,7 @@ private:
   sensor_channel gyro_channel_ = SENSOR_CHAN_ALL;
   sensor_channel magn_channel_ = SENSOR_CHAN_ALL;
   int fetch_counter_ = 0;
+  int error_counter_ = 0;
 };
 
 extern std::vector<std::unique_ptr<Imu>> &get_imus();
