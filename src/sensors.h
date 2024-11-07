@@ -5,10 +5,7 @@
 #include <string>
 #include <vector>
 
-extern "C" {
-
 #include <zephyr/device.h>
-}
 
 #include "functions.h"
 #include "geometry.h"
@@ -27,19 +24,32 @@ extern Vector3 read_sensor(device const *sensor, sensor_channel channel);
 
 struct Imu {
   Imu(std::string name, device const *const accel_device,
-      device const *const gyro_device, device const *const magn_device)
+      device const *const gyro_device, device const *const magn_device,
+      int magn_rate_divisor = 1)
       : name_(name), accel_device_(accel_device), gyro_device_(gyro_device),
-        magn_device_(magn_device) {}
+        magn_device_(magn_device), magn_rate_divisor_(magn_rate_divisor),
+        fetch_gyro_(gyro_device != nullptr && gyro_device != accel_device),
+        fetch_magn_(magn_device != nullptr && magn_device != accel_device &&
+                    magn_device != gyro_device) {
+    if (magn_rate_divisor != 1 && !fetch_magn_) {
+      accel_channel_ = SENSOR_CHAN_ACCEL_XYZ;
+      gyro_channel_ = SENSOR_CHAN_GYRO_XYZ;
+      magn_channel_ = SENSOR_CHAN_MAGN_XYZ;
+      fetch_gyro_ = true;
+      fetch_magn_ = true;
+    }
+  }
 
   int64_t fetch() {
-    fetch_sensor(accel_device_);
-    if (gyro_device_ != accel_device_) {
-      fetch_sensor(gyro_device_);
+    fetch_sensor(accel_device_, accel_channel_);
+    if (fetch_gyro_) {
+      fetch_sensor(gyro_device_, gyro_channel_);
     }
-    if (magn_device_ != accel_device_ && magn_device_ != gyro_device_) {
-      fetch_sensor(magn_device_);
+    if (fetch_magn_ && (fetch_counter_ % magn_rate_divisor_ == 0)) {
+      fetch_sensor(magn_device_, magn_channel_);
     }
     time_ = k_uptime_get();
+    ++fetch_counter_;
     return time_;
   }
 
@@ -64,7 +74,14 @@ private:
   device const *const accel_device_ = nullptr;
   device const *const gyro_device_ = nullptr;
   device const *const magn_device_ = nullptr;
+  int magn_rate_divisor_ = 1;
+  bool fetch_gyro_ = false;
+  bool fetch_magn_ = false;
   int64_t time_ = 0;
+  sensor_channel accel_channel_ = SENSOR_CHAN_ALL;
+  sensor_channel gyro_channel_ = SENSOR_CHAN_ALL;
+  sensor_channel magn_channel_ = SENSOR_CHAN_ALL;
+  int fetch_counter_ = 0;
 };
 
 extern std::vector<std::unique_ptr<Imu>> &get_imus();

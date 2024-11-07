@@ -6,10 +6,13 @@
 #include <zephyr/drivers/gpio.h>
 #include <zephyr/drivers/sensor.h>
 #include <zephyr/kernel.h>
+#include <zephyr/logging/log.h>
+LOG_MODULE_DECLARE(imubar);
 
 #include "errors.h"
 #include "geometry.h"
 #include "sensors.h"
+
 
 #define MPU9250_0 DT_NODELABEL(mpu9250_0)
 #define FXOS8700_0 DT_NODELABEL(fxos8700_0)
@@ -101,9 +104,9 @@ std::vector<std::unique_ptr<Imu>> &get_imus() {
     imus.push_back(std::make_unique<Imu>("adafruit_nxp_fx", imu_fxos8700,
                                          imu_fxas21002, imu_fxos8700));
     imus.push_back(std::make_unique<Imu>("sparkfun_mpu9250", imu_mpu9250,
-                                         imu_mpu9250, imu_mpu9250));
+                                         imu_mpu9250, imu_mpu9250, 12));
     imus.push_back(std::make_unique<Imu>("adafruit_lsm_l3", imu_lsm303accel,
-                                         nullptr, imu_lsm303magn));
+                                         nullptr, imu_lsm303magn, 10));
     imus.push_back(std::make_unique<Imu>("adafruit_bno055", imu_bno055,
                                          imu_bno055, imu_bno055));
   }

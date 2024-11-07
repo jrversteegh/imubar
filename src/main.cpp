@@ -4,14 +4,14 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-extern "C" {
 
 #include <zephyr/device.h>
 #include <zephyr/drivers/gpio.h>
 #include <zephyr/drivers/i2c.h>
 #include <zephyr/drivers/sensor.h>
 #include <zephyr/kernel.h>
-}
+#include <zephyr/logging/log.h>
+LOG_MODULE_REGISTER(imubar);
 
 #include "errors.h"
 #include "sensors.h"
@@ -23,7 +23,7 @@ static const struct gpio_dt_spec led = GPIO_DT_SPEC_GET(DT_ALIAS(led0), gpios);
 static void button_pressed(const device *dev, gpio_callback *cb,
                            uint32_t pins) {
   if (pins & BIT(sw0_gpio.pin)) {
-    printk("Button pressed\n");
+    LOG_INF("Button pressed");
   }
 }
 
@@ -73,12 +73,12 @@ static void initialize_buttons() {
 
 static void initialize_led() {
   if (!gpio_is_ready_dt(&led)) {
-    printk("GPIO not ready.\n");
+    LOG_ERR("GPIO not ready.");
   }
 
   int ret = gpio_pin_configure_dt(&led, GPIO_OUTPUT_ACTIVE);
   if (ret < 0) {
-    printk("Failed to initialize LED.\n");
+    LOG_ERR("Failed to initialize LED.");
   }
 }
 
@@ -86,18 +86,18 @@ static void toggle_led() {
   static bool led_state = true;
   int ret = gpio_pin_toggle_dt(&led);
   if (ret < 0) {
-    printk("Failed to toggle LED.\n");
+    LOG_ERR("Failed to toggle LED.");
   }
   led_state = !led_state;
 }
 
 int main(void) {
-  printk("IMUBar initializing...\n");
+  LOG_INF("IMUBar initializing...");
   initialize_led();
   initialize_buttons();
   initialize_sensors();
 
-  printk("IMUBar running...\n");
+  LOG_INF("IMUBar running...");
   int i = 0;
   while (true) {
     if (gpio_pin_get_dt(&sw0_gpio)) {
@@ -111,6 +111,6 @@ int main(void) {
     ++i;
   }
 
-  printk("IMUBar done.\n");
+  LOG_INF("IMUBar done.");
   return 0;
 }
