@@ -1,0 +1,9 @@
+** Booting Zephyr OS build v3.7.0-175-g064fcfca6b44 ***
+[00:00:00.002,000] <inf> fp_perf: Starting FP Perf...
+[00:00:00.029,000] <inf> fp_perf: Running ADDMUL
+[00:01:06.868,000] <inf> fp_perf: Result: 4.194304e+06 in 66839ms
+[00:01:06.872,000] <inf> fp_perf: Running ROOT
+[00:01:18.722,000] <inf> fp_perf: Result: 6.989218e+05 in 11850ms
+[00:01:18.726,000] <inf> fp_perf: Running TRIG
+[00:02:39.599,000] <inf> fp_perf: Result: 1.364208e+06 in 80873ms
+[00:02:39.603,000] <inf> fp_perf: FP Perf done.
