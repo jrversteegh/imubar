@@ -98,6 +98,8 @@ int main(void) {
 
   LOG_INF("IMUBar running...");
   int i = 0;
+  auto time = k_uptime_get();
+  int64_t sum_rem = 0;
   while (true) {
     if (gpio_pin_get_dt(&sw0_gpio)) {
     }
@@ -105,6 +107,18 @@ int main(void) {
 
     if (i % 100 == 0) {
       toggle_led();
+    }
+
+    time += 10;
+    auto rem = time - k_uptime_get();
+    if (rem > 0) {
+      k_sleep(K_MSEC(rem));
+    }
+    sum_rem += rem;
+    if (i % 1000 == 0) {
+      auto duty_cycle = 100 - sum_rem / 100;
+      printk("Duty cycle: %lld%%\n\n", duty_cycle);
+      sum_rem = 0;
     }
 
     ++i;
