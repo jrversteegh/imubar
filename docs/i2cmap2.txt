@@ -1,4 +1,0 @@
-Data read from device 0x1E: 0x10 0x20: 10DOF HMC5882L Magn
-Data read from device 0x40: 0x03 0x14: 10DOF BMA180 Accel
-Data read from device 0x68: 0x68 0xFE: 10DOF ITG3205 Gyro
-Data read from device 0x77: 0x00 0x00: 10DOF BMP085 Pressure

@@ -19,3 +19,28 @@ root@navigator:~# i2cdetect -y 0
 0: 6a: SPARKFUN SEN13762 - LSM9DS1: accel/gyro
 0  6b: ADAFRUIT 10DOF - L3GD20H: gyro
 0: 77: ADAFRUIT 10DOF - BMP180: press/temp
+
+1: 1E: NAMELESS 10DOF - HMC5882L: magn
+1: 40: NAMELESS 10DOF - BMA180: accel
+1: 68: NAMELESS 10DOF - ITG3205: gyro
+1: 69: PIMORONI 9DOF - ICM20948: accel/gyro/magn
+1: 77: NAMELESS 10DOF - BMP085: press
+
+Scanning I2C addresses...
+I2C 1 read from device 0x19: 0x00 0x00
+I2C 1 read from device 0x1C: 0x00 0x00
+I2C 1 read from device 0x1E: 0x10 0x20
+I2C 1 read from device 0x1F: 0x00 0x1C
+I2C 1 read from device 0x21: 0x00 0x08
+I2C 1 read from device 0x28: 0xA0 0xFB
+I2C 1 read from device 0x68: 0xC5 0xD0
+I2C 1 read from device 0x6A: 0x00 0x00
+I2C 1 read from device 0x6B: 0xA0 0xC6
+I2C 1 read from device 0x77: 0x00 0x00
+I2C 2 read from device 0x1E: 0x10 0x20
+I2C 2 read from device 0x40: 0x03 0x14
+I2C 2 read from device 0x68: 0x68 0xFE
+I2C 2 read from device 0x69: 0xEA 0x00
+I2C 2 read from device 0x77: 0x00 0x00
+Done!
+
