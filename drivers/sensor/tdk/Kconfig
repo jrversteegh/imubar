@@ -1,0 +1,2 @@
+rsource "itg3205/Kconfig"
+rsource "icm20948/Kconfig"

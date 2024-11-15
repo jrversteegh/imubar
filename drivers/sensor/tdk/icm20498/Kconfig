@@ -1,0 +1,5 @@
+config ICM20948
+	bool "ICM20948 motion tracking sensor"
+	depends on (I2C && HAS_DTS_I2C)
+	help
+		Enable driver for ICM20948.
