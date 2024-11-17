@@ -20,6 +20,8 @@ LOG_MODULE_DECLARE(imubar);
 #define LSM303ACCEL_0 DT_NODELABEL(lsm303accel_0)
 #define LSM303MAGN_0 DT_NODELABEL(lsm303magn_0)
 #define BNO055_0 DT_NODELABEL(bno055_0)
+#define LSM9DS1_0 DT_NODELABEL(lsm9ds1_0)
+#define LSM9DS1MAGN_0 DT_NODELABEL(lsm9ds1magn_0)
 
 static device const *const imu_mpu9250 = DEVICE_DT_GET(MPU9250_0);
 static device const *const imu_fxos8700 = DEVICE_DT_GET(FXOS8700_0);
@@ -27,6 +29,8 @@ static device const *const imu_fxas21002 = DEVICE_DT_GET(FXAS21002_0);
 static device const *const imu_lsm303accel = DEVICE_DT_GET(LSM303ACCEL_0);
 static device const *const imu_lsm303magn = DEVICE_DT_GET(LSM303MAGN_0);
 static device const *const imu_bno055 = DEVICE_DT_GET(BNO055_0);
+static device const *const imu_lsm9ds1 = DEVICE_DT_GET(LSM9DS1_0);
+static device const *const imu_lsm9ds1magn = DEVICE_DT_GET(LSM9DS1MAGN_0);
 
 struct None {};
 
