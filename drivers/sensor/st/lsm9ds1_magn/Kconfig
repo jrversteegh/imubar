@@ -1,0 +1,84 @@
+# LSM9DS1 accelerometer, magnetometer and temperature configuration options
+
+# Copyright (c) 2016 Intel Corporation
+# SPDX-License-Identifier: Apache-2.0
+
+menuconfig LSM9DS1_MAGN
+	bool "LSM9DS1 I2C magnetometer"
+	default y
+	depends on DT_HAS_ST_LSM9DS1_MAGN_ENABLED
+	select I2C
+	help
+	  Enable driver for LSM9DS1 I2C-based MFD sensor.
+
+if LSM9DS1_MAGN
+
+
+menu "Attributes"
+
+choice
+	prompt "Magnetometer sampling rate"
+	default LSM9DS1_MAGN_SAMPLING_RATE_25
+	depends on LSM9DS1_MAGN_ENABLE
+	help
+	  Specify the default sampling rate frequency for magnetometer.
+
+config LSM9DS1_MAGN_SAMPLING_RATE_3_125
+	bool "3.125 Hz"
+
+config LSM9DS1_MAGN_SAMPLING_RATE_6_25
+	bool "6.25 Hz"
+
+config LSM9DS1_MAGN_SAMPLING_RATE_12_5
+	bool "12.5 Hz"
+
+config LSM9DS1_MAGN_SAMPLING_RATE_25
+	bool "25 Hz"
+
+config LSM9DS1_MAGN_SAMPLING_RATE_50
+	bool "50 Hz"
+
+config LSM9DS1_MAGN_SAMPLING_RATE_100
+	bool "100 Hz"
+
+endchoice
+
+config LSM9DS1_MAGN_SAMPLING_RATE_RUNTIME
+	bool "Dynamic sampling rate for magnetometer"
+	depends on LSM9DS1_MAGN_ENABLE
+	help
+	  Enable alteration of magnetometer sampling rate attribute at
+	  runtime.
+
+choice
+	prompt "Magnetometer full-scale"
+	default LSM9DS1_MAGN_FULL_SCALE_4
+	depends on LSM9DS1_MAGN_ENABLE
+	help
+	  Specify the default full-scale for magnetometer.
+
+
+config LSM9DS1_MAGN_FULL_SCALE_4
+	bool "4 Gauss"
+
+config LSM9DS1_MAGN_FULL_SCALE_8
+	bool "8 Gauss"
+
+config LSM9DS1_MAGN_FULL_SCALE_12
+	bool "12 Gauss"
+
+config LSM9DS1_MAGN_FULL_SCALE_16
+	bool "16 Gauss"
+
+endchoice
+
+config LSM9DS1_MAGN_FULL_SCALE_RUNTIME
+	bool "Dynamic full-scale for magnetometer"
+	depends on LSM9DS1_MAGN_ENABLE
+	help
+	  Enable alteration of magnetometer full-scale attribute at
+	  runtime.
+
+endmenu
+
+endif # LSM9DS1_MAGN

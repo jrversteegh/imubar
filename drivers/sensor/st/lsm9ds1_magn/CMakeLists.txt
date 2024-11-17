@@ -2,4 +2,4 @@
 
 zephyr_library()
 
-zephyr_library_sources(lsm9ds0_mfd.c)
+zephyr_library_sources(lsm9ds0_magn.c)

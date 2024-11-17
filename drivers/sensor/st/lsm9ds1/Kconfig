@@ -13,7 +13,57 @@ menuconfig LSM9DS1
 
 if LSM9DS1
 
+config LSM9DS1_ACCEL_SAMPLING_RATE_RUNTIME
+	bool "Dynamic sampling rate for accelerometer"
+	depends on DT_HAS_ST_LSM9DS1_ENABLED
+	help
+	  Enable alteration of accelerometer sampling rate attribute at
+	  runtime.
+
+
 menu "Attributes"
+
+choice
+	prompt "Accelerometer sampling rate"
+	default LSM9DS1_ACCEL_SAMPLING_RATE_25
+	depends on LSM9DS1_ACCEL_ENABLE
+	help
+	  Specify the default sampling rate frequency for accelerometer.
+
+config LSM9DS1_ACCEL_SAMPLING_RATE_0
+	bool "0 Hz (power down)"
+
+config LSM9DS1_ACCEL_SAMPLING_RATE_3_125
+	bool "3.125 Hz"
+
+config LSM9DS1_ACCEL_SAMPLING_RATE_6_25
+	bool "6.25 Hz"
+
+config LSM9DS1_ACCEL_SAMPLING_RATE_12_5
+	bool "12.5 Hz"
+
+config LSM9DS1_ACCEL_SAMPLING_RATE_25
+	bool "25 Hz"
+
+config LSM9DS1_ACCEL_SAMPLING_RATE_50
+	bool "50 Hz"
+
+config LSM9DS1_ACCEL_SAMPLING_RATE_100
+	bool "100 Hz"
+
+config LSM9DS1_ACCEL_SAMPLING_RATE_200
+	bool "200 Hz"
+
+config LSM9DS1_ACCEL_SAMPLING_RATE_400
+	bool "400 Hz"
+
+config LSM9DS1_ACCEL_SAMPLING_RATE_800
+	bool "800 Hz"
+
+config LSM9DS1_ACCEL_SAMPLING_RATE_1600
+	bool "1600 Hz"
+
+endchoice
 
 choice
 	prompt "Default full-scale"
@@ -29,6 +79,30 @@ config LSM9DS1_FULLSCALE_500
 
 config LSM9DS1_FULLSCALE_2000
 	bool "2000 DPS"
+
+endchoice
+
+choice
+	prompt "Accelerometer full-scale"
+	default LSM9DS1_ACCEL_FULL_SCALE_2
+	depends on LSM9DS1_ACCEL_ENABLE
+	help
+	  Specify the default full-scale for accelerometer.
+
+config LSM9DS1_ACCEL_FULL_SCALE_2
+	bool "2G"
+
+config LSM9DS1_ACCEL_FULL_SCALE_4
+	bool "4G"
+
+config LSM9DS1_ACCEL_FULL_SCALE_6
+	bool "6G"
+
+config LSM9DS1_ACCEL_FULL_SCALE_8
+	bool "8G"
+
+config LSM9DS1_ACCEL_FULL_SCALE_16
+	bool "16G"
 
 endchoice
 
