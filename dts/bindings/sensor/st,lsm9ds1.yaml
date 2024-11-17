@@ -1,0 +1,16 @@
+# Copyright (c) 2020 Nordic Semiconductor ASA
+# SPDX-License-Identifier: Apache-2.0
+
+description: |
+  ST LSM9DS1 IMU.  See more info at:
+  https://www.st.com/en/mems-and-sensors/lsm9ds1.html
+
+compatible: "st,lsm9ds1"
+
+include: [sensor-device.yaml, i2c-device.yaml]
+
+properties:
+  int1-gpios:
+    type: phandle-array
+    description: |
+      Identifies pin for the INT1 signal on the sensor.

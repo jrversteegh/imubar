@@ -23,7 +23,7 @@
 LOG_MODULE_REGISTER(LSM9DS1, CONFIG_SENSOR_LOG_LEVEL);
 
 static inline int lsm9ds1_power_ctrl(const struct device *dev, int power,
-                                          int x_en, int y_en, int z_en) {
+                                     int x_en, int y_en, int z_en) {
   const struct lsm9ds1_config *config = dev->config;
   uint8_t state = (power << LSM9DS1_SHIFT_CTRL_REG1_G_PD) |
                   (x_en << LSM9DS1_SHIFT_CTRL_REG1_G_XEN) |
@@ -72,8 +72,7 @@ static int lsm9ds1_set_fs(const struct device *dev, int fs) {
 }
 #endif
 
-static inline int lsm9ds1_set_odr_raw(const struct device *dev,
-                                           uint8_t odr) {
+static inline int lsm9ds1_set_odr_raw(const struct device *dev, uint8_t odr) {
   const struct lsm9ds1_config *config = dev->config;
 
   return i2c_reg_update_byte_dt(&config->i2c, LSM9DS1_REG_CTRL_REG1_G,
@@ -92,8 +91,7 @@ static int lsm9ds1_set_odr(const struct device *dev, int odr) {
 
   for (i = 0; i < ARRAY_SIZE(lsm9ds1_samp_freq_table); ++i) {
     if (odr <= lsm9ds1_samp_freq_table[i].freq) {
-      return lsm9ds1_set_odr_raw(dev,
-                                      lsm9ds1_samp_freq_table[i].reg_val);
+      return lsm9ds1_set_odr_raw(dev, lsm9ds1_samp_freq_table[i].reg_val);
     }
   }
 
@@ -102,25 +100,19 @@ static int lsm9ds1_set_odr(const struct device *dev, int odr) {
 #endif
 
 static int lsm9ds1_sample_fetch(const struct device *dev,
-                                     enum sensor_channel chan) {
+                                enum sensor_channel chan) {
   struct lsm9ds1_data *data = dev->data;
   const struct lsm9ds1_config *config = dev->config;
   uint8_t x_l, x_h, y_l, y_h, z_l, z_h;
 
   __ASSERT_NO_MSG(chan == SENSOR_CHAN_ALL || chan == SENSOR_CHAN_GYRO_XYZ);
 
-  if (i2c_reg_read_byte_dt(&config->i2c, LSM9DS1_REG_OUT_X_L_G, &x_l) <
-          0 ||
-      i2c_reg_read_byte_dt(&config->i2c, LSM9DS1_REG_OUT_X_H_G, &x_h) <
-          0 ||
-      i2c_reg_read_byte_dt(&config->i2c, LSM9DS1_REG_OUT_Y_L_G, &y_l) <
-          0 ||
-      i2c_reg_read_byte_dt(&config->i2c, LSM9DS1_REG_OUT_Y_H_G, &y_h) <
-          0 ||
-      i2c_reg_read_byte_dt(&config->i2c, LSM9DS1_REG_OUT_Z_L_G, &z_l) <
-          0 ||
-      i2c_reg_read_byte_dt(&config->i2c, LSM9DS1_REG_OUT_Z_H_G, &z_h) <
-          0) {
+  if (i2c_reg_read_byte_dt(&config->i2c, LSM9DS1_REG_OUT_X_L_G, &x_l) < 0 ||
+      i2c_reg_read_byte_dt(&config->i2c, LSM9DS1_REG_OUT_X_H_G, &x_h) < 0 ||
+      i2c_reg_read_byte_dt(&config->i2c, LSM9DS1_REG_OUT_Y_L_G, &y_l) < 0 ||
+      i2c_reg_read_byte_dt(&config->i2c, LSM9DS1_REG_OUT_Y_H_G, &y_h) < 0 ||
+      i2c_reg_read_byte_dt(&config->i2c, LSM9DS1_REG_OUT_Z_L_G, &z_l) < 0 ||
+      i2c_reg_read_byte_dt(&config->i2c, LSM9DS1_REG_OUT_Z_H_G, &z_h) < 0) {
     LOG_DBG("failed to read sample");
     return -EIO;
   }
@@ -137,7 +129,7 @@ static int lsm9ds1_sample_fetch(const struct device *dev,
 }
 
 static inline void lsm9ds1_convert(struct sensor_value *val, int raw_val,
-                                        float numerator) {
+                                   float numerator) {
   double dval;
 
   dval = (double)(raw_val) * (double)numerator / 1000.0 * DEG2RAD;
@@ -146,9 +138,9 @@ static inline void lsm9ds1_convert(struct sensor_value *val, int raw_val,
 }
 
 static inline int lsm9ds1_get_channel(enum sensor_channel chan,
-                                           struct sensor_value *val,
-                                           struct lsm9ds1_data *data,
-                                           float numerator) {
+                                      struct sensor_value *val,
+                                      struct lsm9ds1_data *data,
+                                      float numerator) {
   switch (chan) {
   case SENSOR_CHAN_GYRO_X:
     lsm9ds1_convert(val, data->sample_x, numerator);
@@ -172,8 +164,8 @@ static inline int lsm9ds1_get_channel(enum sensor_channel chan,
 }
 
 static int lsm9ds1_channel_get(const struct device *dev,
-                                    enum sensor_channel chan,
-                                    struct sensor_value *val) {
+                               enum sensor_channel chan,
+                               struct sensor_value *val) {
   struct lsm9ds1_data *data = dev->data;
 
 #if defined(CONFIG_LSM9DS1_FULLSCALE_RUNTIME)
@@ -196,10 +188,9 @@ static int lsm9ds1_channel_get(const struct device *dev,
 }
 
 #if defined(LSM9DS1_SET_ATTR)
-static int lsm9ds1_attr_set(const struct device *dev,
-                                 enum sensor_channel chan,
-                                 enum sensor_attribute attr,
-                                 const struct sensor_value *val) {
+static int lsm9ds1_attr_set(const struct device *dev, enum sensor_channel chan,
+                            enum sensor_attribute attr,
+                            const struct sensor_value *val) {
   switch (attr) {
 #if defined(CONFIG_LSM9DS1_FULLSCALE_RUNTIME)
   case SENSOR_ATTR_FULL_SCALE:
@@ -250,8 +241,8 @@ static int lsm9ds1_init_chip(const struct device *dev) {
     return -EIO;
   }
 
-  if (i2c_reg_read_byte_dt(&config->i2c, LSM9DS1_REG_WHO_AM_I_G,
-                           &chip_id) < 0) {
+  if (i2c_reg_read_byte_dt(&config->i2c, LSM9DS1_REG_WHO_AM_I_G, &chip_id) <
+      0) {
     LOG_DBG("failed reading chip id");
     goto err_poweroff;
   }
@@ -271,11 +262,11 @@ static int lsm9ds1_init_chip(const struct device *dev) {
     goto err_poweroff;
   }
 
-  if (i2c_reg_update_byte_dt(
-          &config->i2c, LSM9DS1_REG_CTRL_REG4_G,
-          LSM9DS1_MASK_CTRL_REG4_G_BDU | LSM9DS1_MASK_CTRL_REG4_G_BLE,
-          (1 << LSM9DS1_SHIFT_CTRL_REG4_G_BDU) |
-              (0 << LSM9DS1_SHIFT_CTRL_REG4_G_BLE)) < 0) {
+  if (i2c_reg_update_byte_dt(&config->i2c, LSM9DS1_REG_CTRL_REG4_G,
+                             LSM9DS1_MASK_CTRL_REG4_G_BDU |
+                                 LSM9DS1_MASK_CTRL_REG4_G_BLE,
+                             (1 << LSM9DS1_SHIFT_CTRL_REG4_G_BDU) |
+                                 (0 << LSM9DS1_SHIFT_CTRL_REG4_G_BLE)) < 0) {
     LOG_DBG("failed to set BDU and BLE");
     goto err_poweroff;
   }
@@ -312,18 +303,17 @@ static int lsm9ds1_init(const struct device *dev) {
   return 0;
 }
 
-#define LSM9DS1_DEFINE(inst)                                              \
-  static struct lsm9ds1_data lsm9ds1_data_##inst;                    \
+#define LSM9DS1_DEFINE(inst)                                                   \
+  static struct lsm9ds1_data lsm9ds1_data_##inst;                              \
                                                                                \
-  static const struct lsm9ds1_config lsm9ds1_config_##inst = {       \
+  static const struct lsm9ds1_config lsm9ds1_config_##inst = {                 \
       .i2c = I2C_DT_SPEC_INST_GET(inst),                                       \
       IF_ENABLED(                                                              \
-          CONFIG_LSM9DS1_TRIGGER_DRDY,                                    \
+          CONFIG_LSM9DS1_TRIGGER_DRDY,                                         \
           (.int_gpio = GPIO_DT_SPEC_INST_GET_OR(inst, irq_gpios, {0}), ))};    \
                                                                                \
   SENSOR_DEVICE_DT_INST_DEFINE(                                                \
-      inst, lsm9ds1_init, NULL, &lsm9ds1_data_##inst,                \
-      &lsm9ds1_config_##inst, POST_KERNEL, CONFIG_SENSOR_INIT_PRIORITY,   \
-      &lsm9ds1_api_funcs);
+      inst, lsm9ds1_init, NULL, &lsm9ds1_data_##inst, &lsm9ds1_config_##inst,  \
+      POST_KERNEL, CONFIG_SENSOR_INIT_PRIORITY, &lsm9ds1_api_funcs);
 
 DT_INST_FOREACH_STATUS_OKAY(LSM9DS1_DEFINE)

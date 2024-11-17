@@ -43,12 +43,12 @@
     };
 
     lsm9ds1magn_0: lsm9ds1magn@1c {
-        compatible = "st,lsm9ds1-magn"
+        compatible = "st,lsm9ds1-magn";
         reg = <0x1c>;
     };
 
     lsm9ds1_0: lsm9ds1@6a {
-        compatible = "st,lsm9ds1"
+        compatible = "st,lsm9ds1";
         reg = <0x6a>;
     };
 };

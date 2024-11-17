@@ -1,0 +1,3 @@
+rsource "l3gd20h/Kconfig"
+rsource "lsm9ds1/Kconfig"
+rsource "lsm9ds1_magn/Kconfig"

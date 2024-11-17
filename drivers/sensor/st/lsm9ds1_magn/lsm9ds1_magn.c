@@ -39,7 +39,7 @@ static inline int lsm9ds1_magn_reboot_memory(const struct device *dev) {
 
 #if !defined(LSM9DS1_MAGN_ACCEL_DISABLED)
 static inline int lsm9ds1_magn_accel_set_odr_raw(const struct device *dev,
-                                                uint8_t odr) {
+                                                 uint8_t odr) {
   const struct lsm9ds1_magn_config *config = dev->config;
 
   return i2c_reg_update_byte_dt(&config->i2c, LSM9DS1_MAGN_REG_CTRL_REG1_XM,
@@ -56,7 +56,7 @@ static const struct {
     {100, 0}, {200, 0},    {400, 0},    {800, 0},     {1600, 0}};
 
 static int lsm9ds1_magn_accel_set_odr(const struct device *dev,
-                                     const struct sensor_value *val) {
+                                      const struct sensor_value *val) {
   uint8_t i;
 
   for (i = 0U; i < ARRAY_SIZE(lsm9ds1_magn_accel_odr_map); ++i) {
@@ -72,7 +72,7 @@ static int lsm9ds1_magn_accel_set_odr(const struct device *dev,
 #endif
 
 static inline int lsm9ds1_magn_accel_set_fs_raw(const struct device *dev,
-                                               uint8_t fs) {
+                                                uint8_t fs) {
   const struct lsm9ds1_magn_config *config = dev->config;
 
   if (i2c_reg_update_byte_dt(&config->i2c, LSM9DS1_MAGN_REG_CTRL_REG2_XM,
@@ -109,7 +109,7 @@ static int lsm9ds1_magn_accel_set_fs(const struct device *dev, int val) {
 
 #if !defined(LSM9DS1_MAGN_MAGN_DISABLED)
 static inline int lsm9ds1_magn_magn_set_odr_raw(const struct device *dev,
-                                               uint8_t odr) {
+                                                uint8_t odr) {
   const struct lsm9ds1_magn_config *config = dev->config;
 
   return i2c_reg_update_byte_dt(&config->i2c, LSM9DS1_MAGN_REG_CTRL_REG5_XM,
@@ -121,11 +121,11 @@ static inline int lsm9ds1_magn_magn_set_odr_raw(const struct device *dev,
 static const struct {
   int freq_int;
   int freq_micro;
-} lsm9ds1_magn_magn_odr_map[] = {{0, 0},  {3, 125000}, {6, 250000}, {12, 500000},
-                                {25, 0}, {50, 0},     {100, 0}};
+} lsm9ds1_magn_magn_odr_map[] = {
+    {0, 0}, {3, 125000}, {6, 250000}, {12, 500000}, {25, 0}, {50, 0}, {100, 0}};
 
 static int lsm9ds1_magn_magn_set_odr(const struct device *dev,
-                                    const struct sensor_value *val) {
+                                     const struct sensor_value *val) {
   uint8_t i;
 
   for (i = 0U; i < ARRAY_SIZE(lsm9ds1_magn_accel_odr_map); ++i) {
@@ -141,7 +141,7 @@ static int lsm9ds1_magn_magn_set_odr(const struct device *dev,
 #endif
 
 static inline int lsm9ds1_magn_magn_set_fs_raw(const struct device *dev,
-                                              uint8_t fs) {
+                                               uint8_t fs) {
   const struct lsm9ds1_magn_config *config = dev->config;
 
   if (i2c_reg_update_byte_dt(&config->i2c, LSM9DS1_MAGN_REG_CTRL_REG6_XM,
@@ -163,7 +163,7 @@ static const struct {
 } lsm9ds1_magn_magn_fs_map[] = {{2}, {4}, {8}, {12}};
 
 static int lsm9ds1_magn_magn_set_fs(const struct device *dev,
-                                   const struct sensor_value *val) {
+                                    const struct sensor_value *val) {
   uint8_t i;
 
   for (i = 0U; i < ARRAY_SIZE(lsm9ds1_magn_magn_fs_map); ++i) {
@@ -317,7 +317,7 @@ static inline int lsm9ds1_magn_sample_fetch_all(const struct device *dev) {
 }
 
 static int lsm9ds1_magn_sample_fetch(const struct device *dev,
-                                    enum sensor_channel chan) {
+                                     enum sensor_channel chan) {
   switch (chan) {
 #if !defined(LSM9DS1_MAGN_ACCEL_DISABLED)
   case SENSOR_CHAN_ACCEL_XYZ:
@@ -342,7 +342,7 @@ static int lsm9ds1_magn_sample_fetch(const struct device *dev,
 
 #if !defined(LSM9DS1_MAGN_ACCEL_DISABLED)
 static inline void lsm9ds1_magn_convert_accel(struct sensor_value *val,
-                                             int raw_val, float scale) {
+                                              int raw_val, float scale) {
   double dval;
 
   dval = (double)(raw_val) * (double)scale;
@@ -351,9 +351,9 @@ static inline void lsm9ds1_magn_convert_accel(struct sensor_value *val,
 }
 
 static inline int lsm9ds1_magn_get_accel_channel(enum sensor_channel chan,
-                                                struct sensor_value *val,
-                                                struct lsm9ds1_magn_data *data,
-                                                float scale) {
+                                                 struct sensor_value *val,
+                                                 struct lsm9ds1_magn_data *data,
+                                                 float scale) {
   switch (chan) {
   case SENSOR_CHAN_ACCEL_X:
     lsm9ds1_magn_convert_accel(val, data->sample_accel_x, scale);
@@ -377,27 +377,27 @@ static inline int lsm9ds1_magn_get_accel_channel(enum sensor_channel chan,
 }
 
 static inline int lsm9ds1_magn_get_accel(const struct device *dev,
-                                        enum sensor_channel chan,
-                                        struct sensor_value *val) {
+                                         enum sensor_channel chan,
+                                         struct sensor_value *val) {
   struct lsm9ds1_magn_data *data = dev->data;
 
 #if defined(CONFIG_LSM9DS1_MAGN_ACCEL_FULL_SCALE_RUNTIME)
   switch (data->sample_accel_fs) {
   case 0:
     return lsm9ds1_magn_get_accel_channel(chan, val, data,
-                                         2.0 * 9.807 / 32767.0);
+                                          2.0 * 9.807 / 32767.0);
   case 1:
     return lsm9ds1_magn_get_accel_channel(chan, val, data,
-                                         4.0 * 9.807 / 32767.0);
+                                          4.0 * 9.807 / 32767.0);
   case 2:
     return lsm9ds1_magn_get_accel_channel(chan, val, data,
-                                         6.0 * 9.807 / 32767.0);
+                                          6.0 * 9.807 / 32767.0);
   case 3:
     return lsm9ds1_magn_get_accel_channel(chan, val, data,
-                                         8.0 * 9.807 / 32767.0);
+                                          8.0 * 9.807 / 32767.0);
   case 4:
     return lsm9ds1_magn_get_accel_channel(chan, val, data,
-                                         16.0 * 9.807 / 32767.0);
+                                          16.0 * 9.807 / 32767.0);
   default:
     return -ENOTSUP;
   }
@@ -410,7 +410,8 @@ static inline int lsm9ds1_magn_get_accel(const struct device *dev,
 #elif defined(CONFIG_LSM9DS1_MAGN_ACCEL_FULL_SCALE_8)
   return lsm9ds1_magn_get_accel_channel(chan, val, data, 8.0 * 9.807 / 32767.0);
 #elif defined(CONFIG_LSM9DS1_MAGN_ACCEL_FULL_SCALE_16)
-  return lsm9ds1_magn_get_accel_channel(chan, val, data, 16.0 * 9.807 / 32767.0);
+  return lsm9ds1_magn_get_accel_channel(chan, val, data,
+                                        16.0 * 9.807 / 32767.0);
 #endif
 
   return 0;
@@ -419,7 +420,7 @@ static inline int lsm9ds1_magn_get_accel(const struct device *dev,
 
 #if !defined(LSM9DS1_MAGN_MAGN_DISABLED)
 static inline void lsm9ds1_magn_convert_magn(struct sensor_value *val,
-                                            int raw_val, float scale) {
+                                             int raw_val, float scale) {
   double dval;
 
   dval = (double)(raw_val) * (double)scale;
@@ -428,9 +429,9 @@ static inline void lsm9ds1_magn_convert_magn(struct sensor_value *val,
 }
 
 static inline int lsm9ds1_magn_get_magn_channel(enum sensor_channel chan,
-                                               struct sensor_value *val,
-                                               struct lsm9ds1_magn_data *data,
-                                               float scale) {
+                                                struct sensor_value *val,
+                                                struct lsm9ds1_magn_data *data,
+                                                float scale) {
   switch (chan) {
   case SENSOR_CHAN_MAGN_X:
     lsm9ds1_magn_convert_magn(val, data->sample_magn_x, scale);
@@ -454,8 +455,8 @@ static inline int lsm9ds1_magn_get_magn_channel(enum sensor_channel chan,
 }
 
 static inline int lsm9ds1_magn_get_magn(const struct device *dev,
-                                       enum sensor_channel chan,
-                                       struct sensor_value *val) {
+                                        enum sensor_channel chan,
+                                        struct sensor_value *val) {
   struct lsm9ds1_magn_data *data = dev->data;
 
 #if defined(CONFIG_LSM9DS1_MAGN_MAGN_FULL_SCALE_RUNTIME)
@@ -486,8 +487,8 @@ static inline int lsm9ds1_magn_get_magn(const struct device *dev,
 #endif
 
 static int lsm9ds1_magn_channel_get(const struct device *dev,
-                                   enum sensor_channel chan,
-                                   struct sensor_value *val) {
+                                    enum sensor_channel chan,
+                                    struct sensor_value *val) {
 #if !defined(LSM9DS1_MAGN_TEMP_DISABLED)
   struct lsm9ds1_magn_data *data = dev->data;
 #endif
@@ -520,8 +521,8 @@ static int lsm9ds1_magn_channel_get(const struct device *dev,
 
 #if defined(LSM9DS1_MAGN_ATTR_SET_ACCEL)
 static inline int lsm9ds1_magn_attr_set_accel(const struct device *dev,
-                                             enum sensor_attribute attr,
-                                             const struct sensor_value *val) {
+                                              enum sensor_attribute attr,
+                                              const struct sensor_value *val) {
   switch (attr) {
 #if defined(CONFIG_LSM9DS1_MAGN_ACCEL_SAMPLING_RATE_RUNTIME)
   case SENSOR_ATTR_SAMPLING_FREQUENCY:
@@ -541,8 +542,8 @@ static inline int lsm9ds1_magn_attr_set_accel(const struct device *dev,
 
 #if defined(LSM9DS1_MAGN_ATTR_SET_MAGN)
 static inline int lsm9ds1_magn_attr_set_magn(const struct device *dev,
-                                            enum sensor_attribute attr,
-                                            const struct sensor_value *val) {
+                                             enum sensor_attribute attr,
+                                             const struct sensor_value *val) {
   switch (attr) {
 #if defined(CONFIG_LSM9DS1_MAGN_MAGN_SAMPLING_RATE_RUNTIME)
   case SENSOR_ATTR_SAMPLING_FREQUENCY:
@@ -562,9 +563,9 @@ static inline int lsm9ds1_magn_attr_set_magn(const struct device *dev,
 
 #if defined(LSM9DS1_MAGN_ATTR_SET)
 static int lsm9ds1_magn_attr_set(const struct device *dev,
-                                enum sensor_channel chan,
-                                enum sensor_attribute attr,
-                                const struct sensor_value *val) {
+                                 enum sensor_channel chan,
+                                 enum sensor_attribute attr,
+                                 const struct sensor_value *val) {
 
   switch (chan) {
 #if defined(LSM9DS1_MAGN_ATTR_SET_ACCEL)
@@ -635,16 +636,17 @@ static int lsm9ds1_magn_init_chip(const struct device *dev) {
     return -EIO;
   }
 
-  if (i2c_reg_update_byte_dt(
-          &config->i2c, LSM9DS1_MAGN_REG_CTRL_REG1_XM,
-          LSM9DS1_MAGN_MASK_CTRL_REG1_XM_AXEN |
-              LSM9DS1_MAGN_MASK_CTRL_REG1_XM_AYEN |
-              LSM9DS1_MAGN_MASK_CTRL_REG1_XM_AZEN,
-          (LSM9DS1_MAGN_ACCEL_ENABLE_X << LSM9DS1_MAGN_SHIFT_CTRL_REG1_XM_AXEN) |
-              (LSM9DS1_MAGN_ACCEL_ENABLE_Y
-               << LSM9DS1_MAGN_SHIFT_CTRL_REG1_XM_AYEN) |
-              (LSM9DS1_MAGN_ACCEL_ENABLE_Z
-               << LSM9DS1_MAGN_SHIFT_CTRL_REG1_XM_AZEN)) < 0) {
+  if (i2c_reg_update_byte_dt(&config->i2c, LSM9DS1_MAGN_REG_CTRL_REG1_XM,
+                             LSM9DS1_MAGN_MASK_CTRL_REG1_XM_AXEN |
+                                 LSM9DS1_MAGN_MASK_CTRL_REG1_XM_AYEN |
+                                 LSM9DS1_MAGN_MASK_CTRL_REG1_XM_AZEN,
+                             (LSM9DS1_MAGN_ACCEL_ENABLE_X
+                              << LSM9DS1_MAGN_SHIFT_CTRL_REG1_XM_AXEN) |
+                                 (LSM9DS1_MAGN_ACCEL_ENABLE_Y
+                                  << LSM9DS1_MAGN_SHIFT_CTRL_REG1_XM_AYEN) |
+                                 (LSM9DS1_MAGN_ACCEL_ENABLE_Z
+                                  << LSM9DS1_MAGN_SHIFT_CTRL_REG1_XM_AZEN)) <
+      0) {
     LOG_DBG("failed to set accelerometer axis enable bits\n");
     return -EIO;
   }
@@ -680,7 +682,8 @@ static int lsm9ds1_magn_init_chip(const struct device *dev) {
 #if !defined(LSM9DS1_MAGN_TEMP_DISABLED)
   if (i2c_reg_update_byte_dt(&config->i2c, LSM9DS1_MAGN_REG_CTRL_REG5_XM,
                              LSM9DS1_MAGN_MASK_CTRL_REG5_XM_TEMP_EN,
-                             1 << LSM9DS1_MAGN_SHIFT_CTRL_REG5_XM_TEMP_EN) < 0) {
+                             1 << LSM9DS1_MAGN_SHIFT_CTRL_REG5_XM_TEMP_EN) <
+      0) {
     LOG_DBG("failed to power on temperature sensor");
     return -EIO;
   }
@@ -705,16 +708,16 @@ int lsm9ds1_magn_init(const struct device *dev) {
   return 0;
 }
 
-#define LSM9DS1_MAGN_DEFINE(inst)                                               \
-  static struct lsm9ds1_magn_data lsm9ds1_magn_data_##inst;                      \
+#define LSM9DS1_MAGN_DEFINE(inst)                                              \
+  static struct lsm9ds1_magn_data lsm9ds1_magn_data_##inst;                    \
                                                                                \
-  static const struct lsm9ds1_magn_config lsm9ds1_magn_config_##inst = {         \
+  static const struct lsm9ds1_magn_config lsm9ds1_magn_config_##inst = {       \
       .i2c = I2C_DT_SPEC_INST_GET(inst),                                       \
   };                                                                           \
                                                                                \
   SENSOR_DEVICE_DT_INST_DEFINE(                                                \
-      inst, lsm9ds1_magn_init, NULL, &lsm9ds1_magn_data_##inst,                  \
-      &lsm9ds1_magn_config_##inst, POST_KERNEL, CONFIG_SENSOR_INIT_PRIORITY,    \
+      inst, lsm9ds1_magn_init, NULL, &lsm9ds1_magn_data_##inst,                \
+      &lsm9ds1_magn_config_##inst, POST_KERNEL, CONFIG_SENSOR_INIT_PRIORITY,   \
       &lsm9ds1_magn_api_funcs);
 
 DT_INST_FOREACH_STATUS_OKAY(LSM9DS1_MAGN_DEFINE)
