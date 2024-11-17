@@ -4,7 +4,7 @@
 #include <cmath>
 #include <numbers>
 
-using Number = float;
+#include "types.h"
 
 static constexpr Number pi = std::numbers::pi_v<Number>;
 
