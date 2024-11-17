@@ -2,12 +2,11 @@
 title: IMU Bar
 ---
 
-This is a Zephyr RTOS based project to read out and process data
-from a number of IMU breakout board that have all been glued to 
-a single piece of wood. The goal is to fuse the data of all the 
-sensors together and compare the respective qualities of the
-signals. An STM32 BlackPill is used to read out the data through
-two I2C ports:
+This is a Zephyr RTOS based project to read out and process data from a
+number of IMU breakout board that have all been glued to a single piece
+of wood. The goal is to fuse the data of all the sensors together and
+compare the respective qualities of the signals. An STM32 BlackPill is
+used to read out the data through two I2C ports:
 
     Address: Board - Chip: Type
 
@@ -33,8 +32,9 @@ two I2C ports:
     69: PRIMORONI IMC20948 - ICM20948: accel/gyro/magn
     77: NAMELESS 10DOF - BMP085: pressure
 
+# Flashing
 
-## Flashing the BlackPill
+## BlackPill
 
 Boot the BlackPill with BOOT0 button down and use dfu-util -a 0 to
 download or upload firmware
