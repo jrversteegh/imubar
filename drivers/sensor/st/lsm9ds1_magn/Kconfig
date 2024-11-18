@@ -16,36 +16,64 @@ if LSM9DS1_MAGN
 
 menu "Attributes"
 
+config LSM9DS1_MAGN_TEMP_COMP
+    bool "Use temperature compensation"
+    default y
+    help
+      Use temperature compensation
+
+choice
+	prompt "Power mode"
+	default LSM9DS1_MAGN_HIGH_PERF
+
+config LSM9DS1_MAGN_LOW_POWER
+	bool "Low power"
+
+config LSM9DS1_MAGN_MED_PERF
+	bool "Medium performance"
+
+config LSM9DS1_MAGN_HIGH_PERF
+	bool "High performance"
+
+config LSM9DS1_MAGN_ULTRA_PERF
+	bool "Ultra performance"
+
+endchoice
+
 choice
 	prompt "Magnetometer sampling rate"
-	default LSM9DS1_MAGN_SAMPLING_RATE_25
-	depends on LSM9DS1_MAGN_ENABLE
+	default LSM9DS1_MAGN_SAMPLING_RATE_10
 	help
 	  Specify the default sampling rate frequency for magnetometer.
 
-config LSM9DS1_MAGN_SAMPLING_RATE_3_125
-	bool "3.125 Hz"
+config LSM9DS1_MAGN_SAMPLING_RATE_0_625
+	bool "0.625 Hz"
 
-config LSM9DS1_MAGN_SAMPLING_RATE_6_25
-	bool "6.25 Hz"
+config LSM9DS1_MAGN_SAMPLING_RATE_1_25
+	bool "1.25 Hz"
 
-config LSM9DS1_MAGN_SAMPLING_RATE_12_5
-	bool "12.5 Hz"
+config LSM9DS1_MAGN_SAMPLING_RATE_2_5
+	bool "2.5 Hz"
 
-config LSM9DS1_MAGN_SAMPLING_RATE_25
-	bool "25 Hz"
+config LSM9DS1_MAGN_SAMPLING_RATE_5
+	bool "5 Hz"
 
-config LSM9DS1_MAGN_SAMPLING_RATE_50
-	bool "50 Hz"
+config LSM9DS1_MAGN_SAMPLING_RATE_10
+	bool "10 Hz"
 
-config LSM9DS1_MAGN_SAMPLING_RATE_100
-	bool "100 Hz"
+config LSM9DS1_MAGN_SAMPLING_RATE_20
+	bool "20 Hz"
+
+config LSM9DS1_MAGN_SAMPLING_RATE_40
+	bool "40 Hz"
+
+config LSM9DS1_MAGN_SAMPLING_RATE_80
+	bool "80 Hz"
 
 endchoice
 
 config LSM9DS1_MAGN_SAMPLING_RATE_RUNTIME
 	bool "Dynamic sampling rate for magnetometer"
-	depends on LSM9DS1_MAGN_ENABLE
 	help
 	  Enable alteration of magnetometer sampling rate attribute at
 	  runtime.
@@ -53,7 +81,6 @@ config LSM9DS1_MAGN_SAMPLING_RATE_RUNTIME
 choice
 	prompt "Magnetometer full-scale"
 	default LSM9DS1_MAGN_FULL_SCALE_4
-	depends on LSM9DS1_MAGN_ENABLE
 	help
 	  Specify the default full-scale for magnetometer.
 
@@ -72,9 +99,8 @@ config LSM9DS1_MAGN_FULL_SCALE_16
 
 endchoice
 
-config LSM9DS1_MAGN_FULL_SCALE_RUNTIME
-	bool "Dynamic full-scale for magnetometer"
-	depends on LSM9DS1_MAGN_ENABLE
+config LSM9DS1_MAGN_SET_RUNTIME
+	bool "Set sensor attributes at runtime"
 	help
 	  Enable alteration of magnetometer full-scale attribute at
 	  runtime.

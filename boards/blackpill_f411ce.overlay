@@ -47,10 +47,12 @@
         reg = <0x1c>;
     };
 
+/*
     lsm9ds1_0: lsm9ds1@6a {
         compatible = "st,lsm9ds1";
         reg = <0x6a>;
     };
+    */
 };
 
 &i2c2 {
