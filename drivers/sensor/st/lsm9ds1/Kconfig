@@ -102,18 +102,18 @@ config LSM9DS1_ACCEL_SAMPLING_RATE_1600
 endchoice
 
 choice
-	prompt "Default full-scale"
-	default LSM9DS1_FULLSCALE_245
+	prompt "Gyro full-scale"
+	default LSM9DS1_GYRO_FULLSCALE_245
 	help
-	  Specify the default full-scale.
+	  Specify the default full-scale for the gyroscope.
 
-config LSM9DS1_FULLSCALE_245
+config LSM9DS1_GYRO_FULLSCALE_245
 	bool "245 DPS"
 
-config LSM9DS1_FULLSCALE_500
+config LSM9DS1_GYRO_FULLSCALE_500
 	bool "500 DPS"
 
-config LSM9DS1_FULLSCALE_2000
+config LSM9DS1_GYRO_FULLSCALE_2000
 	bool "2000 DPS"
 
 endchoice
@@ -123,7 +123,7 @@ choice
 	default LSM9DS1_ACCEL_FULL_SCALE_2
 	depends on LSM9DS1_ACCEL_ENABLE
 	help
-	  Specify the default full-scale for accelerometer.
+	  Specify the default full-scale for the accelerometer.
 
 config LSM9DS1_ACCEL_FULL_SCALE_2
 	bool "2G"
@@ -142,10 +142,10 @@ config LSM9DS1_ACCEL_FULL_SCALE_16
 
 endchoice
 
-config LSM9DS1_FULLSCALE_RUNTIME
-	bool "Dynamic full-scale"
+config LSM9DS1_SET_RUNTIME
+	bool "Dynamic attribute setting"
 	help
-	  Enable alteration of full-scale attribute at runtime.
+	  Enable alteration of sensor attributes at runtime.
 
 choice
 	prompt "Default sampling rate frequency"
@@ -167,26 +167,8 @@ config LSM9DS1_SAMPLING_RATE_760
 
 endchoice
 
-config LSM9DS1_SAMPLING_RATE_RUNTIME
-	bool "Dynamic sampling rate"
-	help
-	  Enable alteration of sampling rate frequency at runtime.
 
 endmenu
 
-config LSM9DS1_TRIGGERS
-	bool "Triggers"
-	depends on GPIO
-
-config LSM9DS1_THREAD_STACK_SIZE
-	int "Thread stack size"
-	depends on LSM9DS1_TRIGGERS
-	default 1024
-	help
-	  Specify the internal thread stack size.
-
-config LSM9DS1_TRIGGER_DRDY
-	bool "Data ready trigger"
-	depends on LSM9DS1_TRIGGERS
 
 endif # LSM9DS1

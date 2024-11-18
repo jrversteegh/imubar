@@ -72,11 +72,6 @@ config LSM9DS1_MAGN_SAMPLING_RATE_80
 
 endchoice
 
-config LSM9DS1_MAGN_SAMPLING_RATE_RUNTIME
-	bool "Dynamic sampling rate for magnetometer"
-	help
-	  Enable alteration of magnetometer sampling rate attribute at
-	  runtime.
 
 choice
 	prompt "Magnetometer full-scale"
@@ -102,7 +97,7 @@ endchoice
 config LSM9DS1_MAGN_SET_RUNTIME
 	bool "Set sensor attributes at runtime"
 	help
-	  Enable alteration of magnetometer full-scale attribute at
+	  Enable alteration of magnetometer attributes at
 	  runtime.
 
 endmenu

@@ -1,7 +1,7 @@
-/* lsm9ds1.c - Driver for LSM9DS0 gyroscope sensor */
+/* lsm9ds1.c - Driver for LSM9DS1 accelerometer and gyroscope sensor */
 
 /*
- * Copyright (c) 2016 Intel Corporation
+ * Copyright (c) 2024 J.R. Versteegh
  *
  * SPDX-License-Identifier: Apache-2.0
  */
