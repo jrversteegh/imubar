@@ -22,57 +22,102 @@
 
 LOG_MODULE_REGISTER(LSM9DS1, CONFIG_SENSOR_LOG_LEVEL);
 
-static inline int lsm9ds1_power_ctrl(const struct device *dev, int power,
-                                     int x_en, int y_en, int z_en) {
-  const struct lsm9ds1_config *config = dev->config;
-  uint8_t state = (power << LSM9DS1_SHIFT_CTRL_REG1_G_PD) |
-                  (x_en << LSM9DS1_SHIFT_CTRL_REG1_G_XEN) |
-                  (y_en << LSM9DS1_SHIFT_CTRL_REG1_G_YEN) |
-                  (z_en << LSM9DS1_SHIFT_CTRL_REG1_G_ZEN);
+#define DEG2RAD 0.01745329252f
 
-  return i2c_reg_update_byte_dt(
-      &config->i2c, LSM9DS1_REG_CTRL_REG1_G,
-      LSM9DS1_MASK_CTRL_REG1_G_PD | LSM9DS1_MASK_CTRL_REG1_G_XEN |
-          LSM9DS1_MASK_CTRL_REG1_G_YEN | LSM9DS1_MASK_CTRL_REG1_G_ZEN,
-      state);
-}
-
-static int lsm9ds1_set_fs_raw(const struct device *dev, uint8_t fs) {
+#if defined(CONFIG_LSM9DS1_SET_RUNTIME)
+static int lsm9ds1_set_gyro_fs_raw(const struct device *dev, uint8_t fs) {
   const struct lsm9ds1_config *config = dev->config;
 
-  if (i2c_reg_update_byte_dt(&config->i2c, LSM9DS1_REG_CTRL_REG4_G,
-                             LSM9DS1_MASK_CTRL_REG4_G_FS,
-                             fs << LSM9DS1_SHIFT_CTRL_REG4_G_FS) < 0) {
+  if (i2c_reg_update_byte_dt(&config->i2c, LSM9DS1_REG_CTRL_REG1,
+                             LSM9DS1_REG_CTRL_REG1_FS_G_MASK,
+                             fs << LSM9DS1_REG_CTRL_REG1_FS_G_SHIFT) < 0) {
     return -EIO;
   }
 
-#if defined(CONFIG_LSM9DS1_FULLSCALE_RUNTIME)
-  data->fs = fs;
-#endif
+  data->gyro_fs = fs;
 
   return 0;
 }
 
-#if defined(CONFIG_LSM9DS1_FULLSCALE_RUNTIME)
 static const struct {
   int fs;
   uint8_t reg_val;
-} lsm9ds1_fs_table[] = {{245, 0}, {500, 1}, {2000, 2}};
+} lsm9ds1_fs_table[] = {{245, 0}, {500, 1}, {2000, 3}};
 
-static int lsm9ds1_set_fs(const struct device *dev, int fs) {
+static int lsm9ds1_set_gyro_fs(const struct device *dev, int fs) {
   int i;
 
   for (i = 0; i < ARRAY_SIZE(lsm9ds1_fs_table); ++i) {
-    if (fs <= lsm9ds1_fs_table[i].fs) {
+    if (fs == lsm9ds1_fs_table[i].fs) {
       return lsm9ds1_set_fs_raw(dev, lsm9ds1_fs_table[i].reg_val);
     }
   }
 
   return -ENOTSUP;
 }
-#endif
 
-static inline int lsm9ds1_set_odr_raw(const struct device *dev, uint8_t odr) {
+static inline int lsm9ds1_set_gyro_odr_raw(const struct device *dev,
+                                           uint8_t odr) {
+  const struct lsm9ds1_config *config = dev->config;
+
+  return i2c_reg_update_byte_dt(&config->i2c, LSM9DS1_REG_CTRL_REG1,
+                                LSM9DS1_REG_CTRL_REG1_ODR_G_MASK,
+                                odr << LSM9DS1_REG_CTRL_REG1_ODR_G_SHIFT);
+}
+
+static const struct {
+  int freq_int;
+  int freq_micros;
+} lsm9ds1_gyro_odr_table[] = {{14, 900000}, {59, 500000}, {119, 0},
+                              {238, 0},     {476, 0},     {952, 0}};
+
+static int lsm9ds1_set_gyro_odr(const struct device *dev,
+                                const struct sensor_value *odr) {
+  uint8_t i;
+
+  for (i = 1U; i < ARRAY_SIZE(lsm9ds1_gyro_odr_table); ++i) {
+    if (odr->val1 < lsm9ds1_gyro_odr_table[i].freq_int ||
+        (odr->val1 == lsm9ds1_gyro_odr_table[i].freq_int &&
+         odr->val2 <= lsm9ds1_gyro_odr_table[i].freq_micros)) {
+      return lsm9ds1_set_odr_raw(dev, i);
+    }
+  }
+
+  return -ENOTSUP;
+}
+
+static int lsm9ds1_set_accel_fs_raw(const struct device *dev, uint8_t fs) {
+  const struct lsm9ds1_config *config = dev->config;
+
+  if (i2c_reg_update_byte_dt(&config->i2c, LSM9DS1_REG_CTRL_REG6,
+                             LSM9DS1_REG_CTRL_REG6_FS_XL_MASK,
+                             fs << LSM9DS1_REG_CTRL_REG6_FS_XL_SHIFT) < 0) {
+    return -EIO;
+  }
+
+  data->accel_fs = fs;
+
+  return 0;
+}
+
+static const struct {
+  int fs;
+} lsm9ds1_accel_fs_table[] = {{2}, {16}, {4}, {8}};
+
+static int lsm9ds1_set_accel_fs(const struct device *dev, int fs) {
+  uint8_t i;
+
+  for (i = 1U; i < ARRAY_SIZE(lsm9ds1_accel_fs_table); ++i) {
+    if (fs == lsm9ds1_accel_fs_table[i].fs) {
+      return lsm9ds1_set_accel_fs_raw(dev, i);
+    }
+  }
+
+  return -ENOTSUP;
+}
+
+static inline int lsm9ds1_set_accel_odr_raw(const struct device *dev,
+                                            uint8_t odr) {
   const struct lsm9ds1_config *config = dev->config;
 
   return i2c_reg_update_byte_dt(&config->i2c, LSM9DS1_REG_CTRL_REG1_G,
@@ -80,32 +125,28 @@ static inline int lsm9ds1_set_odr_raw(const struct device *dev, uint8_t odr) {
                                 odr << LSM9DS1_SHIFT_CTRL_REG1_G_BW);
 }
 
-#if defined(CONFIG_LSM9DS1_SAMPLING_RATE_RUNTIME)
 static const struct {
   int freq;
-  uint8_t reg_val;
-} lsm9ds1_samp_freq_table[] = {{95, 0}, {190, 1}, {380, 2}, {760, 3}};
+} lsm9ds1_accel_odr_table[] = {{10}, {50}, {119}, {238}, {476}, {952}};
 
-static int lsm9ds1_set_odr(const struct device *dev, int odr) {
-  int i;
+static int lsm9ds1_set_accel_odr(const struct device *dev, int odr) {
+  uint8_t i;
 
-  for (i = 0; i < ARRAY_SIZE(lsm9ds1_samp_freq_table); ++i) {
-    if (odr <= lsm9ds1_samp_freq_table[i].freq) {
-      return lsm9ds1_set_odr_raw(dev, lsm9ds1_samp_freq_table[i].reg_val);
+  for (i = 1U; i < ARRAY_SIZE(lsm9ds1_accel_odr_table); ++i) {
+    if (odr <= lsm9ds1_accel_ord_table[i].freq) {
+      return lsm9ds1_set_accel_odr_raw(dev, i);
     }
   }
 
   return -ENOTSUP;
 }
+
 #endif
 
 static int lsm9ds1_sample_fetch(const struct device *dev,
                                 enum sensor_channel chan) {
   struct lsm9ds1_data *data = dev->data;
   const struct lsm9ds1_config *config = dev->config;
-  uint8_t x_l, x_h, y_l, y_h, z_l, z_h;
-
-  __ASSERT_NO_MSG(chan == SENSOR_CHAN_ALL || chan == SENSOR_CHAN_GYRO_XYZ);
 
   if (i2c_reg_read_byte_dt(&config->i2c, LSM9DS1_REG_OUT_X_L_G, &x_l) < 0 ||
       i2c_reg_read_byte_dt(&config->i2c, LSM9DS1_REG_OUT_X_H_G, &x_h) < 0 ||
@@ -121,18 +162,14 @@ static int lsm9ds1_sample_fetch(const struct device *dev,
   data->sample_y = (int16_t)((uint16_t)(y_l) | ((uint16_t)(y_h) << 8));
   data->sample_z = (int16_t)((uint16_t)(z_l) | ((uint16_t)(z_h) << 8));
 
-#if defined(CONFIG_LSM9DS1_FULLSCALE_RUNTIME)
-  data->sample_fs = data->fs;
-#endif
-
   return 0;
 }
 
 static inline void lsm9ds1_convert(struct sensor_value *val, int raw_val,
-                                   float numerator) {
-  double dval;
+                                   float scale) {
+  float dval;
 
-  dval = (double)(raw_val) * (double)numerator / 1000.0 * DEG2RAD;
+  dval = (float)(raw_val)*scale;
   val->val1 = (int32_t)dval;
   val->val2 = ((int32_t)(dval * 1000000)) % 1000000;
 }
@@ -142,19 +179,21 @@ static inline int lsm9ds1_get_channel(enum sensor_channel chan,
                                       struct lsm9ds1_data *data,
                                       float numerator) {
   switch (chan) {
-  case SENSOR_CHAN_GYRO_X:
-    lsm9ds1_convert(val, data->sample_x, numerator);
+  case SENSOR_CHAN_TEMP:
+    lsm9ds1_convert(val, data->temp, 0.0625f);
+  break case SENSOR_CHAN_GYRO_X:
+    lsm9ds1_gyro_convert(val, data->gyro_x, numerator);
     break;
   case SENSOR_CHAN_GYRO_Y:
-    lsm9ds1_convert(val, data->sample_y, numerator);
+    lsm9ds1_gyro_convert(val, data->gyro_y, numerator);
     break;
   case SENSOR_CHAN_GYRO_Z:
-    lsm9ds1_convert(val, data->sample_z, numerator);
+    lsm9ds1_gyro_convert(val, data->gyro_z, numerator);
     break;
   case SENSOR_CHAN_GYRO_XYZ:
-    lsm9ds1_convert(val, data->sample_x, numerator);
-    lsm9ds1_convert(val + 1, data->sample_y, numerator);
-    lsm9ds1_convert(val + 2, data->sample_z, numerator);
+    lsm9ds1_gyro_convert(val, data->sample_x, numerator);
+    lsm9ds1_gyro_convert(val + 1, data->sample_y, numerator);
+    lsm9ds1_gyro_convert(val + 2, data->sample_z, numerator);
     break;
   default:
     return -ENOTSUP;
@@ -168,8 +207,8 @@ static int lsm9ds1_channel_get(const struct device *dev,
                                struct sensor_value *val) {
   struct lsm9ds1_data *data = dev->data;
 
-#if defined(CONFIG_LSM9DS1_FULLSCALE_RUNTIME)
-  switch (data->sample_fs) {
+#if defined(CONFIG_LSM9DS1_SET_RUNTIME)
+  switch (data->gyro_fs) {
   case 0:
     return lsm9ds1_get_channel(chan, val, data, 8.75f);
   case 1:
@@ -187,27 +226,45 @@ static int lsm9ds1_channel_get(const struct device *dev,
   return 0;
 }
 
-#if defined(LSM9DS1_SET_ATTR)
+#if defined(LSM9DS1_SET_RUNTIME)
 static int lsm9ds1_attr_set(const struct device *dev, enum sensor_channel chan,
                             enum sensor_attribute attr,
                             const struct sensor_value *val) {
   switch (attr) {
-#if defined(CONFIG_LSM9DS1_FULLSCALE_RUNTIME)
   case SENSOR_ATTR_FULL_SCALE:
-    if (lsm9ds1_set_fs(dev, sensor_rad_to_degrees(val)) < 0) {
-      LOG_DBG("full-scale value not supported");
-      return -EIO;
+    switch (chan) {
+    case SENSOR_CHANNEL_GYRO_XYZ:
+      if (lsm9ds1_set_gyro_fs(dev, val) < 0) {
+        LOG_DBG("full-scale value not supported");
+        return -EIO;
+      }
+      break;
+    case SENSOR_CHANNEL_ACCEL_XYZ:
+      if (lsm9ds1_set_accel_fs(dev, val->val1) < 0) {
+        LOG_DBG("full-scale value not supported");
+        return -EIO;
+      }
+      break;
+    default:
+      return -ENOTSUP;
     }
-    break;
-#endif
-#if defined(CONFIG_LSM9DS1_SAMPLING_RATE_RUNTIME)
   case SENSOR_ATTR_SAMPLING_FREQUENCY:
-    if (lsm9ds1_set_odr(dev, val->val1) < 0) {
-      LOG_DBG("sampling frequency value not supported");
-      return -EIO;
+    switch (chan) {
+    case SENSOR_CHANNEL_GYRO_XYZ:
+      if (lsm9ds1_set_gyro_odr(dev, val) < 0) {
+        LOG_DBG("sampling frequency value not supported");
+        return -EIO;
+      }
+      break;
+    case SENSOR_CHANNEL_ACCEL_XYZ:
+      if (lsm9ds1_set_accel_odr(dev, val->val1) < 0) {
+        LOG_DBG("sampling frequency value not supported");
+        return -EIO;
+      }
+      break;
+    default:
+      return -ENOTSUP;
     }
-    break;
-#endif
   default:
     return -ENOTSUP;
   }
@@ -219,10 +276,10 @@ static int lsm9ds1_attr_set(const struct device *dev, enum sensor_channel chan,
 static const struct sensor_driver_api lsm9ds1_api_funcs = {
     .sample_fetch = lsm9ds1_sample_fetch,
     .channel_get = lsm9ds1_channel_get,
-#if defined(LSM9DS1_SET_ATTR)
+#if defined(LSM9DS1_SET_RUNTIME)
     .attr_set = lsm9ds1_attr_set,
 #endif
-#if defined(CONFIG_LSM9DS1_TRIGGER_DRDY)
+#if !defined(CONFIG_LSM9DS1_TRIGGER_NONE)
     .trigger_set = lsm9ds1_trigger_set,
 #endif
 };
@@ -231,36 +288,15 @@ static int lsm9ds1_init_chip(const struct device *dev) {
   const struct lsm9ds1_config *config = dev->config;
   uint8_t chip_id;
 
-  if (lsm9ds1_power_ctrl(dev, 0, 0, 0, 0) < 0) {
-    LOG_DBG("failed to power off device");
-    return -EIO;
-  }
-
-  if (lsm9ds1_power_ctrl(dev, 1, 1, 1, 1) < 0) {
-    LOG_DBG("failed to power on device");
-    return -EIO;
-  }
-
-  if (i2c_reg_read_byte_dt(&config->i2c, LSM9DS1_REG_WHO_AM_I_G, &chip_id) <
-      0) {
+  if (i2c_reg_read_byte_dt(&config->i2c, LSM9DS1_REG_WHO_AM_I, &chip_id) < 0) {
     LOG_DBG("failed reading chip id");
-    goto err_poweroff;
+    return -EIO;
   }
-  if (chip_id != LSM9DS1_VAL_WHO_AM_I_G) {
+  if (chip_id != LSM9DS1_VAL_WHO_AM_I) {
     LOG_DBG("invalid chip id 0x%x", chip_id);
-    goto err_poweroff;
+    return -EIO;
   }
   LOG_DBG("chip id 0x%x", chip_id);
-
-  if (lsm9ds1_set_fs_raw(dev, LSM9DS1_DEFAULT_FULLSCALE) < 0) {
-    LOG_DBG("failed to set full-scale");
-    goto err_poweroff;
-  }
-
-  if (lsm9ds1_set_odr_raw(dev, LSM9DS1_DEFAULT_SAMPLING_RATE) < 0) {
-    LOG_DBG("failed to set sampling rate");
-    goto err_poweroff;
-  }
 
   if (i2c_reg_update_byte_dt(&config->i2c, LSM9DS1_REG_CTRL_REG4_G,
                              LSM9DS1_MASK_CTRL_REG4_G_BDU |
@@ -268,14 +304,10 @@ static int lsm9ds1_init_chip(const struct device *dev) {
                              (1 << LSM9DS1_SHIFT_CTRL_REG4_G_BDU) |
                                  (0 << LSM9DS1_SHIFT_CTRL_REG4_G_BLE)) < 0) {
     LOG_DBG("failed to set BDU and BLE");
-    goto err_poweroff;
+    return -EIO;
   }
 
   return 0;
-
-err_poweroff:
-  lsm9ds1_power_ctrl(dev, 0, 0, 0, 0);
-  return -EIO;
 }
 
 static int lsm9ds1_init(const struct device *dev) {
@@ -291,7 +323,7 @@ static int lsm9ds1_init(const struct device *dev) {
     return -EIO;
   }
 
-#if defined(CONFIG_LSM9DS1_TRIGGER_DRDY)
+#if !defined(CONFIG_LSM9DS1_TRIGGER_NONE)
   if (config->int_gpio.port) {
     if (lsm9ds1_init_interrupt(dev) < 0) {
       LOG_DBG("failed to initialize interrupts");

@@ -9,9 +9,17 @@ menuconfig LSM9DS1
 	depends on DT_HAS_ST_LSM9DS1_ENABLED
 	select I2C
 	help
-	  Enable driver for LSM9DS1 I2C-based gyroscope sensor.
+	  Enable driver for LSM9DS1 I2C-based accelerometer and gyroscope sensor.
 
 if LSM9DS1
+
+config LSM9DS1_ACCEL_ENABLE
+    bool "Enable accelerometer"
+    default y
+
+config LSM9DS1_GYRO_ENABLE
+    bool "Enable gyroscope"
+    default y
 
 choice
         prompt "Trigger mode"
@@ -49,72 +57,40 @@ config LSM9DS1_THREAD_STACK_SIZE
         help
           The thread stack size.
 
-config LSM9DS1_ACCEL_SAMPLING_RATE_RUNTIME
-	bool "Dynamic sampling rate for accelerometer"
+config LSM9DS1_ACCEL_SET_RUNTIME
+	bool "Set sensor attributes at runtime"
 	depends on DT_HAS_ST_LSM9DS1_ENABLED
 	help
-	  Enable alteration of accelerometer sampling rate attribute at
-	  runtime.
+	  Enable alteration of sensor attributes at runtime.
 
 
 menu "Attributes"
 
 choice
-	prompt "Accelerometer sampling rate"
-	default LSM9DS1_ACCEL_SAMPLING_RATE_25
+	prompt "Accelerometer sampling rate and output rate (ODR)"
+	default LSM9DS1_ACCEL_SAMPLING_RATE_476
 	depends on LSM9DS1_ACCEL_ENABLE
 	help
 	  Specify the default sampling rate frequency for accelerometer.
 
-config LSM9DS1_ACCEL_SAMPLING_RATE_0
-	bool "0 Hz (power down)"
-
-config LSM9DS1_ACCEL_SAMPLING_RATE_3_125
-	bool "3.125 Hz"
-
-config LSM9DS1_ACCEL_SAMPLING_RATE_6_25
-	bool "6.25 Hz"
-
-config LSM9DS1_ACCEL_SAMPLING_RATE_12_5
-	bool "12.5 Hz"
-
-config LSM9DS1_ACCEL_SAMPLING_RATE_25
-	bool "25 Hz"
+config LSM9DS1_ACCEL_SAMPLING_RATE_10
+	bool "10 Hz"
 
 config LSM9DS1_ACCEL_SAMPLING_RATE_50
 	bool "50 Hz"
 
-config LSM9DS1_ACCEL_SAMPLING_RATE_100
-	bool "100 Hz"
+config LSM9DS1_ACCEL_SAMPLING_RATE_119
+	bool "119 Hz"
 
-config LSM9DS1_ACCEL_SAMPLING_RATE_200
-	bool "200 Hz"
+config LSM9DS1_ACCEL_SAMPLING_RATE_238
+	bool "238 Hz"
 
-config LSM9DS1_ACCEL_SAMPLING_RATE_400
-	bool "400 Hz"
+config LSM9DS1_ACCEL_SAMPLING_RATE_476
+	bool "476 Hz"
 
-config LSM9DS1_ACCEL_SAMPLING_RATE_800
-	bool "800 Hz"
+config LSM9DS1_ACCEL_SAMPLING_RATE_952
+	bool "952 Hz"
 
-config LSM9DS1_ACCEL_SAMPLING_RATE_1600
-	bool "1600 Hz"
-
-endchoice
-
-choice
-	prompt "Gyro full-scale"
-	default LSM9DS1_GYRO_FULLSCALE_245
-	help
-	  Specify the default full-scale for the gyroscope.
-
-config LSM9DS1_GYRO_FULLSCALE_245
-	bool "245 DPS"
-
-config LSM9DS1_GYRO_FULLSCALE_500
-	bool "500 DPS"
-
-config LSM9DS1_GYRO_FULLSCALE_2000
-	bool "2000 DPS"
 
 endchoice
 
@@ -131,9 +107,6 @@ config LSM9DS1_ACCEL_FULL_SCALE_2
 config LSM9DS1_ACCEL_FULL_SCALE_4
 	bool "4G"
 
-config LSM9DS1_ACCEL_FULL_SCALE_6
-	bool "6G"
-
 config LSM9DS1_ACCEL_FULL_SCALE_8
 	bool "8G"
 
@@ -142,28 +115,138 @@ config LSM9DS1_ACCEL_FULL_SCALE_16
 
 endchoice
 
-config LSM9DS1_SET_RUNTIME
-	bool "Dynamic attribute setting"
-	help
-	  Enable alteration of sensor attributes at runtime.
+
+config LSM9DS1_ACCEL_ENABLE_BW_SETTING
+    bool "Enable filter bandwith setting"
+    default n
+
+choice 
+    prompt "Filter bandwidth frequency"
+    depends on LSM9DS1_ACCEL_ENABLE_BW_SETTING
+    default LSM9DS1_ACCEL_BW_FILTER_105
+
+config LSM9DS1_ACCEL_BW_FILTER_408
+    bool "408 Hz"
+
+config LSM9DS1_ACCEL_BW_FILTER_211
+    bool "211 Hz"
+
+config LSM9DS1_ACCEL_BW_FILTER_105
+    bool "105 Hz"
+
+config LSM9DS1_ACCEL_BW_FILTER_50
+    bool "50 Hz"
+
+endchoice
 
 choice
-	prompt "Default sampling rate frequency"
-	default LSM9DS1_SAMPLING_RATE_95
+	prompt "Gyroscope sampling rate and output data rate (ODR)"
+	default LSM9DS1_GYRO_SAMPLING_RATE_476
+	depends on LSM9DS1_GYRO_ENABLE
 	help
-	  Specify the default sampling rate frequency.
+	  Specify the default sampling rate frequency for gyroscope.
 
-config LSM9DS1_SAMPLING_RATE_95
-	bool "95 Hz"
+config LSM9DS1_GYRO_SAMPLING_RATE_14_9
+    bool "14.9 Hz"
 
-config LSM9DS1_SAMPLING_RATE_190
-	bool "190 Hz"
+config LSM9DS1_GYRO_SAMPLING_RATE_59_5
+    bool "59.5 Hz"
 
-config LSM9DS1_SAMPLING_RATE_380
-	bool "380 Hz"
+config LSM9DS1_GYRO_SAMPLING_RATE_119
+    bool "119 Hz"
 
-config LSM9DS1_SAMPLING_RATE_760
-	bool "760 Hz"
+config LSM9DS1_GYRO_SAMPLING_RATE_238
+    bool "238 Hz"
+
+config LSM9DS1_GYRO_SAMPLING_RATE_476
+    bool "476 Hz"
+
+config LSM9DS1_GYRO_SAMPLING_RATE_952
+    bool "952 Hz"
+
+endchoice
+
+choice
+	prompt "Gyro full-scale"
+	default LSM9DS1_GYRO_FULLSCALE_245
+	depends on LSM9DS1_GYRO_ENABLE
+	help
+	  Specify the default full-scale for the gyroscope.
+
+config LSM9DS1_GYRO_FULLSCALE_245
+	bool "245 DPS"
+
+config LSM9DS1_GYRO_FULLSCALE_500
+	bool "500 DPS"
+
+config LSM9DS1_GYRO_FULLSCALE_2000
+	bool "2000 DPS"
+
+endchoice
+
+config LSM9DS1_GYRO_SECOND_LPF_ENABLE
+    bool "Enable second low pass filter"
+    depends on LSM9DS1_GYRO_ENABLE
+    default n
+
+choice 
+    prompt "Gyro second low pass filter setting"
+    default LSM9DS1_GYRO_BW_FILTER_MID_HIGH
+	depends on LSM9DS1_GYRO_SECOND_LPF_ENABLE
+
+config LSM9DS1_GYRO_BW_FILTER_LOW
+    bool "Low filter cut off approx ODR/20"
+
+config LSM9DS1_GYRO_BW_FILTER_MID_LOW
+    bool "Mid low cut off approx ODR/12"
+
+config LSM9DS1_GYRO_BW_FILTER_MID_HIGH
+    bool "Mid high filter cut off approx ODR/8"
+
+config LSM9DS1_GYRO_BW_FILTER_HIGH
+    bool "High filter cut off approx ODR/4"
+
+endchoice
+
+config LSM9DS1_GYRO_HPF_ENABLE
+    bool "Enable high pass filter"
+    depends on LSM9DS1_GYRO_ENABLE
+    default n
+
+choice 
+    prompt "Gyro high pass filter setting"
+    default LSM9DS1_GYRO_HPF_FILTER_ODR_DIV_5000
+	depends on LSM9DS1_GYRO_HPF_ENABLE
+
+config LSM9DS1_GYRO_HPF_FILTER_ODR_DIV_15
+    bool "ODR / 15 Hz"
+
+config LSM9DS1_GYRO_HPF_FILTER_ODR_DIV_30
+    bool "ODR / 30 Hz"
+
+config LSM9DS1_GYRO_HPF_FILTER_ODR_DIV_60
+    bool "ODR / 60 Hz"
+
+config LSM9DS1_GYRO_HPF_FILTER_ODR_DIV_150
+    bool "ODR / 150 Hz"
+
+config LSM9DS1_GYRO_HPF_FILTER_ODR_DIV_250
+    bool "ODR / 250 Hz"
+
+config LSM9DS1_GYRO_HPF_FILTER_ODR_DIV_500
+    bool "ODR / 500 Hz"
+
+config LSM9DS1_GYRO_HPF_FILTER_ODR_DIV_1000
+    bool "ODR / 1000 Hz"
+
+config LSM9DS1_GYRO_HPF_FILTER_ODR_DIV_2500
+    bool "ODR / 2500 Hz"
+
+config LSM9DS1_GYRO_HPF_FILTER_ODR_DIV_5000
+    bool "ODR / 5000 Hz"
+
+config LSM9DS1_GYRO_HPF_FILTER_ODR_DIV_10000
+    bool "ODR / 10000 Hz"
 
 endchoice
 
