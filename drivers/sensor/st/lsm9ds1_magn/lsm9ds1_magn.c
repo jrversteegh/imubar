@@ -22,6 +22,11 @@
 
 LOG_MODULE_REGISTER(LSM9DS1_MAGN, CONFIG_SENSOR_LOG_LEVEL);
 
+#define MAGN_FS_4_LSB_PER_MG 7143
+#define MAGN_FS_8_LSB_PER_MG 3448
+#define MAGN_FS_12_LSB_PER_MG 2326
+#define MAGN_FS_16_LSB_PER_MG 1724
+
 #if defined(CONFIG_LSM9DS1_MAGN_SET_RUNTIME)
 static inline int lsm9ds1_magn_set_odr_raw(const struct device *dev,
                                            uint8_t odr) {
@@ -176,42 +181,31 @@ static int lsm9ds1_magn_sample_fetch(const struct device *dev,
   return 0;
 }
 
-static inline void lsm9ds1_magn_convert_accel(struct sensor_value *val,
-                                              int raw_val, float scale) {
-  double dval;
-
-  dval = (double)(raw_val) * (double)scale;
-  val->val1 = (int32_t)dval;
-  val->val2 = ((int32_t)(dval * 1000000)) % 1000000;
-}
-
-static inline void lsm9ds1_magn_convert(struct sensor_value *val, int raw_val,
-                                        float scale) {
-  double dval;
-
-  dval = (double)(raw_val) * (double)scale;
-  val->val1 = (int32_t)dval;
-  val->val2 = ((int32_t)(dval * 1000000)) % 1000000;
+static inline struct sensor_value get_sensor_value(const uint16_t value,
+                                                   const int32_t divisor) {
+  int32_t tmp = (int64_t)value * 1000000 / divisor;
+  struct sensor_value result = {.val1 = tmp / 1000000, .val2 = tmp % 1000000};
+  return result;
 }
 
 static inline int lsm9ds1_magn_get_channel(enum sensor_channel chan,
                                            struct sensor_value *val,
                                            struct lsm9ds1_magn_data *data,
-                                           float scale) {
+                                           int divisor) {
   switch (chan) {
   case SENSOR_CHAN_MAGN_X:
-    lsm9ds1_magn_convert(val, data->sample_magn_x, scale);
+    *val = get_sensor_value(data->sample_magn_x, divisor);
     break;
   case SENSOR_CHAN_MAGN_Y:
-    lsm9ds1_magn_convert(val, data->sample_magn_y, scale);
+    *val = get_sensor_value(data->sample_magn_y, divisor);
     break;
   case SENSOR_CHAN_MAGN_Z:
-    lsm9ds1_magn_convert(val, data->sample_magn_z, scale);
+    *val = get_sensor_value(data->sample_magn_z, divisor);
     break;
   case SENSOR_CHAN_MAGN_XYZ:
-    lsm9ds1_magn_convert(val, data->sample_magn_x, scale);
-    lsm9ds1_magn_convert(val + 1, data->sample_magn_y, scale);
-    lsm9ds1_magn_convert(val + 2, data->sample_magn_z, scale);
+    *val = get_sensor_value(data->sample_magn_x, divisor);
+    *(val + 1) = get_sensor_value(data->sample_magn_y, divisor);
+    *(val + 2) = get_sensor_value(data->sample_magn_z, divisor);
     break;
   default:
     return -ENOTSUP;
@@ -228,24 +222,24 @@ static inline int lsm9ds1_magn_get_magn(const struct device *dev,
 #if defined(CONFIG_LSM9DS1_MAGN_SET_RUNTIME)
   switch (data->fs) {
   case 0:
-    return lsm9ds1_magn_get_channel(chan, val, data, 4.0 / 32767.0);
+    return lsm9ds1_magn_get_channel(chan, val, data, MAGN_FS_4_LSB_PER_MG);
   case 1:
-    return lsm9ds1_magn_get_channel(chan, val, data, 8.0 / 32767.0);
+    return lsm9ds1_magn_get_channel(chan, val, data, MAGN_FS_8_LSB_PER_MG);
   case 2:
-    return lsm9ds1_magn_get_channel(chan, val, data, 12.0 / 32767.0);
+    return lsm9ds1_magn_get_channel(chan, val, data, MAGN_FS_12_LSB_PER_MG);
   case 3:
-    return lsm9ds1_magn_get_channel(chan, val, data, 16.0 / 32767.0);
+    return lsm9ds1_magn_get_channel(chan, val, data, MAGN_FS_16_LSB_PER_MG);
   default:
     return -ENOTSUP;
   }
 #elif defined(CONFIG_LSM9DS1_MAGN_FULL_SCALE_4)
-  return lsm9ds1_magn_get_channel(chan, val, data, 4.0 / 32767.0);
+  return lsm9ds1_magn_get_channel(chan, val, data, MAGN_FS_4_LSB_PER_MG);
 #elif defined(CONFIG_LSM9DS1_MAGN_FULL_SCALE_8)
-  return lsm9ds1_magn_get_channel(chan, val, data, 8.0 / 32767.0);
+  return lsm9ds1_magn_get_channel(chan, val, data, MAGN_FS_8_LSB_PER_MG);
 #elif defined(CONFIG_LSM9DS1_MAGN_FULL_SCALE_12)
-  return lsm9ds1_magn_get_channel(chan, val, data, 12.0 / 32767.0);
+  return lsm9ds1_magn_get_channel(chan, val, data, MAGN_FS_12_LSB_PER_MG);
 #elif defined(CONFIG_LSM9DS1_MAGN_FULL_SCALE_16)
-  return lsm9ds1_magn_get_channel(chan, val, data, 16.0 / 32767.0);
+  return lsm9ds1_magn_get_channel(chan, val, data, MAGN_FS_16_LSB_PER_MG);
 #else
 #error "Full scale not set"
 #endif

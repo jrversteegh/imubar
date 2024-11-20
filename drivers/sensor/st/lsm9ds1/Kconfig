@@ -168,18 +168,18 @@ endchoice
 
 choice
 	prompt "Gyro full-scale"
-	default LSM9DS1_GYRO_FULLSCALE_245
+	default LSM9DS1_GYRO_FULL_SCALE_245
 	depends on LSM9DS1_GYRO_ENABLE
 	help
 	  Specify the default full-scale for the gyroscope.
 
-config LSM9DS1_GYRO_FULLSCALE_245
+config LSM9DS1_GYRO_FULL_SCALE_245
 	bool "245 DPS"
 
-config LSM9DS1_GYRO_FULLSCALE_500
+config LSM9DS1_GYRO_FULL_SCALE_500
 	bool "500 DPS"
 
-config LSM9DS1_GYRO_FULLSCALE_2000
+config LSM9DS1_GYRO_FULL_SCALE_2000
 	bool "2000 DPS"
 
 endchoice

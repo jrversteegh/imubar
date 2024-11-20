@@ -49,8 +49,8 @@ template <> inline double sensor_value_to<double>(sensor_value const &value) {
 
 std::vector<device const *> get_sensors() {
   return {
-      imu_mpu9250,     imu_fxos8700,   imu_fxas21002,
-      imu_lsm303accel, imu_lsm303magn, imu_bno055,
+      imu_mpu9250,    imu_fxos8700, imu_fxas21002, imu_lsm303accel,
+      imu_lsm303magn, imu_bno055,   imu_lsm9ds1,   imu_lsm9ds1magn,
   };
 }
 
@@ -107,6 +107,12 @@ void initialize_sensors() {
   if (!device_is_ready(imu_bno055)) {
     error(2, "BNO055 not ready.");
   }
+  if (!device_is_ready(imu_lsm9ds1)) {
+    error(2, "LSM9DS1 not ready.");
+  }
+  if (!device_is_ready(imu_lsm9ds1magn)) {
+    error(2, "LSM9DS1 magn not ready.");
+  }
 }
 
 std::vector<std::unique_ptr<Imu>> &get_imus() {
@@ -116,10 +122,12 @@ std::vector<std::unique_ptr<Imu>> &get_imus() {
                                          imu_fxas21002, imu_fxos8700));
     imus.push_back(std::make_unique<Imu>("sparkfun_mpu9250", imu_mpu9250,
                                          imu_mpu9250, imu_mpu9250, 12));
-    imus.push_back(std::make_unique<Imu>("adafruit_lsm_l3", imu_lsm303accel,
+    imus.push_back(std::make_unique<Imu>("ada_lsm303_l3gd20", imu_lsm303accel,
                                          nullptr, imu_lsm303magn, 10));
     imus.push_back(std::make_unique<Imu>("adafruit_bno055", imu_bno055,
                                          imu_bno055, imu_bno055));
+    imus.push_back(std::make_unique<Imu>("sparkfun_lsm9ds1", imu_lsm9ds1,
+                                         imu_lsm9ds1, imu_lsm9ds1magn));
   }
   return imus;
 }
