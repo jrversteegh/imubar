@@ -9,22 +9,15 @@
 #include <zephyr/sys/util.h>
 #include <zephyr/types.h>
 
-#define LSM9DS1_MAGN_REG_OUT_X_L 0x28
-#define LSM9DS1_MAGN_REG_OUT_X_H 0x29
-#define LSM9DS1_MAGN_REG_OUT_Y_L 0x2A
-#define LSM9DS1_MAGN_REG_OUT_Y_H 0x2B
-#define LSM9DS1_MAGN_REG_OUT_Z_L 0x2C
-#define LSM9DS1_MAGN_REG_OUT_Z_H 0x2D
-
-#define LSM9DS1_MAGN_REG_WHO_AM_I 0x0F
-#define LSM9DS1_MAGN_VAL_WHO_AM_I 0x3D
-
 #define LSM9DS1_MAGN_REG_OFFSET_X_L 0x05
 #define LSM9DS1_MAGN_REG_OFFSET_X_H 0x06
 #define LSM9DS1_MAGN_REG_OFFSET_Y_L 0x07
 #define LSM9DS1_MAGN_REG_OFFSET_Y_H 0x08
 #define LSM9DS1_MAGN_REG_OFFSET_Z_L 0x09
 #define LSM9DS1_MAGN_REG_OFFSET_Z_H 0x0A
+
+#define LSM9DS1_MAGN_REG_WHO_AM_I 0x0F
+#define LSM9DS1_MAGN_VAL_WHO_AM_I 0x3D
 
 #define LSM9DS1_MAGN_REG_CTRL_REG1 0x20
 #define LSM9DS1_MAGN_REG_CTRL_REG1_TEMP_COMP_SHIFT 7
@@ -111,12 +104,28 @@
 #error "No full scale selected"
 #endif
 
+#define LSM9DS1_MAGN_REG_OUT_X_L 0x28
+#define LSM9DS1_MAGN_REG_OUT_X_H 0x29
+#define LSM9DS1_MAGN_REG_OUT_Y_L 0x2A
+#define LSM9DS1_MAGN_REG_OUT_Y_H 0x2B
+#define LSM9DS1_MAGN_REG_OUT_Z_L 0x2C
+#define LSM9DS1_MAGN_REG_OUT_Z_H 0x2D
+
 struct lsm9ds1_magn_config {
   struct i2c_dt_spec i2c;
 };
 
+struct lsm9ds1_magn_sample {
+  int16_t x;
+  int16_t y;
+  int16_t z;
+};
+
 struct lsm9ds1_magn_data {
-  int sample_magn_x, sample_magn_y, sample_magn_z;
+  union {
+    int16_t vec[3];
+    struct lsm9ds1_magn_sample sample;
+  };
   uint8_t fs;
 };
 

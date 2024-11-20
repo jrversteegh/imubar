@@ -17,6 +17,7 @@
 #include <zephyr/init.h>
 #include <zephyr/kernel.h>
 #include <zephyr/logging/log.h>
+#include <zephyr/sys/byteorder.h>
 
 #include "lsm9ds1_magn.h"
 
@@ -91,89 +92,35 @@ static int lsm9ds1_magn_set_fs(const struct device *dev, int val) {
 }
 #endif
 
-static inline int lsm9ds1_magn_sample_fetch_magn_x(const struct device *dev) {
-  struct lsm9ds1_magn_data *data = dev->data;
+static inline int read_i2c(const struct device *dev, const uint8_t reg_addr,
+                           uint8_t *buf, const uint32_t num_bytes) {
   const struct lsm9ds1_magn_config *config = dev->config;
-  uint8_t out_l, out_h;
-
-  if (i2c_reg_read_byte_dt(&config->i2c, LSM9DS1_MAGN_REG_OUT_X_L, &out_l) <
-          0 ||
-      i2c_reg_read_byte_dt(&config->i2c, LSM9DS1_MAGN_REG_OUT_X_H, &out_h) <
-          0) {
-    LOG_DBG("failed to read magn sample (X axis)");
-    return -EIO;
-  }
-
-  data->sample_magn_x = (int16_t)((uint16_t)(out_l) | ((uint16_t)(out_h) << 8));
-
-  return 0;
-}
-
-static inline int lsm9ds1_magn_sample_fetch_magn_y(const struct device *dev) {
-  struct lsm9ds1_magn_data *data = dev->data;
-  const struct lsm9ds1_magn_config *config = dev->config;
-  uint8_t out_l, out_h;
-
-  if (i2c_reg_read_byte_dt(&config->i2c, LSM9DS1_MAGN_REG_OUT_Y_L, &out_l) <
-          0 ||
-      i2c_reg_read_byte_dt(&config->i2c, LSM9DS1_MAGN_REG_OUT_Y_H, &out_h) <
-          0) {
-    LOG_DBG("failed to read magn sample (Y axis)");
-    return -EIO;
-  }
-
-  data->sample_magn_y = (int16_t)((uint16_t)(out_l) | ((uint16_t)(out_h) << 8));
-  return 0;
-}
-
-static inline int lsm9ds1_magn_sample_fetch_magn_z(const struct device *dev) {
-  struct lsm9ds1_magn_data *data = dev->data;
-  const struct lsm9ds1_magn_config *config = dev->config;
-  uint8_t out_l, out_h;
-  if (i2c_reg_read_byte_dt(&config->i2c, LSM9DS1_MAGN_REG_OUT_Z_L, &out_l) <
-          0 ||
-      i2c_reg_read_byte_dt(&config->i2c, LSM9DS1_MAGN_REG_OUT_Z_H, &out_h) <
-          0) {
-    LOG_DBG("failed to read magn sample (Z axis)");
-    return -EIO;
-  }
-
-  data->sample_magn_z = (int16_t)((uint16_t)(out_l) | ((uint16_t)(out_h) << 8));
-  return 0;
-}
-
-static inline int lsm9ds1_magn_sample_fetch_magn(const struct device *dev) {
-  struct lsm9ds1_magn_data *data = dev->data;
-  const struct lsm9ds1_magn_config *config = dev->config;
-
-  uint8_t buf[6];
-  if (i2c_burst_read_dt(&config->i2c, LSM9DS1_MAGN_REG_OUT_X_L, buf,
-                        sizeof(buf)) < 0) {
+  if (i2c_burst_read_dt(&config->i2c, reg_addr, buf, num_bytes) < 0) {
     LOG_DBG("Could not read LSM9DS1 data");
     return -EIO;
   }
-  data->sample_magn_x =
-      (int16_t)((uint16_t)(buf[0]) | ((uint16_t)(buf[1]) << 8));
-  data->sample_magn_y =
-      (int16_t)((uint16_t)(buf[2]) | ((uint16_t)(buf[3]) << 8));
-  data->sample_magn_z =
-      (int16_t)((uint16_t)(buf[4]) | ((uint16_t)(buf[5]) << 8));
   return 0;
 }
 
 static int lsm9ds1_magn_sample_fetch(const struct device *dev,
                                      enum sensor_channel chan) {
+  struct lsm9ds1_magn_data *data = dev->data;
   switch (chan) {
   case SENSOR_CHAN_MAGN_X:
-    return lsm9ds1_magn_sample_fetch_magn_x(dev);
+    return read_i2c(dev, LSM9DS1_MAGN_REG_OUT_X_L, (uint8_t *)&data->sample.x,
+                    sizeof(data->sample.x));
   case SENSOR_CHAN_MAGN_Y:
-    return lsm9ds1_magn_sample_fetch_magn_y(dev);
+    return read_i2c(dev, LSM9DS1_MAGN_REG_OUT_Y_L, (uint8_t *)&data->sample.y,
+                    sizeof(data->sample.y));
   case SENSOR_CHAN_MAGN_Z:
-    return lsm9ds1_magn_sample_fetch_magn_z(dev);
+    return read_i2c(dev, LSM9DS1_MAGN_REG_OUT_Z_L, (uint8_t *)&data->sample.z,
+                    sizeof(data->sample.z));
   case SENSOR_CHAN_MAGN_XYZ:
-    return lsm9ds1_magn_sample_fetch_magn(dev);
+    return read_i2c(dev, LSM9DS1_MAGN_REG_OUT_X_L, (uint8_t *)&data->sample,
+                    sizeof(data->sample));
   case SENSOR_CHAN_ALL:
-    return lsm9ds1_magn_sample_fetch_magn(dev);
+    return read_i2c(dev, LSM9DS1_MAGN_REG_OUT_X_L, (uint8_t *)&data->sample,
+                    sizeof(data->sample));
   default:
     return -EINVAL;
   }
@@ -183,7 +130,8 @@ static int lsm9ds1_magn_sample_fetch(const struct device *dev,
 
 static inline struct sensor_value get_sensor_value(const uint16_t value,
                                                    const int32_t divisor) {
-  int32_t tmp = (int64_t)value * 1000000 / divisor;
+  int64_t val = (int16_t)sys_le16_to_cpu(value);
+  int32_t tmp = val * 1000000 / divisor;
   struct sensor_value result = {.val1 = tmp / 1000000, .val2 = tmp % 1000000};
   return result;
 }
@@ -194,18 +142,18 @@ static inline int lsm9ds1_magn_get_channel(enum sensor_channel chan,
                                            int divisor) {
   switch (chan) {
   case SENSOR_CHAN_MAGN_X:
-    *val = get_sensor_value(data->sample_magn_x, divisor);
+    *val = get_sensor_value(data->sample.x, divisor);
     break;
   case SENSOR_CHAN_MAGN_Y:
-    *val = get_sensor_value(data->sample_magn_y, divisor);
+    *val = get_sensor_value(data->sample.y, divisor);
     break;
   case SENSOR_CHAN_MAGN_Z:
-    *val = get_sensor_value(data->sample_magn_z, divisor);
+    *val = get_sensor_value(data->sample.z, divisor);
     break;
   case SENSOR_CHAN_MAGN_XYZ:
-    *val = get_sensor_value(data->sample_magn_x, divisor);
-    *(val + 1) = get_sensor_value(data->sample_magn_y, divisor);
-    *(val + 2) = get_sensor_value(data->sample_magn_z, divisor);
+    *val = get_sensor_value(data->sample.x, divisor);
+    *(val + 1) = get_sensor_value(data->sample.y, divisor);
+    *(val + 2) = get_sensor_value(data->sample.z, divisor);
     break;
   default:
     return -ENOTSUP;
@@ -311,36 +259,49 @@ static int lsm9ds1_magn_init_chip(const struct device *dev) {
 
   if (i2c_reg_read_byte_dt(&config->i2c, LSM9DS1_MAGN_REG_WHO_AM_I, &chip_id) <
       0) {
-    LOG_DBG("failed reading chip id");
+    LOG_DBG("Failed reading chip id");
     return -EIO;
   }
 
   if (chip_id != LSM9DS1_MAGN_VAL_WHO_AM_I) {
-    LOG_DBG("invalid chip id 0x%x", chip_id);
+    LOG_DBG("Invalid chip id 0x%x", chip_id);
     return -EIO;
   }
 
   LOG_DBG("chip id 0x%x", chip_id);
 
-  if (i2c_reg_write_byte_dt(&config->i2c, LSM9DS1_MAGN_REG_CTRL_REG1,
-                            LSM9DS1_MAGN_DEFAULT_TEMP_COMP |
-                                LSM9DS1_MAGN_DEFAULT_ODR |
-                                LSM9DS1_MAGN_DEFAULT_XY_OPR)) {
-    LOG_DBG("failed to set X OPR");
+  uint8_t data = LSM9DS1_MAGN_DEFAULT_TEMP_COMP | LSM9DS1_MAGN_DEFAULT_ODR |
+                 LSM9DS1_MAGN_DEFAULT_XY_OPR;
+  if (i2c_reg_write_byte_dt(&config->i2c, LSM9DS1_MAGN_REG_CTRL_REG1, data) <
+      0) {
+    LOG_DBG("Failed to set X OPR");
     return -EIO;
   }
+  LOG_DBG("Written %d to CTRL1", (int)data);
 
-  if (i2c_reg_write_byte_dt(&config->i2c, LSM9DS1_MAGN_REG_CTRL_REG2,
-                            LSM9DS1_MAGN_DEFAULT_FS)) {
-    LOG_DBG("failed to set FS");
+  data = LSM9DS1_MAGN_DEFAULT_FS;
+  if (i2c_reg_write_byte_dt(&config->i2c, LSM9DS1_MAGN_REG_CTRL_REG2, data) <
+      0) {
+    LOG_DBG("Failed to set FS");
     return -EIO;
   }
+  LOG_DBG("Written %d to CTRL2", (int)data);
 
-  if (i2c_reg_write_byte_dt(&config->i2c, LSM9DS1_MAGN_REG_CTRL_REG4,
-                            LSM9DS1_MAGN_DEFAULT_Z_OPR)) {
-    LOG_DBG("failed to set Z OPR");
+  data = 0;
+  if (i2c_reg_write_byte_dt(&config->i2c, LSM9DS1_MAGN_REG_CTRL_REG3, data) <
+      0) {
+    LOG_DBG("Failed to power up");
     return -EIO;
   }
+  LOG_DBG("Written %d to CTRL3", (int)data);
+
+  data = LSM9DS1_MAGN_DEFAULT_Z_OPR;
+  if (i2c_reg_write_byte_dt(&config->i2c, LSM9DS1_MAGN_REG_CTRL_REG4, data) <
+      0) {
+    LOG_DBG("Failed to set Z OPR");
+    return -EIO;
+  }
+  LOG_DBG("Written %d to CTRL4", (int)data);
 
   return 0;
 }
