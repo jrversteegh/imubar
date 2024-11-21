@@ -13,6 +13,8 @@
 #include <zephyr/sys/__assert.h>
 #include <zephyr/sys/byteorder.h>
 
+#include <assert.h>
+
 #include "bno055.h"
 
 LOG_MODULE_REGISTER(BNO055, CONFIG_SENSOR_LOG_LEVEL);
@@ -145,13 +147,16 @@ static void get_acceleration_vec(const struct device *dev,
 
 static void get_gyro(const struct device *dev, const uint16_t gyro,
                      struct sensor_value *val) {
-  *val = get_sensor_value(gyro, BNO055_GYRO_LSB_PER_RPS);
+  struct bno055_data *data = dev->data;
+  *val = get_sensor_value(gyro, BNO055_GYRO_LSB_PER_RPS * data->gyr_div);
 }
 
 static void get_gyro_vec(const struct device *dev, const bno055_vec gyro,
                          struct sensor_value *val) {
+  struct bno055_data *data = dev->data;
   for (int i = 0; i < 3; ++i) {
-    *val = get_sensor_value(gyro.components[i], BNO055_GYRO_LSB_PER_RPS);
+    *val = get_sensor_value(gyro.components[i],
+                            BNO055_GYRO_LSB_PER_RPS * data->gyr_div);
     ++val;
   }
 }
@@ -194,6 +199,8 @@ static int set_unit_selection(const struct device *dev) {
                                     .euler_angles = euler_angles_radians,
                                     .angular_rate = angular_rate_rps,
                                     .acceleration = acceleration_ms2}};
+  if (usel.byte != 134)
+    return -ENOTSUP;
   return write_i2c_byte(dev, 0, BNO055_UNIT_SEL_ADDR, usel.byte);
 }
 
@@ -219,8 +226,8 @@ static int set_accel_config(const struct device *dev) {
           .accel_bandwidth = accel_config_bandwidth_8Hz,
 #elif defined CONFIG_BNO055_ACCEL_BANDWIDTH_16HZ
           .accel_bandwidth = accel_config_bandwidth_16Hz,
-#elif defined CONFIG_BNO055_ACCEL_BANDWIDTH_31HZ
-          .accel_bandwidth = accel_config_bandwidth_31Hz,
+#elif defined CONFIG_BNO055_ACCEL_BANDWIDTH_32HZ
+          .accel_bandwidth = accel_config_bandwidth_32Hz,
 #elif defined CONFIG_BNO055_ACCEL_BANDWIDTH_63HZ
           .accel_bandwidth = accel_config_bandwidth_63Hz,
 #elif defined CONFIG_BNO055_ACCEL_BANDWIDTH_125HZ
@@ -241,9 +248,23 @@ static int set_accel_config(const struct device *dev) {
 
 static int set_gyro_config(const struct device *dev) {
   int result = 0;
+  struct bno055_data *data = dev->data;
   if ((result = set_operation_mode(dev, operation_mode_config)) != 0) {
     return result;
   };
+#ifdef CONFIG_BNO055_GYRO_RANGE_125DPS
+  data->gyr_div = 16;
+#elif defined CONFIG_BNO055_GYRO_RANGE_250DPS
+  data->gyr_div = 8;
+#elif defined CONFIG_BNO055_GYRO_RANGE_500DPS
+  data->gyr_div = 4;
+#elif defined CONFIG_BNO055_GYRO_RANGE_1000DPS
+  data->gyr_div = 2;
+#elif defined CONFIG_BNO055_GYRO_RANGE_2000DPS
+  data->gyr_div = 1;
+#else
+#error "No gyro range selected"
+#endif
   union gyro_config g_conf = {.config = {
 #ifdef CONFIG_BNO055_GYRO_RANGE_125DPS
                                   .gyro_range = gyro_mode_range_125dps,

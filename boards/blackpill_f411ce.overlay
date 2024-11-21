@@ -17,9 +17,15 @@
         reg = <0x1e>;
     };
 
+    l3gd20h_0: l3gd20h@6b {
+        compatible = "st,l3gd20h";
+        reg = <0x6b>;
+    };
+
     fxos8700_0: fxos8700@1f {
 		compatible = "nxp,fxos8700";
 		reg = <0x1f>;
+        range = <2>;
     };
 
     fxas21002_0: fxas21002@21 {

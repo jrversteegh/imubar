@@ -121,11 +121,11 @@ config BNO055_ACCEL_BANDWIDTH_8HZ
 config BNO055_ACCEL_BANDWIDTH_16HZ
         bool "16 Hz"
 
-config BNO055_ACCEL_BANDWIDTH_31HZ
-        bool "31 Hz"
+config BNO055_ACCEL_BANDWIDTH_32HZ
+        bool "32 Hz"
 
 config BNO055_ACCEL_BANDWIDTH_63HZ
-        bool "62 Hz"
+        bool "63 Hz"
 
 config BNO055_ACCEL_BANDWIDTH_125HZ
         bool "125 Hz"

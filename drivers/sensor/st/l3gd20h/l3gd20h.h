@@ -1,0 +1,106 @@
+/* sensor_l3gd20h.h - header file for LSM9DS1 magnetometer
+ * sensor driver
+ */
+
+#ifndef ZEPHYR_DRIVERS_SENSOR_L3GD20H_L3GD20H_H_
+#define ZEPHYR_DRIVERS_SENSOR_L3GD20H_L3GD20H_H_
+
+#include <zephyr/drivers/i2c.h>
+#include <zephyr/sys/util.h>
+#include <zephyr/types.h>
+
+#define L3GD20H_REG_WHO_AM_I 0x0F
+#define L3GD20H_VAL_WHO_AM_I 0xD7
+
+#define L3GD20H_REG_CTRL_REG1 0x20
+#define L3GD20H_REG_CTRL_REG1_DR_SHIFT 6
+#define L3GD20H_REG_CTRL_REG1_DR_MASK (3 << L3GD20H_REG_CTRL_REG1_DR_SHIFT)
+#define L3GD20H_REG_CTRL_REG1_BW_SHIFT 4
+#define L3GD20H_REG_CTRL_REG1_BW_MASK (3 << L3GD20H_REG_CTRL_REG1_BW_SHIFT)
+#define L3GD20H_REG_CTRL_REG1_POWER_UP 0x0F
+
+#define L3GD20H_REG_CTRL_REG2 0x21
+#define L3GD20H_REG_CTRL_REG3 0x22
+#define L3GD20H_REG_CTRL_REG4 0x23
+#define L3GD20H_REG_CTRL_REG4_FS_SHIFT 4
+#define L3GD20H_REG_CTRL_REG4_FS_MASK (3 << L3GD20H_REG_CTRL_REG4_FS_SHIFT)
+
+#define L3GD20H_REG_CTRL_REG5 0x24
+
+#define L3GD20H_REG_OUT_TEMP 0x26
+#define L3GD20H_REG_OUT_X_L 0x28
+#define L3GD20H_REG_OUT_X_H 0x29
+#define L3GD20H_REG_OUT_Y_L 0x2A
+#define L3GD20H_REG_OUT_Y_H 0x2B
+#define L3GD20H_REG_OUT_Z_L 0x2C
+#define L3GD20H_REG_OUT_Z_H 0x2D
+
+#define L3GD20H_REG_LOW_ODR 0x39
+
+#if defined(CONFIG_L3GD20H_ODR_12_5)
+#define L3GD20H_DEFAULT_LOW_ODR 0x01
+#define L3GD20H_DEFAULT_ODR (0 << L3GD20H_REG_CTRL_REG1_DR_SHIFT)
+#elif defined(CONFIG_L3GD20H_ODR_25)
+#define L3GD20H_DEFAULT_LOW_ODR 0x01
+#define L3GD20H_DEFAULT_ODR (1 << L3GD20H_REG_CTRL_REG1_DR_SHIFT)
+#elif defined(CONFIG_L3GD20H_ODR_50)
+#define L3GD20H_DEFAULT_LOW_ODR 0x01
+#define L3GD20H_DEFAULT_ODR (2 << L3GD20H_REG_CTRL_REG1_DR_SHIFT)
+#elif defined(CONFIG_L3GD20H_ODR_100)
+#define L3GD20H_DEFAULT_LOW_ODR 0x00
+#define L3GD20H_DEFAULT_ODR (0 << L3GD20H_REG_CTRL_REG1_DR_SHIFT)
+#elif defined(CONFIG_L3GD20H_ODR_200)
+#define L3GD20H_DEFAULT_LOW_ODR 0x00
+#define L3GD20H_DEFAULT_ODR (1 << L3GD20H_REG_CTRL_REG1_DR_SHIFT)
+#elif defined(CONFIG_L3GD20H_ODR_400)
+#define L3GD20H_DEFAULT_LOW_ODR 0x00
+#define L3GD20H_DEFAULT_ODR (2 << L3GD20H_REG_CTRL_REG1_DR_SHIFT)
+#elif defined(CONFIG_L3GD20H_ODR_800)
+#define L3GD20H_DEFAULT_LOW_ODR 0x00
+#define L3GD20H_DEFAULT_ODR (3 << L3GD20H_REG_CTRL_REG1_DR_SHIFT)
+#else
+#error "No sampling/output data rate selected"
+#endif
+
+#if defined(CONFIG_L3GD20H_FS_245)
+#define L3GD20H_DEFAULT_FS (0 << L3GD20H_REG_CTRL_REG4_FS_SHIFT)
+#elif defined(CONFIG_L3GD20H_FS_500)
+#define L3GD20H_DEFAULT_FS (1 << L3GD20H_REG_CTRL_REG4_FS_SHIFT)
+#elif defined(CONFIG_L3GD20H_FS_2000)
+#define L3GD20H_DEFAULT_FS (2 << L3GD20H_REG_CTRL_REG4_FS_SHIFT)
+#else
+#error "No full scale selected"
+#endif
+
+#if defined(CONFIG_L3GD20H_FILTER_CUTOFF_0)
+#define L3GD20H_DEFAULT_BW (0 << L3GD20H_REG_CTRL_REG1_BW_SHIFT)
+#elif defined(CONFIG_L3GD20H_FILTER_CUTOFF_1)
+#define L3GD20H_DEFAULT_BW (1 << L3GD20H_REG_CTRL_REG1_BW_SHIFT)
+#elif defined(CONFIG_L3GD20H_FILTER_CUTOFF_2)
+#define L3GD20H_DEFAULT_BW (2 << L3GD20H_REG_CTRL_REG1_BW_SHIFT)
+#elif defined(CONFIG_L3GD20H_FILTER_CUTOFF_3)
+#define L3GD20H_DEFAULT_BW (3 << L3GD20H_REG_CTRL_REG1_BW_SHIFT)
+#else
+#error "No filter cutoff selected"
+#endif
+
+struct l3gd20h_config {
+  struct i2c_dt_spec i2c;
+};
+
+struct l3gd20h_sample {
+  int16_t x;
+  int16_t y;
+  int16_t z;
+};
+
+struct l3gd20h_data {
+  union {
+    int16_t vec[3];
+    struct l3gd20h_sample sample;
+  };
+  int8_t temp;
+  uint8_t fs;
+};
+
+#endif /* ZEPHYR_DRIVERS_SENSOR_L3GD20H_L3GD20H_H_ */

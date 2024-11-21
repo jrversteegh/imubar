@@ -19,6 +19,7 @@ LOG_MODULE_DECLARE(imubar);
 #define FXAS21002_0 DT_NODELABEL(fxas21002_0)
 #define LSM303ACCEL_0 DT_NODELABEL(lsm303accel_0)
 #define LSM303MAGN_0 DT_NODELABEL(lsm303magn_0)
+#define L3GD20H_0 DT_NODELABEL(l3gd20h_0)
 #define BNO055_0 DT_NODELABEL(bno055_0)
 #define LSM9DS1_0 DT_NODELABEL(lsm9ds1_0)
 #define LSM9DS1MAGN_0 DT_NODELABEL(lsm9ds1magn_0)
@@ -28,6 +29,7 @@ static device const *const imu_fxos8700 = DEVICE_DT_GET(FXOS8700_0);
 static device const *const imu_fxas21002 = DEVICE_DT_GET(FXAS21002_0);
 static device const *const imu_lsm303accel = DEVICE_DT_GET(LSM303ACCEL_0);
 static device const *const imu_lsm303magn = DEVICE_DT_GET(LSM303MAGN_0);
+static device const *const imu_l3gd20h = DEVICE_DT_GET(L3GD20H_0);
 static device const *const imu_bno055 = DEVICE_DT_GET(BNO055_0);
 static device const *const imu_lsm9ds1 = DEVICE_DT_GET(LSM9DS1_0);
 static device const *const imu_lsm9ds1magn = DEVICE_DT_GET(LSM9DS1MAGN_0);
@@ -49,7 +51,7 @@ template <> inline double sensor_value_to<double>(sensor_value const &value) {
 
 std::vector<device const *> get_sensors() {
   return {
-      imu_mpu9250,    imu_fxos8700, imu_fxas21002, imu_lsm303accel,
+      imu_mpu9250,    imu_fxos8700, imu_fxas21002, imu_lsm303accel, imu_l3gd20h,
       imu_lsm303magn, imu_bno055,   imu_lsm9ds1,   imu_lsm9ds1magn,
   };
 }
@@ -95,6 +97,11 @@ void initialize_sensors() {
   if (!device_is_ready(imu_fxos8700)) {
     error(2, "FXOS8700 not ready.");
   }
+  struct sensor_value odr = {.val1 = 100, .val2 = 0};
+  if (sensor_attr_set(imu_fxos8700, SENSOR_CHAN_ALL,
+                      SENSOR_ATTR_SAMPLING_FREQUENCY, &odr) != 0) {
+    error(2, "Failed to set FXOS8700 odr.");
+  }
   if (!device_is_ready(imu_fxas21002)) {
     error(2, "FXAS21002 not ready.");
   }
@@ -103,6 +110,9 @@ void initialize_sensors() {
   }
   if (!device_is_ready(imu_lsm303magn)) {
     error(2, "LSM303 magn not ready.");
+  }
+  if (!device_is_ready(imu_l3gd20h)) {
+    error(2, "L3GD20H gyro not ready.");
   }
   if (!device_is_ready(imu_bno055)) {
     error(2, "BNO055 not ready.");
@@ -123,11 +133,11 @@ std::vector<std::unique_ptr<Imu>> &get_imus() {
     imus.push_back(std::make_unique<Imu>("sparkfun_mpu9250", imu_mpu9250,
                                          imu_mpu9250, imu_mpu9250, 12));
     imus.push_back(std::make_unique<Imu>("ada_lsm303_l3gd20", imu_lsm303accel,
-                                         nullptr, imu_lsm303magn, 10));
+                                         imu_l3gd20h, imu_lsm303magn, 25));
     imus.push_back(std::make_unique<Imu>("adafruit_bno055", imu_bno055,
                                          imu_bno055, imu_bno055));
     imus.push_back(std::make_unique<Imu>("sparkfun_lsm9ds1", imu_lsm9ds1,
-                                         imu_lsm9ds1, imu_lsm9ds1magn));
+                                         imu_lsm9ds1, imu_lsm9ds1magn, 10));
   }
   return imus;
 }

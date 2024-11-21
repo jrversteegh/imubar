@@ -1,0 +1,95 @@
+# L3GD20H gyro configuration options
+
+# Copyright (c) 2024 J.R. Versteegh
+# SPDX-License-Identifier: Apache-2.0
+
+menuconfig L3GD20H
+	bool "L3GD20H I2C gyro"
+	default y
+	depends on DT_HAS_ST_L3GD20H_ENABLED
+	select I2C
+	help
+	  Enable driver for L3GD20H I2C-based gyro sensor.
+
+if L3GD20H
+
+
+menu "Attributes"
+
+choice
+	prompt "Gyro data rate"
+	default L3GD20H_ODR_200
+	help
+	  Specify the default sampling rate frequency for gyro.
+
+config L3GD20H_ODR_12_5
+	bool "12.5 Hz"
+
+config L3GD20H_ODR_25
+	bool "25 Hz"
+
+config L3GD20H_ODR_50
+	bool "50 Hz"
+
+config L3GD20H_ODR_100
+	bool "100 Hz"
+
+config L3GD20H_ODR_200
+	bool "200 Hz"
+
+config L3GD20H_ODR_400
+	bool "400 Hz"
+
+config L3GD20H_ODR_800
+	bool "800 Hz"
+
+endchoice
+
+
+choice
+	prompt "Gyro full-scale"
+    default L3GD20H_FS_245
+    help
+      Specify the default full-scale for gyroscope.
+
+    config L3GD20H_FS_245
+    bool "245 dps"
+
+    config L3GD20H_FS_500
+    bool "500 dps"
+
+    config L3GD20H_FS_2000
+	bool "2000 dps"
+
+endchoice
+
+choice
+	prompt "Gyro low-pass filter cut-off"
+	default L3GD20H_FILTER_CUTOFF_3
+    help
+      Filter cut-off frequency of low pass filter. Actual value
+      depends on sampling frequency and is approx (BW + 1) * sqrt(SFR)
+
+config L3GD20H_FILTER_CUTOFF_0
+	bool "~1 * sqrt(SFR)"
+
+config L3GD20H_FILTER_CUTOFF_1
+	bool "~2 * sqrt(SFR)"
+
+config L3GD20H_FILTER_CUTOFF_2
+	bool "~3 * sqrt(SFR)"
+
+config L3GD20H_FILTER_CUTOFF_3
+	bool "~4 * sqrt(SFR)"
+
+
+endchoice
+config L3GD20H_SET_RUNTIME
+	bool "Set sensor attributes at runtime"
+	help
+	  Enable alteration of gyro attributes at
+	  runtime.
+
+endmenu
+
+endif # L3GD20H

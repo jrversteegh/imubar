@@ -231,6 +231,7 @@ typedef union {
 struct bno055_data {
   bno055_ninedof sample;
   uint8_t temp;
+  int gyr_div;
 
   const struct device *dev;
 #ifdef CONFIG_BNO055_TRIGGER
@@ -395,8 +396,8 @@ enum accel_config_power_mode_values {
 enum accel_config_bandwidth_values {
   accel_config_bandwidth_8Hz = 0,
   accel_config_bandwidth_16Hz = 1,
-  accel_config_bandwidth_31Hz = 2,
-  accel_config_bandwidth_62Hz = 3,
+  accel_config_bandwidth_32Hz = 2,
+  accel_config_bandwidth_63Hz = 3,
   accel_config_bandwidth_125Hz = 4,
   accel_config_bandwidth_250Hz = 5,
   accel_config_bandwidth_500Hz = 6,
