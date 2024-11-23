@@ -18,7 +18,7 @@ used to read out the data through two I2C ports:
     1f: ADAFRUIT 9DOF - FXOS8700CQ: accel/magn
     21: ADAFRUIT 9DOF - FXAS21002C: gyro
     28: ADAFRUIT IMU - BNO055: accel/gyro/mag - fusion
-    69: SPARKFUN SEN13762 - MPU9250: accel/gyro/magn
+    68: SPARKFUN SEN13762 - MPU9250: accel/gyro/magn
     6a: SPARKFUN SEN13944 - LSM9DS1: accel/gyro
     6b: ADAFRUIT 10DOF - L3GD20H: gyro
     77: ADAFRUIT 10DOF - BMP180: press/temp

@@ -33,9 +33,9 @@
 		reg = <0x21>;
     };
 
-	mpu9250_0: mpu9250@69 {
+	mpu9250_0: mpu9250@68 {
 		compatible = "invensense,mpu9250";
-		reg = <0x69>;
+		reg = <0x68>;
         gyro-sr-div = <10>;
         gyro-dlpf = <5>;
         gyro-fs = <250>;

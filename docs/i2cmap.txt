@@ -15,7 +15,7 @@ root@navigator:~# i2cdetect -y 0
 0: 1f: ADAFRUIT 9DOF - FXOS8700CQ: accel/magn
 0: 21: ADAFRUIT 9DOF - FXAS21002C: gyro
 0: 28: ADAFRUIT IMU - BNO055: accel/gyro/mag - fusion
-0: 69: SPARKFUN SEN13944 - MPU9250: accel/gyro/magn
+0: 68: SPARKFUN SEN13944 - MPU9250: accel/gyro/magn
 0: 6a: SPARKFUN SEN13762 - LSM9DS1: accel/gyro
 0  6b: ADAFRUIT 10DOF - L3GD20H: gyro
 0: 77: ADAFRUIT 10DOF - BMP180: press/temp
