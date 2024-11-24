@@ -1,0 +1,10 @@
+# Copyright (c) 2020 Nordic Semiconductor ASA
+# SPDX-License-Identifier: Apache-2.0
+
+description: |
+  Bosch BMP085 pressure sensor.  See more info at:
+  https://www.bosch-sensortec.com/products/
+
+compatible: "bosch,bmp085"
+
+include: [sensor-device.yaml, i2c-device.yaml]

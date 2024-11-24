@@ -23,6 +23,7 @@ LOG_MODULE_DECLARE(imubar);
 #define BNO055_0 DT_NODELABEL(bno055_0)
 #define LSM9DS1_0 DT_NODELABEL(lsm9ds1_0)
 #define LSM9DS1MAGN_0 DT_NODELABEL(lsm9ds1magn_0)
+#define BMP085_0 DT_NODELABEL(bmp085_0)
 
 static device const *const imu_mpu9250 = DEVICE_DT_GET(MPU9250_0);
 static device const *const imu_fxos8700 = DEVICE_DT_GET(FXOS8700_0);
@@ -33,6 +34,7 @@ static device const *const imu_l3gd20h = DEVICE_DT_GET(L3GD20H_0);
 static device const *const imu_bno055 = DEVICE_DT_GET(BNO055_0);
 static device const *const imu_lsm9ds1 = DEVICE_DT_GET(LSM9DS1_0);
 static device const *const imu_lsm9ds1magn = DEVICE_DT_GET(LSM9DS1MAGN_0);
+static device const *const env_bmp085 = DEVICE_DT_GET(BMP085_0);
 
 struct None {};
 
@@ -122,6 +124,10 @@ void initialize_sensors() {
   }
   if (!device_is_ready(imu_lsm9ds1magn)) {
     error(2, "LSM9DS1 magn not ready.");
+  }
+
+  if (!device_is_ready(env_bmp085)) {
+    error(2, "BMP085 pressure not ready.");
   }
 }
 

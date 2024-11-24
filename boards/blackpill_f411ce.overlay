@@ -57,6 +57,11 @@
         compatible = "st,lsm9ds1";
         reg = <0x6a>;
     };
+
+    bmp085_0: bmp085@77 {
+		compatible = "bosch,bmp085";
+		reg = <0x77>;
+    };
 };
 
 &i2c2 {

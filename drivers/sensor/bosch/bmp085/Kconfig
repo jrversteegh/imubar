@@ -1,0 +1,11 @@
+menuconfig BMP085
+        bool "BMP085 pressure sensor"
+        default y
+        depends on DT_HAS_BOSCH_BMP085_ENABLED
+        select I2C
+        help
+          Enable driver for BMP085 I2C-based pressure sensor family.
+
+if BMP085
+
+endif  # if BMP085

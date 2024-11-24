@@ -4,6 +4,6 @@
 # zephyr-keep-sorted-start
 rsource "./bma180/Kconfig"
 rsource "./bmp085/Kconfig"
-rsource "./bmp180/Kconfig"
+rsource "./bmp085/Kconfig"
 rsource "./bno055/Kconfig"
 # zephyr-keep-sorted-stop

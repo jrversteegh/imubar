@@ -30,6 +30,7 @@ set(driver_sources
   drivers/sensor/st/lsm9ds1/lsm9ds1.c
   drivers/sensor/st/lsm9ds1_magn/lsm9ds1_magn.c
   drivers/sensor/st/l3gd20h/l3gd20h.c
+  drivers/sensor/bosch/bmp085/bmp085.c
 )
 FILE(GLOB app_sources src/*.cpp)
 target_sources(app PRIVATE ${app_sources} ${driver_sources})
