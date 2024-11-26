@@ -69,52 +69,70 @@ int32_t compute_b5(const struct bmp085_coefficients *c, uint16_t ut) {
   return x1 + x2;
 }
 
-static int fetch_temperature(const struct device *dev, uint16_t *temp) {
-  int r = write_i2c_byte(dev, BMP085_CONTROL, BMP085_READTEMPCMD);
-  if (r < 0)
-    return r;
-  k_sleep(K_MSEC(5));
-  return read_i2c_word(dev, BMP085_TEMPDATA, temp);
-}
-
-static int fetch_pressure(const struct device *dev, uint32_t *pressure) {
-  int r = write_i2c_byte(dev, BMP085_CONTROL,
-                         BMP085_READPRESSURECMD + (BMP085_OVERSAMPLING << 6));
-  if (r < 0)
-    return r;
-
-  k_sleep(K_MSEC(BMP085_PRESSURE_READ_DELAY));
-
-  uint8_t control;
-  r = read_i2c_byte(dev, BMP085_CONTROL, &control);
-  if (r < 0)
-    return r;
-  if (control & 0x20) {
-    LOG_ERR("Conversion was incomplete");
-    return -EIO;
-  }
-
-  uint8_t p_buf[3];
-  r = read_i2c(dev, BMP085_PRESSUREDATA, p_buf, sizeof(p_buf));
-  if (r < 0)
-    return r;
-  *pressure = (p_buf[0] << 16) + (p_buf[1] << 8) + p_buf[2];
-  *pressure >>= (8 - BMP085_OVERSAMPLING);
-  return 0;
-}
-
 static int bmp085_sample_fetch(const struct device *dev,
                                const enum sensor_channel chan) {
   struct bmp085_data *data = dev->data;
-  int r = fetch_temperature(dev, &data->temperature);
-  if (r < 0)
-    return r;
-  r = fetch_pressure(dev, &data->pressure);
-  if (r < 0)
-    return r;
-  LOG_DBG("Raw temp: %d  Raw pressure: %d", (int)data->temperature,
-          (int)data->pressure);
-  return 0;
+  int ret;
+  uint8_t p_buf[3];
+
+  switch (chan) {
+  case SENSOR_CHAN_PRESS:
+    uint8_t control;
+    if ((ret = read_i2c_byte(dev, BMP085_CONTROL, &control)) < 0)
+      return ret;
+    // Check if the busy bit is set in the control register...
+    if (control & 0x20) {
+      // ..and return the current state if so
+      return data->fetch_state;
+    }
+    switch (data->fetch_state) {
+    case bmp085_fetch_new:
+      if ((ret = write_i2c_byte(dev, BMP085_CONTROL, BMP085_READTEMPCMD)) < 0)
+        return ret;
+      return ++data->fetch_state;
+    case bmp085_temperature_commanded:
+      if ((ret = read_i2c_word(dev, BMP085_TEMPDATA, &data->temperature)) < 0)
+        return ret;
+      return ++data->fetch_state;
+    case bmp085_temperature_fetched:
+      if ((ret = write_i2c_byte(dev, BMP085_CONTROL,
+                                BMP085_READPRESSURECMD +
+                                    (BMP085_OVERSAMPLING << 6))) < 0)
+        return ret;
+      return ++data->fetch_state;
+    case bmp085_pressure_commanded:
+      if ((ret = read_i2c(dev, BMP085_PRESSUREDATA, p_buf, sizeof(p_buf))) < 0)
+        return ret;
+      data->pressure = (p_buf[0] << 16) + (p_buf[1] << 8) + p_buf[2];
+      data->pressure >>= (8 - BMP085_OVERSAMPLING);
+      data->fetch_state = bmp085_fetch_new;
+      return 0;
+    default:
+      data->fetch_state = bmp085_fetch_new;
+      return 0;
+    }
+  case SENSOR_CHAN_ALL:
+    if ((ret = write_i2c_byte(dev, BMP085_CONTROL, BMP085_READTEMPCMD)) < 0)
+      return ret;
+    k_sleep(K_MSEC(5));
+    if ((ret = read_i2c_word(dev, BMP085_TEMPDATA, &data->temperature)) < 0)
+      return ret;
+
+    if ((ret = write_i2c_byte(dev, BMP085_CONTROL,
+                              BMP085_READPRESSURECMD +
+                                  (BMP085_OVERSAMPLING << 6))) < 0)
+      return ret;
+    k_sleep(K_MSEC(BMP085_PRESSURE_READ_DELAY));
+    if ((ret = read_i2c(dev, BMP085_PRESSUREDATA, p_buf, sizeof(p_buf))) < 0)
+      return ret;
+    data->pressure = (p_buf[0] << 16) + (p_buf[1] << 8) + p_buf[2];
+    data->pressure >>= (8 - BMP085_OVERSAMPLING);
+    LOG_DBG("Raw temp: %d  Raw pressure: %d", (int)data->temperature,
+            (int)data->pressure);
+    return 0;
+  default:
+    return -ENOTSUP;
+  }
 }
 
 static int bmp085_channel_get(const struct device *dev,
@@ -181,6 +199,8 @@ int bmp085_init(const struct device *dev) {
     LOG_DBG("Unexpected chip id (%x)", id);
     return -EIO;
   }
+
+  data->fetch_state = bmp085_fetch_new;
 
   if (i2c_burst_read_dt(&config->i2c, BMP085_CAL_BASE,
                         (uint8_t *)&data->calibration.data,

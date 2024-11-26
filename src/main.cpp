@@ -26,6 +26,16 @@ static void button_pressed(const device *dev, gpio_callback *cb,
   }
 }
 
+void fetch_envs() {
+  auto &envs = get_envs();
+  envs[0]->fetch();
+  /*
+  for (auto &env : envs) {
+    env->fetch();
+  }
+  */
+}
+
 void read_envs(bool print) {
   auto &envs = get_envs();
   if (print) {
@@ -33,7 +43,7 @@ void read_envs(bool print) {
   }
   for (auto &env : envs) {
     auto name = env->get_name();
-    double uptime = env->fetch() / 1000.0;
+    double uptime = env->get_time() / 1000.0;
     auto temperature = env->get_temperature();
     auto pressure = env->get_pressure();
     if (print) {
@@ -128,6 +138,7 @@ int main(void) {
       read_envs(true);
     }
     read_imus(i % 100 == 0);
+    fetch_envs();
 
     if (i % 100 == 0) {
       toggle_led();

@@ -26,9 +26,10 @@ extern Vector3 read_sensor_vector(device const *sensor, sensor_channel channel);
 struct Sensor {
   Sensor(std::string const name) : name_(name) {}
 
-  void fetch_sensor_with_error_count(device const *sensor,
-                                     sensor_channel channel) {
-    if (int ret = fetch_sensor(sensor, channel) < 0) {
+  int fetch_sensor_with_error_count(device const *sensor,
+                                    sensor_channel channel) {
+    int ret = 0;
+    if ((ret = fetch_sensor(sensor, channel)) < 0) {
       ++error_counter_;
       if (error_counter_ > 10) {
         error(2, "Permanent failure fetching from device: %s, code %d",
@@ -37,6 +38,7 @@ struct Sensor {
     } else {
       error_counter_ = 0;
     }
+    return ret;
   }
 
   std::string get_name() { return name_; }
@@ -130,7 +132,7 @@ struct Env : Sensor {
 private:
   device const *const press_device_ = nullptr;
   int64_t time_ = 0;
-  sensor_channel press_channel_ = SENSOR_CHAN_ALL;
+  sensor_channel press_channel_ = SENSOR_CHAN_PRESS;
   int fetch_counter_ = 0;
 };
 

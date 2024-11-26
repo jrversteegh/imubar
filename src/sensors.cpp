@@ -63,7 +63,7 @@ std::vector<device const *> get_sensors() {
 int fetch_sensor(device const *sensor, sensor_channel channel) {
   if (sensor == nullptr)
     return 0;
-  auto ret = sensor_sample_fetch(sensor);
+  auto ret = sensor_sample_fetch_chan(sensor, channel);
   if (ret < 0) {
     switch (ret) {
     case -EBADMSG:
@@ -145,9 +145,12 @@ void initialize_sensors() {
   if (!device_is_ready(env_bmp180)) {
     error(2, "BMP180 pressure not ready.");
   }
+  fetch_sensor(env_bmp180, SENSOR_CHAN_ALL);
+
   if (!device_is_ready(env_bmp085)) {
     error(2, "BMP085 pressure not ready.");
   }
+  fetch_sensor(env_bmp085, SENSOR_CHAN_ALL);
 }
 
 std::vector<std::unique_ptr<Imu>> &get_imus() {

@@ -56,7 +56,6 @@
 #define BMP085_CONTROL 0xF4
 #define BMP085_TEMPDATA 0xF6
 #define BMP085_PRESSUREDATA 0xF6
-#define BMP085_PRESSUREDATA_XLSB 0xF8
 #define BMP085_READTEMPCMD 0x2E
 #define BMP085_READPRESSURECMD 0x34
 
@@ -79,11 +78,19 @@ union bmp085_calibration {
   uint16_t data[NUM_CAL_COEFFS];
 };
 
+enum bmp085_fetch_state {
+  bmp085_fetch_new,
+  bmp085_temperature_commanded,
+  bmp085_temperature_fetched,
+  bmp085_pressure_commanded,
+};
+
 struct bmp085_data {
   uint16_t temperature;
   uint32_t pressure;
   const struct device *dev;
   union bmp085_calibration calibration;
+  enum bmp085_fetch_state fetch_state;
 };
 
 struct bmp085_config {

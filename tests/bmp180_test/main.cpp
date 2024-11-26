@@ -24,21 +24,24 @@ int main(void) {
     LOG_ERR("BMP180 pressure not ready.");
     return -1;
   }
-  for (int i = 0; i < 120; ++i) {
-    auto ret = sensor_sample_fetch(env_bmp180);
-    if (ret < 0) {
+  int count = 0;
+  for (int i = 0; i < 1000; ++i) {
+    auto state = sensor_sample_fetch_chan(env_bmp180, SENSOR_CHAN_PRESS);
+    //LOG_INF("Fetch state: %d", state);
+    if (state < 0) {
       LOG_ERR("Error fetching sample");
       return -EIO;
     }
-    struct sensor_value value;
-    ret = sensor_channel_get(env_bmp180, SENSOR_CHAN_AMBIENT_TEMP, &value);
-    LOG_INF("Temp: %d", value.val1);
+    if (state == 0) {
+      ++count;
+      struct sensor_value value;
+      sensor_channel_get(env_bmp180, SENSOR_CHAN_AMBIENT_TEMP, &value);
+      LOG_INF("Temp: %d", value.val1);
 
-    ret = sensor_channel_get(env_bmp180, SENSOR_CHAN_PRESS, &value);
-    LOG_INF("Pressure: %d", value.val1);
-
-    k_sleep(K_MSEC(1000));
+      sensor_channel_get(env_bmp180, SENSOR_CHAN_PRESS, &value);
+      LOG_INF("Pressure: %d", value.val1);
+    }
   }
-  LOG_INF("BMP180 test done.");
+  LOG_INF("BMP180 test done: %d reads.", count);
   return 0;
 }
