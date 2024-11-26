@@ -4,8 +4,29 @@ menuconfig BMP085
         depends on DT_HAS_BOSCH_BMP085_ENABLED
         select I2C
         help
-          Enable driver for BMP085 I2C-based pressure sensor family.
+          Enable driver for BMP085/BMP180 I2C-based pressure sensor.
 
 if BMP085
+
+choice
+        prompt "Oversampling"
+        default BMP085_OVERSAMPLING_HIGH
+        depends on BMP085
+        help
+          Sampling accuracy.
+
+config BMP085_OVERSAMPLING_LOW
+        bool "Low (10 ms)"
+
+config BMP085_OVERSAMPLING_STANDARD
+        bool "Standard (13 ms)"
+
+config BMP085_OVERSAMPLING_HIGH
+        bool "High (19 ms)"
+
+config BMP085_OVERSAMPLING_ULTRA
+        bool "Ultra (31 ms)"
+
+endchoice
 
 endif  # if BMP085

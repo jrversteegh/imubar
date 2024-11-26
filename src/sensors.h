@@ -20,13 +20,37 @@ extern void initialize_sensors();
 extern std::vector<device const *> get_sensors();
 extern int fetch_sensor(device const *sensor,
                         sensor_channel channel = SENSOR_CHAN_ALL);
-extern Vector3 read_sensor(device const *sensor, sensor_channel channel);
+extern Number read_sensor(device const *sensor, sensor_channel channel);
+extern Vector3 read_sensor_vector(device const *sensor, sensor_channel channel);
 
-struct Imu {
-  Imu(std::string name, device const *const accel_device,
+struct Sensor {
+  Sensor(std::string const name) : name_(name) {}
+
+  void fetch_sensor_with_error_count(device const *sensor,
+                                     sensor_channel channel) {
+    if (int ret = fetch_sensor(sensor, channel) < 0) {
+      ++error_counter_;
+      if (error_counter_ > 10) {
+        error(2, "Permanent failure fetching from device: %s, code %d",
+              name_.c_str(), ret);
+      }
+    } else {
+      error_counter_ = 0;
+    }
+  }
+
+  std::string get_name() { return name_; }
+
+private:
+  std::string name_ = "";
+  int error_counter_ = 0;
+};
+
+struct Imu : Sensor {
+  Imu(std::string const name, device const *const accel_device,
       device const *const gyro_device, device const *const magn_device,
       int magn_rate_divisor = 1)
-      : name_(name), accel_device_(accel_device), gyro_device_(gyro_device),
+      : Sensor(name), accel_device_(accel_device), gyro_device_(gyro_device),
         magn_device_(magn_device), magn_rate_divisor_(magn_rate_divisor),
         fetch_gyro_(gyro_device != nullptr && gyro_device != accel_device),
         fetch_magn_(magn_device != nullptr && magn_device != accel_device &&
@@ -41,48 +65,33 @@ struct Imu {
   }
 
   int64_t fetch() {
-    fetch_imu_sensor(accel_device_, accel_channel_);
+    fetch_sensor_with_error_count(accel_device_, accel_channel_);
     if (fetch_gyro_) {
-      fetch_imu_sensor(gyro_device_, gyro_channel_);
+      fetch_sensor_with_error_count(gyro_device_, gyro_channel_);
     }
     if (fetch_magn_ && (fetch_counter_ % magn_rate_divisor_ == 0)) {
-      fetch_imu_sensor(magn_device_, magn_channel_);
+      fetch_sensor_with_error_count(magn_device_, magn_channel_);
     }
     time_ = k_uptime_get();
     ++fetch_counter_;
     return time_;
   }
 
-  void fetch_imu_sensor(device const *sensor, sensor_channel channel) {
-    if (int ret = fetch_sensor(sensor, channel) < 0) {
-      ++error_counter_;
-      if (error_counter_ > 10) {
-        error(2, "Permanent failure fetching from device: %s, code %d",
-              name_.c_str(), ret);
-      }
-    } else {
-      error_counter_ = 0;
-    }
-  }
-
-  std::string get_name() { return name_; }
-
   Vector3 get_acceleration() {
-    return read_sensor(accel_device_, SENSOR_CHAN_ACCEL_XYZ);
+    return read_sensor_vector(accel_device_, SENSOR_CHAN_ACCEL_XYZ);
   }
 
   Vector3 get_rotation() {
-    return read_sensor(gyro_device_, SENSOR_CHAN_GYRO_XYZ);
+    return read_sensor_vector(gyro_device_, SENSOR_CHAN_GYRO_XYZ);
   }
 
   Vector3 get_magfield() {
-    return read_sensor(magn_device_, SENSOR_CHAN_MAGN_XYZ);
+    return read_sensor_vector(magn_device_, SENSOR_CHAN_MAGN_XYZ);
   }
 
   int64_t get_time() { return time_; }
 
 private:
-  std::string name_ = "";
   device const *const accel_device_ = nullptr;
   device const *const gyro_device_ = nullptr;
   device const *const magn_device_ = nullptr;
@@ -97,6 +106,35 @@ private:
   int error_counter_ = 0;
 };
 
+struct Env : Sensor {
+  Env(std::string name, device const *const press_device)
+      : Sensor(name), press_device_(press_device) {}
+
+  int64_t fetch() {
+    fetch_sensor_with_error_count(press_device_, press_channel_);
+    time_ = k_uptime_get();
+    ++fetch_counter_;
+    return time_;
+  }
+
+  Number get_temperature() {
+    return read_sensor(press_device_, SENSOR_CHAN_AMBIENT_TEMP);
+  }
+
+  Number get_pressure() {
+    return read_sensor(press_device_, SENSOR_CHAN_PRESS);
+  }
+
+  int64_t get_time() { return time_; }
+
+private:
+  device const *const press_device_ = nullptr;
+  int64_t time_ = 0;
+  sensor_channel press_channel_ = SENSOR_CHAN_ALL;
+  int fetch_counter_ = 0;
+};
+
 extern std::vector<std::unique_ptr<Imu>> &get_imus();
+extern std::vector<std::unique_ptr<Env>> &get_envs();
 
 #endif

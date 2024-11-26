@@ -26,7 +26,29 @@ static void button_pressed(const device *dev, gpio_callback *cb,
   }
 }
 
-void get_imus(bool print) {
+void read_envs(bool print) {
+  auto &envs = get_envs();
+  if (print) {
+    printk("%8.3f\n", k_uptime_get() / 1000.0);
+  }
+  for (auto &env : envs) {
+    auto name = env->get_name();
+    double uptime = env->fetch() / 1000.0;
+    auto temperature = env->get_temperature();
+    auto pressure = env->get_pressure();
+    if (print) {
+      printk("%8.3f  ", uptime);
+      printk("%20.20s  ", name.c_str());
+      printk("T: %2.2f ", static_cast<double>(temperature));
+      printk("P: %6.0f\n", static_cast<double>(pressure));
+    }
+  }
+  if (print) {
+    printk("%8.3f\n---\n", k_uptime_get() / 1000.0);
+  }
+}
+
+void read_imus(bool print) {
   auto &imus = get_imus();
   if (print) {
     printk("%8.3f\n", k_uptime_get() / 1000.0);
@@ -100,10 +122,12 @@ int main(void) {
   int i = 0;
   auto time = k_uptime_get();
   int64_t sum_rem = 0;
+  read_envs(true);
   while (true) {
     if (gpio_pin_get_dt(&sw0_gpio)) {
+      read_envs(true);
     }
-    get_imus(i % 100 == 0);
+    read_imus(i % 100 == 0);
 
     if (i % 100 == 0) {
       toggle_led();

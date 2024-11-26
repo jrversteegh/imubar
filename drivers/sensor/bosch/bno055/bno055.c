@@ -125,8 +125,7 @@ static int bno055_sample_fetch(const struct device *dev,
 static struct sensor_value get_sensor_value(const uint16_t value,
                                             const int32_t divisor) {
   int64_t val = (int16_t)sys_le16_to_cpu(value);
-
-  int32_t tmp = val * 1000000 / divisor;
+  int64_t tmp = val * 1000000 / divisor;
   struct sensor_value result = {.val1 = tmp / 1000000, .val2 = tmp % 1000000};
   return result;
 }

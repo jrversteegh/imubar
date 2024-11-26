@@ -58,7 +58,7 @@
         reg = <0x6a>;
     };
 
-    bmp085_0: bmp085@77 {
+    bmp180_0: bmp085@77 {
 		compatible = "bosch,bmp085";
 		reg = <0x77>;
     };
@@ -69,4 +69,9 @@
     pinctrl-names = "default";
     status = "okay";
     clock-frequency = <I2C_BITRATE_FAST>;
+
+    bmp085_0: bmp085@77 {
+		compatible = "bosch,bmp085";
+		reg = <0x77>;
+    };
 };
