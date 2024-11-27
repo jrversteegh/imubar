@@ -6,7 +6,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-#define DT_DRV_COMPAT st_lsm9ds1
+#define DT_DRV_COMPAT st_lsm9ds1_ag
 
 #include <zephyr/device.h>
 #include <zephyr/drivers/sensor.h>
@@ -18,9 +18,9 @@
 #include <zephyr/drivers/gpio.h>
 #include <zephyr/logging/log.h>
 
-#include "lsm9ds1.h"
+#include "lsm9ds1_ag.h"
 
-LOG_MODULE_REGISTER(LSM9DS1, CONFIG_SENSOR_LOG_LEVEL);
+LOG_MODULE_REGISTER(LSM9DS1_AG, CONFIG_SENSOR_LOG_LEVEL);
 
 #define DEG2RAD 0.01745329252f
 
@@ -455,7 +455,7 @@ static int lsm9ds1_init(const struct device *dev) {
   return 0;
 }
 
-#define LSM9DS1_DEFINE(inst)                                                   \
+#define LSM9DS1_AG_DEFINE(inst)                                                   \
   static struct lsm9ds1_data lsm9ds1_data_##inst;                              \
                                                                                \
   static const struct lsm9ds1_config lsm9ds1_config_##inst = {                 \
@@ -468,4 +468,4 @@ static int lsm9ds1_init(const struct device *dev) {
       inst, lsm9ds1_init, NULL, &lsm9ds1_data_##inst, &lsm9ds1_config_##inst,  \
       POST_KERNEL, CONFIG_SENSOR_INIT_PRIORITY, &lsm9ds1_api_funcs);
 
-DT_INST_FOREACH_STATUS_OKAY(LSM9DS1_DEFINE)
+DT_INST_FOREACH_STATUS_OKAY(LSM9DS1_AG_DEFINE)

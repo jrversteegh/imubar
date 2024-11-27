@@ -3,15 +3,15 @@
 # Copyright (c) 2016 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
-menuconfig LSM9DS1
+menuconfig LSM9DS1_AG
 	bool "LSM9DS1 Accelerometer and Gyroscope"
 	default y
-	depends on DT_HAS_ST_LSM9DS1_ENABLED
+	depends on DT_HAS_ST_LSM9DS1_AG_ENABLED
 	select I2C
 	help
 	  Enable driver for LSM9DS1 I2C-based accelerometer and gyroscope sensor.
 
-if LSM9DS1
+if LSM9DS1_AG
 
 config LSM9DS1_ACCEL_ENABLE
     bool "Enable accelerometer"
