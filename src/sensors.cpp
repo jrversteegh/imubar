@@ -9,8 +9,8 @@
 #include <zephyr/logging/log.h>
 
 #include "errors.h"
-#include "geometry.h"
 #include "sensors.h"
+#include "types.h"
 
 LOG_MODULE_DECLARE(imubar);
 
@@ -21,7 +21,7 @@ LOG_MODULE_DECLARE(imubar);
 #define LSM303MAGN_0 DT_NODELABEL(lsm303magn_0)
 #define L3GD20H_0 DT_NODELABEL(l3gd20h_0)
 #define BNO055_0 DT_NODELABEL(bno055_0)
-#define LSM9DS1_0 DT_NODELABEL(lsm9ds1_0)
+#define LSM9DS1AG_0 DT_NODELABEL(lsm9ds1ag_0)
 #define LSM9DS1MAGN_0 DT_NODELABEL(lsm9ds1magn_0)
 #define BMP180_0 DT_NODELABEL(bmp180_0)
 #define BMP085_0 DT_NODELABEL(bmp085_0)
@@ -33,9 +33,10 @@ static device const *const imu_lsm303accel = DEVICE_DT_GET(LSM303ACCEL_0);
 static device const *const imu_lsm303magn = DEVICE_DT_GET(LSM303MAGN_0);
 static device const *const imu_l3gd20h = DEVICE_DT_GET(L3GD20H_0);
 static device const *const imu_bno055 = DEVICE_DT_GET(BNO055_0);
-static device const *const imu_lsm9ds1 = DEVICE_DT_GET(LSM9DS1_0);
+static device const *const imu_lsm9ds1ag = DEVICE_DT_GET(LSM9DS1AG_0);
 static device const *const imu_lsm9ds1magn = DEVICE_DT_GET(LSM9DS1MAGN_0);
 static device const *const env_bmp180 = DEVICE_DT_GET(BMP180_0);
+
 static device const *const env_bmp085 = DEVICE_DT_GET(BMP085_0);
 
 struct None {};
@@ -56,7 +57,7 @@ template <> inline double sensor_value_to<double>(sensor_value const &value) {
 std::vector<device const *> get_sensors() {
   return {
       imu_mpu9250,    imu_fxos8700, imu_fxas21002, imu_lsm303accel, imu_l3gd20h,
-      imu_lsm303magn, imu_bno055,   imu_lsm9ds1,   imu_lsm9ds1magn,
+      imu_lsm303magn, imu_bno055,   imu_lsm9ds1ag, imu_lsm9ds1magn,
   };
 }
 
@@ -135,7 +136,7 @@ void initialize_sensors() {
   if (!device_is_ready(imu_bno055)) {
     error(2, "BNO055 not ready.");
   }
-  if (!device_is_ready(imu_lsm9ds1)) {
+  if (!device_is_ready(imu_lsm9ds1ag)) {
     error(2, "LSM9DS1 not ready.");
   }
   if (!device_is_ready(imu_lsm9ds1magn)) {
@@ -153,7 +154,7 @@ void initialize_sensors() {
   fetch_sensor(env_bmp085, SENSOR_CHAN_ALL);
 }
 
-std::vector<std::unique_ptr<Imu>> &get_imus() {
+std::vector<std::unique_ptr<Imu>> &get_imus_bus0() {
   static std::vector<std::unique_ptr<Imu>> imus{};
   if (imus.size() == 0) {
     imus.push_back(std::make_unique<Imu>("adafruit_nxp_fx", imu_fxos8700,
@@ -164,16 +165,30 @@ std::vector<std::unique_ptr<Imu>> &get_imus() {
                                          imu_l3gd20h, imu_lsm303magn, 25));
     imus.push_back(std::make_unique<Imu>("adafruit_bno055", imu_bno055,
                                          imu_bno055, imu_bno055));
-    imus.push_back(std::make_unique<Imu>("sparkfun_lsm9ds1", imu_lsm9ds1,
-                                         imu_lsm9ds1, imu_lsm9ds1magn, 10));
+    imus.push_back(std::make_unique<Imu>("sparkfun_lsm9ds1", imu_lsm9ds1ag,
+                                         imu_lsm9ds1ag, imu_lsm9ds1magn, 10));
   }
   return imus;
 }
 
-std::vector<std::unique_ptr<Env>> &get_envs() {
+std::vector<std::unique_ptr<Imu>> &get_imus_bus1() {
+  static std::vector<std::unique_ptr<Imu>> imus{};
+  if (imus.size() == 0) {
+  }
+  return imus;
+}
+
+std::vector<std::unique_ptr<Env>> &get_envs_bus0() {
   static std::vector<std::unique_ptr<Env>> envs{};
   if (envs.size() == 0) {
     envs.push_back(std::make_unique<Env>("adafruit_bmp180", env_bmp180));
+  }
+  return envs;
+}
+
+std::vector<std::unique_ptr<Env>> &get_envs_bus1() {
+  static std::vector<std::unique_ptr<Env>> envs{};
+  if (envs.size() == 0) {
     envs.push_back(std::make_unique<Env>("nameless_bmp085", env_bmp085));
   }
   return envs;

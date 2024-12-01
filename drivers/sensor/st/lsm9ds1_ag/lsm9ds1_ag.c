@@ -455,7 +455,7 @@ static int lsm9ds1_init(const struct device *dev) {
   return 0;
 }
 
-#define LSM9DS1_AG_DEFINE(inst)                                                   \
+#define LSM9DS1_AG_DEFINE(inst)                                                \
   static struct lsm9ds1_data lsm9ds1_data_##inst;                              \
                                                                                \
   static const struct lsm9ds1_config lsm9ds1_config_##inst = {                 \

@@ -9,11 +9,14 @@
 #include <zephyr/drivers/i2c.h>
 #include <zephyr/drivers/sensor.h>
 #include <zephyr/kernel.h>
+#include <zephyr/kernel/thread.h>
 #include <zephyr/logging/log.h>
+
 LOG_MODULE_REGISTER(imubar);
 
 #include "errors.h"
 #include "sensors.h"
+#include "storage.h"
 
 static const struct gpio_dt_spec sw0_gpio =
     GPIO_DT_SPEC_GET(DT_ALIAS(sw0), gpios);
@@ -26,18 +29,15 @@ static void button_pressed(const device *dev, gpio_callback *cb,
   }
 }
 
-void fetch_envs() {
-  auto &envs = get_envs();
-  envs[0]->fetch();
-  /*
+void fetch_envs_bus0() {
+  auto &envs = get_envs_bus0();
   for (auto &env : envs) {
     env->fetch();
   }
-  */
 }
 
-void read_envs(bool print) {
-  auto &envs = get_envs();
+void read_envs_bus0(bool print) {
+  auto &envs = get_envs_bus0();
   if (print) {
     printk("%8.3f\n", k_uptime_get() / 1000.0);
   }
@@ -58,8 +58,8 @@ void read_envs(bool print) {
   }
 }
 
-void read_imus(bool print) {
-  auto &imus = get_imus();
+void read_imus_bus0(bool print) {
+  auto &imus = get_imus_bus0();
   if (print) {
     printk("%8.3f\n", k_uptime_get() / 1000.0);
   }
@@ -122,25 +122,15 @@ static void toggle_led() {
   led_state = !led_state;
 }
 
-int main(void) {
-  LOG_INF("IMUBar initializing...");
-  initialize_led();
-  initialize_buttons();
-  initialize_sensors();
-
-  LOG_INF("IMUBar running...");
+void bus0_loop(void *arg1, void *arg2, void *arg3) {
   int i = 0;
   auto time = k_uptime_get();
   int64_t sum_rem = 0;
-  read_envs(true);
   while (true) {
-    if (gpio_pin_get_dt(&sw0_gpio)) {
-      read_envs(true);
-    }
-    read_imus(i % 100 == 0);
-    fetch_envs();
-
-    if (i % 100 == 0) {
+    bool on_second = i % 100 == 0;
+    read_imus_bus0(on_second);
+    if (on_second) {
+      fetch_envs_bus0();
       toggle_led();
     }
 
@@ -152,7 +142,50 @@ int main(void) {
     sum_rem += rem;
     if (i % 1000 == 0) {
       auto duty_cycle = 100 - sum_rem / 100;
-      printk("Duty cycle: %lld%%\n\n", duty_cycle);
+      printk("Bus 0 duty cycle: %lld%%\n\n", duty_cycle);
+      sum_rem = 0;
+    }
+
+    ++i;
+  }
+}
+
+void bus1_loop(void *arg1, void *arg2, void *arg3) {}
+
+K_THREAD_DEFINE(bus0_thread, 1024, bus0_loop, NULL, NULL, NULL, -1, K_FP_REGS,
+                1000);
+
+int main(void) {
+  LOG_INF("IMUBar initializing...");
+  initialize_led();
+  initialize_buttons();
+  initialize_storage();
+  initialize_sensors();
+
+  LOG_INF("IMUBar running...");
+  int i = 0;
+  auto time = k_uptime_get();
+  int64_t sum_rem = 0;
+  read_envs_bus0(true);
+  while (true) {
+    if (gpio_pin_get_dt(&sw0_gpio)) {
+      read_envs_bus0(true);
+    }
+
+    bool on_second = i % 100 == 0;
+    if (on_second) {
+      toggle_led();
+    }
+
+    time += 10;
+    auto rem = time - k_uptime_get();
+    if (rem > 0) {
+      k_sleep(K_MSEC(rem));
+    }
+    sum_rem += rem;
+    if (i % 1000 == 0) {
+      auto duty_cycle = 100 - sum_rem / 100;
+      printk("Main thread duty cycle: %lld%%\n\n", duty_cycle);
       sum_rem = 0;
     }
 

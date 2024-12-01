@@ -8,13 +8,7 @@
 #include <zephyr/device.h>
 
 #include "functions.h"
-#include "geometry.h"
-
-struct Vector3 {
-  Number x;
-  Number y;
-  Number z;
-};
+#include "types.h"
 
 extern void initialize_sensors();
 extern std::vector<device const *> get_sensors();
@@ -136,7 +130,9 @@ private:
   int fetch_counter_ = 0;
 };
 
-extern std::vector<std::unique_ptr<Imu>> &get_imus();
-extern std::vector<std::unique_ptr<Env>> &get_envs();
+extern std::vector<std::unique_ptr<Imu>> &get_imus_bus0();
+extern std::vector<std::unique_ptr<Imu>> &get_imus_bus1();
+extern std::vector<std::unique_ptr<Env>> &get_envs_bus0();
+extern std::vector<std::unique_ptr<Env>> &get_envs_bus1();
 
 #endif
