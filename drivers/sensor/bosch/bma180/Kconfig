@@ -15,92 +15,70 @@ menuconfig BMA180
 if BMA180
 
 choice
-	prompt "Trigger mode"
-	default BMA180_TRIGGER_GLOBAL_THREAD
-	help
-	  Specify the type of triggering to be used by the driver.
-
-config BMA180_TRIGGER_NONE
-	bool "No trigger"
-
-config BMA180_TRIGGER_GLOBAL_THREAD
-	bool "Use global thread"
-	depends on GPIO
-	select BMA180_TRIGGER
-
-config BMA180_TRIGGER_OWN_THREAD
-	bool "Use own thread"
-	depends on GPIO
-	select BMA180_TRIGGER
-
-endchoice
-
-config BMA180_TRIGGER
-	bool
-
-config BMA180_THREAD_PRIORITY
-	int "Thread priority"
-	depends on BMA180_TRIGGER_OWN_THREAD
-	default 10
-	help
-	  Priority of thread used by the driver to handle interrupts.
-
-config BMA180_THREAD_STACK_SIZE
-	int "Thread stack size"
-	depends on BMA180_TRIGGER_OWN_THREAD
-	default 1024
-	help
-	  Stack size of thread used by the driver to handle interrupts.
-
-choice
 	prompt "Acceleration measurement range"
-	default BMA180_PMU_RANGE_2G
+	default BMA180_RANGE_2G
 	help
 	  Measurement range for acceleration values.
 
-config BMA180_PMU_RANGE_2G
+config BMA180_RANGE_1G
+	bool "+/-1g"
+
+config BMA180_RANGE_1_5G
+	bool "+/-1.5g"
+
+config BMA180_RANGE_2G
 	bool "+/-2g"
 
-config BMA180_PMU_RANGE_4G
+config BMA180_RANGE_3G
+	bool "+/-3g"
+
+config BMA180_RANGE_4G
 	bool "+/-4g"
 
-config BMA180_PMU_RANGE_8G
+config BMA180_RANGE_8G
 	bool "+/-8g"
 
-config BMA180_PMU_RANGE_16G
+config BMA180_RANGE_16G
 	bool "+/-16g"
 
 endchoice
 
 choice
 	prompt "Acceleration data filter bandwidth"
-	default BMA180_PMU_BW_7
+	default BMA180_BW_150HZ
 	help
 	  Bandwidth of filtered acceleration data.
 
-config BMA180_PMU_BW_1
-	bool "7.81Hz"
+config BMA180_BW_10HZ
+	bool "10Hz"
 
-config BMA180_PMU_BW_2
-	bool "15.63HZ"
+config BMA180_BW_20HZ
+	bool "20Hz"
 
-config BMA180_PMU_BW_3
-	bool "31.25Hz"
+config BMA180_BW_40HZ
+	bool "40Hz"
 
-config BMA180_PMU_BW_4
-	bool "62.5Hz"
+config BMA180_BW_75HZ
+	bool "75Hz"
 
-config BMA180_PMU_BW_5
-	bool "125Hz"
+config BMA180_BW_150HZ
+	bool "150Hz"
 
-config BMA180_PMU_BW_6
-	bool "250HZ"
+config BMA180_BW_300HZ
+	bool "300Hz"
 
-config BMA180_PMU_BW_7
-	bool "500Hz"
+config BMA180_BW_600HZ
+	bool "600Hz"
 
-config BMA180_PMU_BW_8
-	bool "unfiltered"
+config BMA180_BW_1200HZ
+	bool "1200Hz"
+
+config BMA180_BW_HIGHPASS
+	bool "High pass 1Hz"
+
+config BMA180_BW_BANDPASS
+	bool "Band pass 0.2-300Hz"
+
 
 endchoice
 

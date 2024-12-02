@@ -75,6 +75,11 @@
 		reg = <0x1e>;
     };
 
+    bma180_0: bma180@40 {
+		compatible = "bosch,bma180";
+		reg = <0x40>;
+    };
+
     bmp085_0: bmp085@77 {
 		compatible = "bosch,bmp085";
 		reg = <0x77>;

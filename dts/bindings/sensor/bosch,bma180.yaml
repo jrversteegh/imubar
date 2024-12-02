@@ -1,0 +1,10 @@
+# Copyright (c) 2024 J.R. Versteegh
+# SPDX-License-Identifier: Apache-2.0
+
+description: |
+  Bosch BMA180 acceleration sensor.  See more info at:
+  https://www.bosch-sensortec.com/products/
+
+compatible: "bosch,bma180"
+
+include: [sensor-device.yaml, i2c-device.yaml]

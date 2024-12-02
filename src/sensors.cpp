@@ -26,6 +26,7 @@ LOG_MODULE_DECLARE(imubar);
 #define BMP180_0 DT_NODELABEL(bmp180_0)
 
 #define HMC5883L_0 DT_NODELABEL(hmc5883l_0)
+#define BMA180_0 DT_NODELABEL(bma180_0)
 #define BMP085_0 DT_NODELABEL(bmp085_0)
 
 static device const *const imu_mpu9250 = DEVICE_DT_GET(MPU9250_0);
@@ -40,6 +41,7 @@ static device const *const imu_lsm9ds1magn = DEVICE_DT_GET(LSM9DS1MAGN_0);
 static device const *const env_bmp180 = DEVICE_DT_GET(BMP180_0);
 
 static device const *const imu_hmc5883l = DEVICE_DT_GET(HMC5883L_0);
+static device const *const imu_bma180 = DEVICE_DT_GET(BMA180_0);
 static device const *const env_bmp085 = DEVICE_DT_GET(BMP085_0);
 
 struct None {};
@@ -153,6 +155,9 @@ void initialize_sensors() {
   if (!device_is_ready(imu_hmc5883l)) {
     error(2, "HMC5883L magn not ready.");
   }
+  if (!device_is_ready(imu_bma180)) {
+    error(2, "BMA180 accel not ready.");
+  }
   if (!device_is_ready(env_bmp085)) {
     error(2, "BMP085 pressure not ready.");
   }
@@ -179,7 +184,7 @@ std::vector<std::unique_ptr<Imu>> &get_imus_bus0() {
 std::vector<std::unique_ptr<Imu>> &get_imus_bus1() {
   static std::vector<std::unique_ptr<Imu>> imus{};
   if (imus.size() == 0) {
-    imus.push_back(std::make_unique<Imu>("nameless_10dof", nullptr, nullptr,
+    imus.push_back(std::make_unique<Imu>("nameless_10dof", imu_bma180, nullptr,
                                          imu_hmc5883l, 7));
   }
   return imus;
