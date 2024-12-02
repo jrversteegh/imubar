@@ -203,9 +203,9 @@ void bus1_loop(void *arg1, void *arg2, void *arg3) {
   }
 }
 
-K_THREAD_DEFINE(bus0_thread, 1024, bus0_loop, NULL, NULL, NULL, -1, K_FP_REGS,
+K_THREAD_DEFINE(bus0_thread, 2048, bus0_loop, NULL, NULL, NULL, -1, K_FP_REGS,
                 1000);
-K_THREAD_DEFINE(bus1_thread, 1024, bus1_loop, NULL, NULL, NULL, -1, K_FP_REGS,
+K_THREAD_DEFINE(bus1_thread, 2048, bus1_loop, NULL, NULL, NULL, -1, K_FP_REGS,
                 1500);
 
 int main(void) {

@@ -1,0 +1,6 @@
+description:
+  TDK InvenSense ITG3205 gyroscope
+
+compatible: "tdk,itg3205"
+
+include: [sensor-device.yaml, i2c-device.yaml]

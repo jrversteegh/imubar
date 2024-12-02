@@ -1,0 +1,49 @@
+# Copyright (c) 2024 J.R. Versteegh
+# SPDX-License-Identifier: Apache-2.0
+
+menuconfig ITG3205
+	bool "ITG3205 Gyroscope"
+	default y
+	depends on DT_HAS_INVENSENSE_ITG3205_ENABLED
+	select I2C
+	help
+	  Enable driver for ITG3205 I2C-based gyroscope.
+
+if ITG3205
+
+config ITG3205_SAMPLE_RATE_DIVIDER
+	int "Sample rate divider"
+	default 10
+	help
+	  Internal sample rate is 1kHz (or 8kHz for 256Hz filter). This value divides that sample rate to get to an output data rate.
+
+choice
+	prompt "Filter bandwidth"
+	default ITG3205_BW_98HZ
+	help
+	  Gyroscope filter bandwidth. Internal sampling frequency is 1kHz, except for 256Hz filter bandwith, when sets the sampling frequency to 8kHz.
+
+config ITG3205_BW_5HZ
+    bool "5 Hz"
+
+config ITG3205_BW_10HZ
+    bool "10 Hz"
+
+config ITG3205_BW_20HZ
+    bool "20 Hz"
+
+config ITG3205_BW_42HZ
+    bool "42 Hz"
+
+config ITG3205_BW_98HZ
+    bool "98 Hz"
+
+config ITG3205_BW_188HZ
+    bool "188 Hz"
+
+config ITG3205_BW_256HZ
+    bool "256 Hz"
+
+endchoice
+
+endif # ITG3205

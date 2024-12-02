@@ -82,10 +82,6 @@ static int bma180_channel_get(const struct device *dev,
 }
 
 static const struct sensor_driver_api bma180_driver_api = {
-#if CONFIG_BMA180_TRIGGER
-    .attr_set = bma180_attr_set,
-    .trigger_set = bma180_trigger_set,
-#endif
     .sample_fetch = bma180_sample_fetch,
     .channel_get = bma180_channel_get,
 };
@@ -129,10 +125,7 @@ int bma180_init(const struct device *dev) {
   static struct bma180_data bma180_data_##inst;                                \
                                                                                \
   static const struct bma180_config bma180_config##inst = {                    \
-      .i2c = I2C_DT_SPEC_INST_GET(inst),                                       \
-      IF_ENABLED(                                                              \
-          CONFIG_BMA180_TRIGGER,                                               \
-          (.int1_gpio = GPIO_DT_SPEC_INST_GET_OR(inst, int1_gpios, {0}), ))};  \
+      .i2c = I2C_DT_SPEC_INST_GET(inst)};                                      \
                                                                                \
   SENSOR_DEVICE_DT_INST_DEFINE(                                                \
       inst, bma180_init, NULL, &bma180_data_##inst, &bma180_config##inst,      \

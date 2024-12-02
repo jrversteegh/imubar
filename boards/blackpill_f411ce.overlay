@@ -80,6 +80,11 @@
 		reg = <0x40>;
     };
 
+    itg3205_0: itg3205@68 {
+		compatible = "tdk,itg3205";
+		reg = <0x68>;
+    };
+
     bmp085_0: bmp085@77 {
 		compatible = "bosch,bmp085";
 		reg = <0x77>;
