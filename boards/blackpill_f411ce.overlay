@@ -70,6 +70,11 @@
     status = "okay";
     clock-frequency = <I2C_BITRATE_FAST>;
 
+    hmc5883l_0: hmc5883l@1e {
+		compatible = "honeywell,hmc5883l";
+		reg = <0x1e>;
+    };
+
     bmp085_0: bmp085@77 {
 		compatible = "bosch,bmp085";
 		reg = <0x77>;

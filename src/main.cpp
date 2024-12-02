@@ -29,15 +29,23 @@ static void button_pressed(const device *dev, gpio_callback *cb,
   }
 }
 
-void fetch_envs_bus0() {
-  auto &envs = get_envs_bus0();
+void fetch_envs(auto &envs) {
   for (auto &env : envs) {
     env->fetch();
   }
 }
 
-void read_envs_bus0(bool print) {
+void fetch_envs_bus0() {
   auto &envs = get_envs_bus0();
+  fetch_envs(envs);
+}
+
+void fetch_envs_bus1() {
+  auto &envs = get_envs_bus1();
+  fetch_envs(envs);
+}
+
+void read_envs(auto &envs, bool print) {
   if (print) {
     printk("%8.3f\n", k_uptime_get() / 1000.0);
   }
@@ -58,8 +66,17 @@ void read_envs_bus0(bool print) {
   }
 }
 
-void read_imus_bus0(bool print) {
-  auto &imus = get_imus_bus0();
+void read_envs_bus0(bool print) {
+  auto &envs = get_envs_bus0();
+  read_envs(envs, print);
+}
+
+void read_envs_bus1(bool print) {
+  auto &envs = get_envs_bus1();
+  read_envs(envs, print);
+}
+
+void read_imus(auto &imus, bool print) {
   if (print) {
     printk("%8.3f\n", k_uptime_get() / 1000.0);
   }
@@ -83,6 +100,16 @@ void read_imus_bus0(bool print) {
   if (print) {
     printk("%8.3f\n---\n", k_uptime_get() / 1000.0);
   }
+}
+
+void read_imus_bus0(bool print) {
+  auto &imus = get_imus_bus0();
+  read_imus(imus, print);
+}
+
+void read_imus_bus1(bool print) {
+  auto &imus = get_imus_bus1();
+  read_imus(imus, print);
 }
 
 static void initialize_buttons() {
@@ -131,7 +158,6 @@ void bus0_loop(void *arg1, void *arg2, void *arg3) {
     read_imus_bus0(on_second);
     if (on_second) {
       fetch_envs_bus0();
-      toggle_led();
     }
 
     time += 10;
@@ -150,9 +176,36 @@ void bus0_loop(void *arg1, void *arg2, void *arg3) {
   }
 }
 
-void bus1_loop(void *arg1, void *arg2, void *arg3) {}
+void bus1_loop(void *arg1, void *arg2, void *arg3) {
+  int i = 0;
+  auto time = k_uptime_get();
+  int64_t sum_rem = 0;
+  while (true) {
+    bool on_second = i % 100 == 0;
+    read_imus_bus1(on_second);
+    if (on_second) {
+      fetch_envs_bus1();
+    }
+
+    time += 10;
+    auto rem = time - k_uptime_get();
+    if (rem > 0) {
+      k_sleep(K_MSEC(rem));
+    }
+    sum_rem += rem;
+    if (i % 1000 == 0) {
+      auto duty_cycle = 100 - sum_rem / 100;
+      printk("Bus 1 duty cycle: %lld%%\n\n", duty_cycle);
+      sum_rem = 0;
+    }
+
+    ++i;
+  }
+}
 
 K_THREAD_DEFINE(bus0_thread, 1024, bus0_loop, NULL, NULL, NULL, -1, K_FP_REGS,
+                1000);
+K_THREAD_DEFINE(bus1_thread, 1024, bus1_loop, NULL, NULL, NULL, -1, K_FP_REGS,
                 1000);
 
 int main(void) {
@@ -166,10 +219,8 @@ int main(void) {
   int i = 0;
   auto time = k_uptime_get();
   int64_t sum_rem = 0;
-  read_envs_bus0(true);
   while (true) {
     if (gpio_pin_get_dt(&sw0_gpio)) {
-      read_envs_bus0(true);
     }
 
     bool on_second = i % 100 == 0;
