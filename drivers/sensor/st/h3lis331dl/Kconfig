@@ -1,0 +1,85 @@
+# H3LIS331DL Three Axis Accelerometer configuration options
+
+# Copyright (c) 2016 Intel Corporation
+# SPDX-License-Identifier: Apache-2.0
+
+menuconfig H3LIS331DL
+	bool "H3LIS331DL Three Axis Accelerometer Family"
+	default y
+	depends on DT_HAS_ST_H3LIS331DL_ENABLED
+	select I2C
+	help
+	  Enable driver for H3LIS331DL I2C-based triaxial accelerometer sensor
+	  family.
+
+if H3LIS331DL
+
+choice
+	prompt "Acceleration measurement range"
+	default H3LIS331DL_RANGE_2G
+	help
+	  Measurement range for acceleration values.
+
+config H3LIS331DL_RANGE_1G
+	bool "+/-1g"
+
+config H3LIS331DL_RANGE_1_5G
+	bool "+/-1.5g"
+
+config H3LIS331DL_RANGE_2G
+	bool "+/-2g"
+
+config H3LIS331DL_RANGE_3G
+	bool "+/-3g"
+
+config H3LIS331DL_RANGE_4G
+	bool "+/-4g"
+
+config H3LIS331DL_RANGE_8G
+	bool "+/-8g"
+
+config H3LIS331DL_RANGE_16G
+	bool "+/-16g"
+
+endchoice
+
+choice
+	prompt "Acceleration data filter bandwidth"
+	default H3LIS331DL_BW_150HZ
+	help
+	  Bandwidth of filtered acceleration data.
+
+config H3LIS331DL_BW_10HZ
+	bool "10Hz"
+
+config H3LIS331DL_BW_20HZ
+	bool "20Hz"
+
+config H3LIS331DL_BW_40HZ
+	bool "40Hz"
+
+config H3LIS331DL_BW_75HZ
+	bool "75Hz"
+
+config H3LIS331DL_BW_150HZ
+	bool "150Hz"
+
+config H3LIS331DL_BW_300HZ
+	bool "300Hz"
+
+config H3LIS331DL_BW_600HZ
+	bool "600Hz"
+
+config H3LIS331DL_BW_1200HZ
+	bool "1200Hz"
+
+config H3LIS331DL_BW_HIGHPASS
+	bool "High pass 1Hz"
+
+config H3LIS331DL_BW_BANDPASS
+	bool "Band pass 0.2-300Hz"
+
+
+endchoice
+
+endif # H3LIS331DL

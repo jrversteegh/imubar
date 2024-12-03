@@ -1,0 +1,16 @@
+# Copyright (c) 2024 J.R. Versteegh
+# SPDX-License-Identifier: Apache-2.0
+
+description: |
+  ST H3LIS331DL Accelerometer.  See more info at:
+  https://www.st.com/en/mems-and-sensors/lsm9ds1.html
+
+compatible: "st,h3lis331dl"
+
+include: [sensor-device.yaml, i2c-device.yaml]
+
+properties:
+  int1-gpios:
+    type: phandle-array
+    description: |
+      Identifies pins for the INT1 and INT2 signal on the sensor.
