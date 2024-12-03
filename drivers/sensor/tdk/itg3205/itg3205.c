@@ -14,72 +14,43 @@
 
 #include "itg3205.h"
 
+#define ITG3205_LSB_PER_RAD 824
+#define ITG3205_LSB_PER_DEG 280
+#define ITG3205_TEMP_OFFSET -47
+
 LOG_MODULE_REGISTER(ITG3205, CONFIG_SENSOR_LOG_LEVEL);
 
-/* see "Temperature Measurement" section from register map description */
-static inline void itg3205_convert_temp(enum itg3205_device_type device_type,
-                                        struct sensor_value *val,
-                                        int16_t raw_val) {
-  int64_t tmp_val = (int64_t)raw_val * 1000000;
-
-  switch (device_type) {
-  case DEVICE_TYPE_MPU6500:
-    tmp_val = (tmp_val * 1000 / 333870) + 21000000;
-    break;
-
-  case DEVICE_TYPE_ITG3205:
-  default:
-    tmp_val = (tmp_val / 340) + 36000000;
-  };
-
-  val->val1 = tmp_val / 1000000;
-  val->val2 = tmp_val % 1000000;
+static inline struct sensor_value get_sensor_value(const uint16_t value,
+                                                   const int32_t divisor) {
+  int64_t val = (int16_t)sys_be16_to_cpu(value);
+  int64_t tmp = val * 1000000 / divisor;
+  struct sensor_value result = {.val1 = tmp / 1000000, .val2 = tmp % 1000000};
+  return result;
 }
 
 static int itg3205_channel_get(const struct device *dev,
                                enum sensor_channel chan,
                                struct sensor_value *val) {
-  struct itg3205_data *drv_data = dev->data;
+  struct itg3205_data *data = dev->data;
 
   switch (chan) {
-  case SENSOR_CHAN_ACCEL_XYZ:
-    itg3205_convert_accel(val, drv_data->accel_x,
-                          drv_data->accel_sensitivity_shift);
-    itg3205_convert_accel(val + 1, drv_data->accel_y,
-                          drv_data->accel_sensitivity_shift);
-    itg3205_convert_accel(val + 2, drv_data->accel_z,
-                          drv_data->accel_sensitivity_shift);
-    break;
-  case SENSOR_CHAN_ACCEL_X:
-    itg3205_convert_accel(val, drv_data->accel_x,
-                          drv_data->accel_sensitivity_shift);
-    break;
-  case SENSOR_CHAN_ACCEL_Y:
-    itg3205_convert_accel(val, drv_data->accel_y,
-                          drv_data->accel_sensitivity_shift);
-    break;
-  case SENSOR_CHAN_ACCEL_Z:
-    itg3205_convert_accel(val, drv_data->accel_z,
-                          drv_data->accel_sensitivity_shift);
-    break;
-  case SENSOR_CHAN_GYRO_XYZ:
-    itg3205_convert_gyro(val, drv_data->gyro_x, drv_data->gyro_sensitivity_x10);
-    itg3205_convert_gyro(val + 1, drv_data->gyro_y,
-                         drv_data->gyro_sensitivity_x10);
-    itg3205_convert_gyro(val + 2, drv_data->gyro_z,
-                         drv_data->gyro_sensitivity_x10);
-    break;
   case SENSOR_CHAN_GYRO_X:
-    itg3205_convert_gyro(val, drv_data->gyro_x, drv_data->gyro_sensitivity_x10);
+    *val = get_sensor_value(data->sample.x, ITG3205_LSB_PER_RAD);
     break;
   case SENSOR_CHAN_GYRO_Y:
-    itg3205_convert_gyro(val, drv_data->gyro_y, drv_data->gyro_sensitivity_x10);
+    *val = get_sensor_value(data->sample.y, ITG3205_LSB_PER_RAD);
     break;
   case SENSOR_CHAN_GYRO_Z:
-    itg3205_convert_gyro(val, drv_data->gyro_z, drv_data->gyro_sensitivity_x10);
+    *val = get_sensor_value(data->sample.z, ITG3205_LSB_PER_RAD);
+    break;
+  case SENSOR_CHAN_GYRO_XYZ:
+    *val = get_sensor_value(data->sample.x, ITG3205_LSB_PER_RAD);
+    *(val + 1) = get_sensor_value(data->sample.y, ITG3205_LSB_PER_RAD);
+    *(val + 2) = get_sensor_value(data->sample.z, ITG3205_LSB_PER_RAD);
     break;
   case SENSOR_CHAN_DIE_TEMP:
-    itg3205_convert_temp(drv_data->device_type, val, drv_data->temp);
+    *val = get_sensor_value(data->temp, ITG3205_LSB_PER_DEG);
+    val->val1 += ITG3205_TEMP_OFFSET;
     break;
   default:
     return -ENOTSUP;
@@ -90,23 +61,28 @@ static int itg3205_channel_get(const struct device *dev,
 
 static int itg3205_sample_fetch(const struct device *dev,
                                 enum sensor_channel chan) {
-  struct itg3205_data *drv_data = dev->data;
-  const struct itg3205_config *cfg = dev->config;
-  int16_t buf[7];
+  struct itg3205_data *data = dev->data;
+  const struct itg3205_config *config = dev->config;
 
-  if (i2c_burst_read_dt(&cfg->i2c, ITG3205_REG_DATA_START, (uint8_t *)buf, 14) <
-      0) {
-    LOG_ERR("Failed to read data sample.");
-    return -EIO;
+  switch (chan) {
+  case SENSOR_CHAN_ALL:
+  case SENSOR_CHAN_GYRO_XYZ:
+    if (i2c_burst_read_dt(&config->i2c, ITG3205_REG_GYRO_X_MSB,
+                          (uint8_t *)&data->sample, sizeof(data->sample)) < 0) {
+      LOG_ERR("Failed to read gyro sample.");
+      return -EIO;
+    }
+    break;
+  case SENSOR_CHAN_DIE_TEMP:
+    if (i2c_burst_read_dt(&config->i2c, ITG3205_REG_TEMP_MSB,
+                          (uint8_t *)&data->temp, 2) < 0) {
+      LOG_ERR("Failed to read temp sample.");
+      return -EIO;
+    }
+    break;
+  default:
+    return -ENOTSUP;
   }
-
-  drv_data->accel_x = sys_be16_to_cpu(buf[0]);
-  drv_data->accel_y = sys_be16_to_cpu(buf[1]);
-  drv_data->accel_z = sys_be16_to_cpu(buf[2]);
-  drv_data->temp = sys_be16_to_cpu(buf[3]);
-  drv_data->gyro_x = sys_be16_to_cpu(buf[4]);
-  drv_data->gyro_y = sys_be16_to_cpu(buf[5]);
-  drv_data->gyro_z = sys_be16_to_cpu(buf[6]);
 
   return 0;
 }
@@ -117,16 +93,15 @@ static const struct sensor_driver_api itg3205_driver_api = {
 };
 
 int itg3205_init(const struct device *dev) {
-  struct itg3205_data *drv_data = dev->data;
-  const struct itg3205_config *cfg = dev->config;
-  uint8_t id, i;
+  const struct itg3205_config *config = dev->config;
+  uint8_t id;
 
-  if (!device_is_ready(cfg->i2c.bus)) {
+  if (!device_is_ready(config->i2c.bus)) {
     LOG_ERR("Bus device is not ready");
     return -ENODEV;
   }
 
-  if (i2c_reg_read_byte_dt(&cfg->i2c, ITG3205_REG_CHIP_ID, &id) < 0) {
+  if (i2c_reg_read_byte_dt(&config->i2c, ITG3205_REG_CHIP_ID, &id) < 0) {
     LOG_ERR("Failed to read chip ID.");
     return -EIO;
   }
@@ -136,13 +111,14 @@ int itg3205_init(const struct device *dev) {
     return -EIO;
   }
 
-  if (i2c_reg_write_byte_dt(&cfg->i2c, ITG3205_REG_BW,
-                            ITG3205_BW << ITG_3205_BW_SHIFT) < 0) {
-    LOG_ERR("Failed to set filter bandwith.");
+  if (i2c_reg_write_byte_dt(&config->i2c, ITG3205_REG_BW,
+                            (ITG3205_BW << ITG3205_BW_SHIFT) |
+                                (ITG3205_FS_SEL << ITG3205_FS_SEL_SHIFT)) < 0) {
+    LOG_ERR("Failed to set filter bandwith and full range selection.");
     return -EIO;
   }
 
-  if (i2c_reg_write_byte_dt(&cfg->i2c, ITG3205_REG_SR_DIVIDER,
+  if (i2c_reg_write_byte_dt(&config->i2c, ITG3205_REG_SR_DIVIDER,
                             CONFIG_ITG3205_SAMPLE_RATE_DIVIDER) < 0) {
     LOG_ERR("Failed to write sample rate divider");
     return -EIO;
@@ -150,8 +126,8 @@ int itg3205_init(const struct device *dev) {
 
   // Select gyro clock instead of internal oscillator as per datasheet
   // recommendation
-  if (i2c_reg_write_byte_dt(&cfg->i2c, ITG3205_REG_PWRMGMT, ITG3205_CLK_SEL) <
-      0) {
+  if (i2c_reg_write_byte_dt(&config->i2c, ITG3205_REG_PWRMGMT,
+                            ITG3205_CLK_SEL) < 0) {
     LOG_ERR("Failed to set CLK_SEL.");
     return -EIO;
   }

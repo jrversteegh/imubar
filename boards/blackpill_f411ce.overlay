@@ -81,7 +81,7 @@
     };
 
     itg3205_0: itg3205@68 {
-		compatible = "tdk,itg3205";
+		compatible = "invensense,itg3205";
 		reg = <0x68>;
     };
 

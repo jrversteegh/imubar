@@ -18,7 +18,7 @@
 
 #define ITG3205_REG_SR_DIVIDER 0x15
 #define ITG3205_REG_BW 0x16
-#define ITG3205_BW_SHIFT 1
+#define ITG3205_BW_SHIFT 0
 
 #if defined(CONFIG_ITG3205_BW_5HZ)
 #define ITG3205_BW 0x06
@@ -37,6 +37,9 @@
 #else
 #error "No filter bandwith assigned"
 #endif
+
+#define ITG3205_FS_SEL 0x03
+#define ITG3205_FS_SEL_SHIFT 3
 
 #define ITG3205_REG_TEMP_MSB 0x1B
 #define ITG3205_REG_TEMP_LSB 0x1C

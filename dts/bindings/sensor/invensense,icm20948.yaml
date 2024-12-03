@@ -1,6 +1,6 @@
 description:
   TDK InvenSense ICM20948 9DOF motion sensor
 
-compatible: "tdk,icm20948"
+compatible: "invensense,icm20948"
 
 include: [sensor-device.yaml, i2c-device.yaml]
