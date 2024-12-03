@@ -1,3 +1,4 @@
 rsource "l3gd20h/Kconfig"
 rsource "lsm9ds1_ag/Kconfig"
 rsource "lsm9ds1_magn/Kconfig"
+rsource "h3lis331dl/Kconfig"

@@ -15,24 +15,18 @@
 #include "h3lis331dl.h"
 
 LOG_MODULE_REGISTER(H3LIS331DL, CONFIG_SENSOR_LOG_LEVEL);
+char dumpstr[256];
 
 static int h3lis331dl_sample_fetch(const struct device *dev,
-                               enum sensor_channel chan) {
+                                   enum sensor_channel chan) {
   struct h3lis331dl_data *data = dev->data;
   const struct h3lis331dl_config *config = dev->config;
   switch (chan) {
   case SENSOR_CHAN_ALL:
   case SENSOR_CHAN_ACCEL_XYZ:
-    if (i2c_burst_read_dt(&config->i2c, H3LIS331DL_REG_ACCEL_X_LSB,
+    if (i2c_burst_read_dt(&config->i2c, H3LIS331DL_REG_ACCEL_X_LSB | 0x80,
                           (uint8_t *)&data->sample, sizeof(data->sample)) < 0) {
       LOG_DBG("Could not read accel axis data");
-      return -EIO;
-    }
-    break;
-  case SENSOR_CHAN_DIE_TEMP:
-    if (i2c_reg_read_byte_dt(&config->i2c, H3LIS331DL_REG_TEMP,
-                             (uint8_t *)&data->temp) < 0) {
-      LOG_DBG("Could not read temperature data");
       return -EIO;
     }
     break;
@@ -45,14 +39,14 @@ static int h3lis331dl_sample_fetch(const struct device *dev,
 
 static inline struct sensor_value get_sensor_value(const uint16_t value) {
   int64_t val = (int16_t)sys_le16_to_cpu(value);
-  int64_t tmp = 1000000 * val / H3LIS331DL_LSB_PER_MS2;
+  int64_t tmp = 1000000000LL * val / H3LIS331DL_LSB_PER_KMS2;
   struct sensor_value result = {.val1 = tmp / 1000000, .val2 = tmp % 1000000};
   return result;
 }
 
 static int h3lis331dl_channel_get(const struct device *dev,
-                              enum sensor_channel chan,
-                              struct sensor_value *val) {
+                                  enum sensor_channel chan,
+                                  struct sensor_value *val) {
   struct h3lis331dl_data *data = dev->data;
 
   switch (chan) {
@@ -69,10 +63,6 @@ static int h3lis331dl_channel_get(const struct device *dev,
     *val = get_sensor_value(data->sample.x);
     *(val + 1) = get_sensor_value(data->sample.y);
     *(val + 2) = get_sensor_value(data->sample.z);
-    break;
-  case SENSOR_CHAN_DIE_TEMP:
-    val->val1 = data->temp;
-    val->val2 = 0;
     break;
   default:
     return -ENOTSUP;
@@ -105,15 +95,21 @@ int h3lis331dl_init(const struct device *dev) {
     return -EIO;
   }
 
-  if (i2c_reg_write_byte_dt(&config->i2c, H3LIS331DL_REG_BW,
-                            (H3LIS331DL_BW << h3lis331dl_BW_SHIFT) |
-                                (H3LIS331DL_TCS << h3lis331dl_TCS_SHIFT)) < 0) {
-    LOG_DBG("Could not set data filter bandwidth");
+  uint8_t ctrl_reg1 = (H3LIS331DL_AXES_ENABLE << H3LIS331DL_AXES_SHIFT) |
+                      (H3LIS331DL_ODR << H3LIS331DL_ODR_SHIFT) |
+                      (H3LIS331DL_PM_NORMAL << H3LIS331DL_PM_SHIFT);
+
+  LOG_DBG("CTRL_REG1: %d", (int)ctrl_reg1);
+  if (i2c_reg_write_byte_dt(&config->i2c, H3LIS331DL_REG_CTRL1, ctrl_reg1) <
+      0) {
+    LOG_DBG("Could not set data output rate");
     return -EIO;
   }
 
-  if (i2c_reg_write_byte_dt(&config->i2c, H3LIS331DL_REG_RANGE,
-                            H3LIS331DL_RANGE << h3lis331dl_RANGE_SHIFT) < 0) {
+  uint8_t ctrl_reg4 = H3LIS331DL_RANGE << H3LIS331DL_RANGE_SHIFT;
+  LOG_DBG("CTRL_REG4: %d", (int)ctrl_reg4);
+  if (i2c_reg_write_byte_dt(&config->i2c, H3LIS331DL_REG_CTRL4, ctrl_reg4) <
+      0) {
     LOG_DBG("Could not set data g-range");
     return -EIO;
   }
@@ -121,14 +117,15 @@ int h3lis331dl_init(const struct device *dev) {
   return 0;
 }
 
-#define H3LIS331DL_DEFINE(inst)                                                    \
-  static struct h3lis331dl_data h3lis331dl_data_##inst;                                \
+#define H3LIS331DL_DEFINE(inst)                                                \
+  static struct h3lis331dl_data h3lis331dl_data_##inst;                        \
                                                                                \
-  static const struct h3lis331dl_config h3lis331dl_config##inst = {                    \
+  static const struct h3lis331dl_config h3lis331dl_config##inst = {            \
       .i2c = I2C_DT_SPEC_INST_GET(inst)};                                      \
                                                                                \
   SENSOR_DEVICE_DT_INST_DEFINE(                                                \
-      inst, h3lis331dl_init, NULL, &h3lis331dl_data_##inst, &bma180_config##inst,      \
-      POST_KERNEL, CONFIG_SENSOR_INIT_PRIORITY, &h3lis331dl_driver_api);
+      inst, h3lis331dl_init, NULL, &h3lis331dl_data_##inst,                    \
+      &h3lis331dl_config##inst, POST_KERNEL, CONFIG_SENSOR_INIT_PRIORITY,      \
+      &h3lis331dl_driver_api);
 
 DT_INST_FOREACH_STATUS_OKAY(H3LIS331DL_DEFINE)

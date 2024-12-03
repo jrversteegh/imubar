@@ -16,69 +16,38 @@ if H3LIS331DL
 
 choice
 	prompt "Acceleration measurement range"
-	default H3LIS331DL_RANGE_2G
+	default H3LIS331DL_RANGE_100G
 	help
 	  Measurement range for acceleration values.
 
-config H3LIS331DL_RANGE_1G
-	bool "+/-1g"
+config H3LIS331DL_RANGE_100G
+	bool "+/-100g"
 
-config H3LIS331DL_RANGE_1_5G
-	bool "+/-1.5g"
+config H3LIS331DL_RANGE_200G
+	bool "+/-200g"
 
-config H3LIS331DL_RANGE_2G
-	bool "+/-2g"
-
-config H3LIS331DL_RANGE_3G
-	bool "+/-3g"
-
-config H3LIS331DL_RANGE_4G
-	bool "+/-4g"
-
-config H3LIS331DL_RANGE_8G
-	bool "+/-8g"
-
-config H3LIS331DL_RANGE_16G
-	bool "+/-16g"
+config H3LIS331DL_RANGE_400G
+	bool "+/-400g"
 
 endchoice
 
 choice
-	prompt "Acceleration data filter bandwidth"
-	default H3LIS331DL_BW_150HZ
+	prompt "Acceleration output data rate"
+	default H3LIS331DL_ODR_100HZ
 	help
-	  Bandwidth of filtered acceleration data.
+	  Output data rate.
 
-config H3LIS331DL_BW_10HZ
-	bool "10Hz"
+config H3LIS331DL_ODR_50HZ
+	bool "50Hz"
 
-config H3LIS331DL_BW_20HZ
-	bool "20Hz"
+config H3LIS331DL_ODR_100HZ
+	bool "100Hz"
 
-config H3LIS331DL_BW_40HZ
-	bool "40Hz"
+config H3LIS331DL_ODR_400HZ
+	bool "400Hz"
 
-config H3LIS331DL_BW_75HZ
-	bool "75Hz"
-
-config H3LIS331DL_BW_150HZ
-	bool "150Hz"
-
-config H3LIS331DL_BW_300HZ
-	bool "300Hz"
-
-config H3LIS331DL_BW_600HZ
-	bool "600Hz"
-
-config H3LIS331DL_BW_1200HZ
-	bool "1200Hz"
-
-config H3LIS331DL_BW_HIGHPASS
-	bool "High pass 1Hz"
-
-config H3LIS331DL_BW_BANDPASS
-	bool "Band pass 0.2-300Hz"
-
+config H3LIS331DL_ODR_1000HZ
+	bool "1000Hz"
 
 endchoice
 
