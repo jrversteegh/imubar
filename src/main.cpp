@@ -168,7 +168,7 @@ void bus0_loop(void *arg1, void *arg2, void *arg3) {
     sum_rem += rem;
     if (i % 1000 == 0) {
       auto duty_cycle = 100 - sum_rem / 100;
-      // printk("Bus 0 duty cycle: %lld%%\n\n", duty_cycle);
+      printk("Bus 0 duty cycle: %lld%%\n\n", duty_cycle);
       sum_rem = 0;
     }
 
@@ -195,7 +195,7 @@ void bus1_loop(void *arg1, void *arg2, void *arg3) {
     sum_rem += rem;
     if (i % 1000 == 0) {
       auto duty_cycle = 100 - sum_rem / 100;
-      // printk("Bus 1 duty cycle: %lld%%\n\n", duty_cycle);
+      printk("Bus 1 duty cycle: %lld%%\n\n", duty_cycle);
       sum_rem = 0;
     }
 
@@ -236,7 +236,7 @@ int main(void) {
     sum_rem += rem;
     if (i % 1000 == 0) {
       auto duty_cycle = 100 - sum_rem / 100;
-      // printk("Main thread duty cycle: %lld%%\n\n", duty_cycle);
+      printk("Main thread duty cycle: %lld%%\n\n", duty_cycle);
       sum_rem = 0;
     }
 

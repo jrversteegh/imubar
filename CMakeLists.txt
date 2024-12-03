@@ -34,5 +34,6 @@ set(driver_sources
   drivers/sensor/bosch/bmp085/bmp085.c
   drivers/sensor/bosch/bma180/bma180.c
   drivers/sensor/tdk/itg3205/itg3205.c
+  drivers/sensor/tdk/icm20948/icm20948.c
 )
 target_sources(app PRIVATE ${app_sources} ${driver_sources})

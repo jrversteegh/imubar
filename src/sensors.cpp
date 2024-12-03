@@ -29,6 +29,7 @@ LOG_MODULE_DECLARE(imubar);
 #define BMA180_0 DT_NODELABEL(bma180_0)
 #define ITG3205_0 DT_NODELABEL(itg3205_0)
 #define BMP085_0 DT_NODELABEL(bmp085_0)
+#define ICM20948_0 DT_NODELABEL(icm20948_0)
 
 static device const *const imu_mpu9250 = DEVICE_DT_GET(MPU9250_0);
 static device const *const imu_fxos8700 = DEVICE_DT_GET(FXOS8700_0);
@@ -45,6 +46,7 @@ static device const *const imu_hmc5883l = DEVICE_DT_GET(HMC5883L_0);
 static device const *const imu_bma180 = DEVICE_DT_GET(BMA180_0);
 static device const *const imu_itg3205 = DEVICE_DT_GET(ITG3205_0);
 static device const *const env_bmp085 = DEVICE_DT_GET(BMP085_0);
+static device const *const imu_icm20948 = DEVICE_DT_GET(ICM20948_0);
 
 struct None {};
 
@@ -117,8 +119,9 @@ Vector3 read_sensor_vector(device const *sensor, sensor_channel channel) {
 }
 
 void initialize_sensors() {
+  // I2C Bus 0
   if (!device_is_ready(imu_mpu9250)) {
-    error(2, "MPU9250 not ready.");
+    error(2, "MPU9250 9dof not ready.");
   }
   if (!device_is_ready(imu_fxos8700)) {
     error(2, "FXOS8700 not ready.");
@@ -154,6 +157,7 @@ void initialize_sensors() {
   }
   fetch_sensor(env_bmp180, SENSOR_CHAN_ALL);
 
+  // I2C Bus 1
   if (!device_is_ready(imu_hmc5883l)) {
     error(2, "HMC5883L magn not ready.");
   }
@@ -167,6 +171,9 @@ void initialize_sensors() {
     error(2, "BMP085 pressure not ready.");
   }
   fetch_sensor(env_bmp085, SENSOR_CHAN_ALL);
+  if (!device_is_ready(imu_icm20948)) {
+    error(2, "ICM20948 9dof not ready.");
+  }
 }
 
 std::vector<std::unique_ptr<Imu>> &get_imus_bus0() {
@@ -191,6 +198,8 @@ std::vector<std::unique_ptr<Imu>> &get_imus_bus1() {
   if (imus.size() == 0) {
     imus.push_back(std::make_unique<Imu>("nameless_10dof", imu_bma180,
                                          imu_itg3205, imu_hmc5883l, 7));
+    imus.push_back(std::make_unique<Imu>("pimoroni_icm20948", imu_icm20948,
+                                         imu_icm20948, imu_icm20948));
   }
   return imus;
 }

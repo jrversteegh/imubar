@@ -70,6 +70,11 @@
     status = "okay";
     clock-frequency = <I2C_BITRATE_FAST>;
 
+    h3lis331dl_0: h3lis331dl@19 {
+		compatible = "st,h3lis331dl";
+		reg = <0x19>;
+    };
+
     hmc5883l_0: hmc5883l@1e {
 		compatible = "honeywell,hmc5883l";
 		reg = <0x1e>;
@@ -89,6 +94,15 @@
 		compatible = "bosch,bmp085";
 		reg = <0x77>;
     };
+
+    icm20948_0: icm20948@69 {
+		compatible = "invensense,icm20948";
+		reg = <0x69>;
+        accel-hz = <100>;
+        gyro-hz = <100>;
+        mag-freq = <10>;
+    };
+
 };
 
 &spi1 {

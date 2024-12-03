@@ -31,7 +31,7 @@ two I2C ports::
     1e: NAMELESS 10DOF - HMC5883: magn
     40: NAMELESS 10DOF - BMA180: accel
     68: NAMELESS 10DOF - ITG3205: gyro
-    69: PRIMORONI IMC20948 - ICM20948: accel/gyro/magn
+    69: PIMORONI IMC20948 - ICM20948: accel/gyro/magn
     77: NAMELESS 10DOF - BMP085: pressure
 
 Flashing
