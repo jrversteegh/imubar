@@ -19,7 +19,6 @@ two I2C ports::
     1e: ADAFRUIT 10DOF - LSM303DLHC: magn
     1f: ADAFRUIT 9DOF - FXOS8700CQ: accel/magn
     21: ADAFRUIT 9DOF - FXAS21002C: gyro
-    28: ADAFRUIT IMU - BNO055: accel/gyro/mag - fusion
     68: SPARKFUN SEN13762 - MPU9250: accel/gyro/magn
     6a: SPARKFUN SEN13944 - LSM9DS1: accel/gyro
     6b: ADAFRUIT 10DOF - L3GD20H: gyro
@@ -27,8 +26,9 @@ two I2C ports::
 
     Port 1:
 
-    19: SPARKFUN SEN14480 - H3LIS331DL: accel
+    19: SPARKFUN SEN14480 - H3LIS331DL: accel (Optional)
     1e: NAMELESS 10DOF - HMC5883: magn
+    28: ADAFRUIT IMU - BNO055: accel/gyro/mag - fusion
     40: NAMELESS 10DOF - BMA180: accel
     68: NAMELESS 10DOF - ITG3205: gyro
     69: PIMORONI IMC20948 - ICM20948: accel/gyro/magn

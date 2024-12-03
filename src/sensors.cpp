@@ -30,6 +30,7 @@ LOG_MODULE_DECLARE(imubar);
 #define ITG3205_0 DT_NODELABEL(itg3205_0)
 #define BMP085_0 DT_NODELABEL(bmp085_0)
 #define ICM20948_0 DT_NODELABEL(icm20948_0)
+#define H3LIS331DL_0 DT_NODELABEL(h3lis331dl_0)
 
 static device const *const imu_mpu9250 = DEVICE_DT_GET(MPU9250_0);
 static device const *const imu_fxos8700 = DEVICE_DT_GET(FXOS8700_0);
@@ -47,6 +48,7 @@ static device const *const imu_bma180 = DEVICE_DT_GET(BMA180_0);
 static device const *const imu_itg3205 = DEVICE_DT_GET(ITG3205_0);
 static device const *const env_bmp085 = DEVICE_DT_GET(BMP085_0);
 static device const *const imu_icm20948 = DEVICE_DT_GET(ICM20948_0);
+static device const *const imu_h3lis331dl = DEVICE_DT_GET(H3LIS331DL_0);
 
 struct None {};
 
@@ -174,6 +176,9 @@ void initialize_sensors() {
   if (!device_is_ready(imu_icm20948)) {
     error(2, "ICM20948 9dof not ready.");
   }
+  if (!device_is_ready(imu_h3lis331dl)) {
+    error(2, "H3LIS331DL high g accel not ready.");
+  }
 }
 
 std::vector<std::unique_ptr<Imu>> &get_imus_bus0() {
@@ -185,8 +190,6 @@ std::vector<std::unique_ptr<Imu>> &get_imus_bus0() {
                                          imu_mpu9250, imu_mpu9250, 12));
     imus.push_back(std::make_unique<Imu>("ada_lsm303_l3gd20", imu_lsm303accel,
                                          imu_l3gd20h, imu_lsm303magn, 25));
-    imus.push_back(std::make_unique<Imu>("adafruit_bno055", imu_bno055,
-                                         imu_bno055, imu_bno055));
     imus.push_back(std::make_unique<Imu>("sparkfun_lsm9ds1", imu_lsm9ds1ag,
                                          imu_lsm9ds1ag, imu_lsm9ds1magn, 10));
   }
@@ -198,8 +201,12 @@ std::vector<std::unique_ptr<Imu>> &get_imus_bus1() {
   if (imus.size() == 0) {
     imus.push_back(std::make_unique<Imu>("nameless_10dof", imu_bma180,
                                          imu_itg3205, imu_hmc5883l, 7));
+    imus.push_back(std::make_unique<Imu>("adafruit_bno055", imu_bno055,
+                                         imu_bno055, imu_bno055));
     imus.push_back(std::make_unique<Imu>("pimoroni_icm20948", imu_icm20948,
                                          imu_icm20948, imu_icm20948));
+    imus.push_back(std::make_unique<Imu>("sparkfun_h3lis331dl", imu_h3lis331dl,
+                                         nullptr, nullptr));
   }
   return imus;
 }

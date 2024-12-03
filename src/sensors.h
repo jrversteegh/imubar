@@ -92,6 +92,7 @@ private:
   device const *const gyro_device_ = nullptr;
   device const *const magn_device_ = nullptr;
   int magn_rate_divisor_ = 1;
+  bool fetch_all = false;
   bool fetch_gyro_ = false;
   bool fetch_magn_ = false;
   int64_t time_ = 0;

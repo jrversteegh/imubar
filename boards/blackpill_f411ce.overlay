@@ -43,11 +43,6 @@
         accel-dlpf = "5.05";
 	};
 
-    bno055_0: bno055@28 {
-		compatible = "bosch,bno055";
-		reg = <0x28>;
-    };
-
     lsm9ds1magn_0: lsm9ds1magn@1c {
         compatible = "st,lsm9ds1-magn";
         reg = <0x1c>;
@@ -78,6 +73,11 @@
     hmc5883l_0: hmc5883l@1e {
 		compatible = "honeywell,hmc5883l";
 		reg = <0x1e>;
+    };
+
+    bno055_0: bno055@28 {
+		compatible = "bosch,bno055";
+		reg = <0x28>;
     };
 
     bma180_0: bma180@40 {
