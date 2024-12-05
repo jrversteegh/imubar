@@ -5,7 +5,7 @@
 
 LOG_MODULE_DECLARE(imubar);
 
-#define SPI_FLASH DT_NODELABEL(spi_flash)
+#define SPI_FLASH DT_NODELABEL(spi_flash_0)
 
 static device const *const spi_flash = DEVICE_DT_GET(SPI_FLASH);
 

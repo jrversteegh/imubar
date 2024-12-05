@@ -108,12 +108,23 @@
 &spi1 {
     status = "okay";
 
-    spi_flash: flash@0 {
+    spi_flash_0: flash@0 {
         compatible = "jedec,spi-nor";
         reg = <0>;
         spi-max-frequency = <24000000>; // 24 MHz
         size = <0x8000000>; // 128 Mbit
         jedec-id = [EF 40 18]; // Manufacturer and device ID
         status = "okay";
+    };
+};
+
+&usart2 {
+    pinctrl-0 = <&usart2_tx_pa2 &usart2_rx_pa3>;
+    pinctrl-names = "default";
+    status = "okay";
+    current-speed = <9600>;
+
+    gnss_0: gnss-nmea-generic {
+        compatible = "gnss-nmea-generic";
     };
 };
