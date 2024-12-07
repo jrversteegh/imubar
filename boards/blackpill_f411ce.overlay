@@ -105,6 +105,18 @@
 
 };
 
+&i2c3 {
+    pinctrl-0 = <&i2c3_scl_pa8 &i2c3_sda_pb4>;
+    pinctrl-names = "default";
+    status = "okay";
+    clock-frequency = <I2C_BITRATE_FAST>;
+
+    rtc_0: ds1307@68 {
+        compatible = "maxim,ds1307";
+        reg = <0x68>;
+    };
+};
+
 &spi1 {
     status = "okay";
 
@@ -116,6 +128,11 @@
         jedec-id = [EF 40 18]; // Manufacturer and device ID
         status = "okay";
     };
+};
+
+&usart1 {
+    status = "okay";
+    current-speed = <230400>;
 };
 
 &usart2 {

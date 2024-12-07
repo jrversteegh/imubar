@@ -14,7 +14,9 @@
 
 LOG_MODULE_REGISTER(imubar);
 
+#include "clock.h"
 #include "errors.h"
+#include "gps.h"
 #include "sensors.h"
 #include "storage.h"
 
@@ -46,9 +48,6 @@ void fetch_envs_bus1() {
 }
 
 void read_envs(auto &envs, bool print) {
-  if (print) {
-    printk("%8.3f\n", k_uptime_get() / 1000.0);
-  }
   for (auto &env : envs) {
     auto name = env->get_name();
     double uptime = env->get_time() / 1000.0;
@@ -60,9 +59,6 @@ void read_envs(auto &envs, bool print) {
       printk("T: %2.2f ", static_cast<double>(temperature));
       printk("P: %6.0f\n", static_cast<double>(pressure));
     }
-  }
-  if (print) {
-    printk("%8.3f\n---\n", k_uptime_get() / 1000.0);
   }
 }
 
@@ -77,9 +73,6 @@ void read_envs_bus1(bool print) {
 }
 
 void read_imus(auto &imus, bool print) {
-  if (print) {
-    printk("%8.3f\n", k_uptime_get() / 1000.0);
-  }
   for (auto &imu : imus) {
     auto name = imu->get_name();
     double uptime = imu->fetch() / 1000.0;
@@ -96,9 +89,6 @@ void read_imus(auto &imus, bool print) {
       printk("M: %7.4f, %7.4f, %7.4f\n", static_cast<double>(magn.x),
              static_cast<double>(magn.y), static_cast<double>(magn.z));
     }
-  }
-  if (print) {
-    printk("%8.3f\n---\n", k_uptime_get() / 1000.0);
   }
 }
 
@@ -210,9 +200,11 @@ K_THREAD_DEFINE(bus1_thread, 2048, bus1_loop, NULL, NULL, NULL, -1, K_FP_REGS,
 
 int main(void) {
   LOG_INF("IMUBar initializing...");
+  initialize_clock();
   initialize_led();
   initialize_buttons();
   initialize_storage();
+  initialize_gnss();
   initialize_sensors();
 
   LOG_INF("IMUBar running...");

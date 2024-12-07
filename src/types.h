@@ -2,9 +2,10 @@
 #define IMUBAR_TYPES_H__
 
 #include <cstdint>
+#include <time.h>
 
 using Number = float;
-using Time = int64_t;
+using Time = time_t;
 
 struct Vector3 {
   Number x;
@@ -25,6 +26,16 @@ struct ImuSample : Sample {
 struct EnvSample : Sample {
   Number temp;
   Number press;
+};
+
+struct Position {
+  Number latitude;
+  Number longitude;
+};
+
+struct Velocity {
+  Number speed;
+  Number bearing;
 };
 
 #endif

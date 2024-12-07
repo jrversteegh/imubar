@@ -9,6 +9,7 @@
 
 #include "functions.h"
 #include "types.h"
+#include "clock.h"
 
 extern void initialize_sensors();
 extern std::vector<device const *> get_sensors();
@@ -60,7 +61,7 @@ struct Imu : Sensor {
     }
   }
 
-  int64_t fetch() {
+  Time fetch() {
     fetch_sensor_with_error_count(accel_device_, accel_channel_);
     if (fetch_gyro_) {
       fetch_sensor_with_error_count(gyro_device_, gyro_channel_);
@@ -68,7 +69,7 @@ struct Imu : Sensor {
     if (fetch_magn_ && (fetch_counter_ % magn_rate_divisor_ == 0)) {
       fetch_sensor_with_error_count(magn_device_, magn_channel_);
     }
-    time_ = k_uptime_get();
+    time_ = ::get_time();
     ++fetch_counter_;
     return time_;
   }
@@ -85,7 +86,7 @@ struct Imu : Sensor {
     return read_sensor_vector(magn_device_, SENSOR_CHAN_MAGN_XYZ);
   }
 
-  int64_t get_time() { return time_; }
+  Time get_time() { return time_; }
 
 private:
   device const *const accel_device_ = nullptr;
@@ -95,7 +96,7 @@ private:
   bool fetch_all = false;
   bool fetch_gyro_ = false;
   bool fetch_magn_ = false;
-  int64_t time_ = 0;
+  Time time_ = 0;
   sensor_channel accel_channel_ = SENSOR_CHAN_ALL;
   sensor_channel gyro_channel_ = SENSOR_CHAN_ALL;
   sensor_channel magn_channel_ = SENSOR_CHAN_ALL;
@@ -107,9 +108,9 @@ struct Env : Sensor {
   Env(std::string name, device const *const press_device)
       : Sensor(name), press_device_(press_device) {}
 
-  int64_t fetch() {
+  Time fetch() {
     fetch_sensor_with_error_count(press_device_, press_channel_);
-    time_ = k_uptime_get();
+    time_ = ::get_time();
     ++fetch_counter_;
     return time_;
   }
@@ -122,11 +123,11 @@ struct Env : Sensor {
     return read_sensor(press_device_, SENSOR_CHAN_PRESS);
   }
 
-  int64_t get_time() { return time_; }
+  Time get_time() { return time_; }
 
 private:
   device const *const press_device_ = nullptr;
-  int64_t time_ = 0;
+  Time time_ = 0;
   sensor_channel press_channel_ = SENSOR_CHAN_PRESS;
   int fetch_counter_ = 0;
 };
