@@ -1,0 +1,3 @@
+&xiao_spi {
+  status = "okay";
+};
