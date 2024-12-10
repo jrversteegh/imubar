@@ -6,7 +6,7 @@
 #include "types.h"
 
 extern void initialize_clock();
-extern bool set_rtc(rtc_time const& time);
+extern bool set_rtc(rtc_time const &time);
 extern void set_clock(Time const time);
 extern Time get_time();
 

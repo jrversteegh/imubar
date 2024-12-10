@@ -7,9 +7,9 @@
 
 #include <zephyr/device.h>
 
+#include "clock.h"
 #include "functions.h"
 #include "types.h"
-#include "clock.h"
 
 extern void initialize_sensors();
 extern std::vector<device const *> get_sensors();

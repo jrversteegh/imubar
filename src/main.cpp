@@ -73,6 +73,9 @@ void read_envs_bus1(bool print) {
 }
 
 void read_imus(auto &imus, bool print) {
+  if (print) {
+    printk("-----\n");
+  }
   for (auto &imu : imus) {
     auto name = imu->get_name();
     double uptime = imu->fetch() / 1000.0;

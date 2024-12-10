@@ -3,8 +3,8 @@
 #include "errors.h"
 
 #include <zephyr/drivers/gnss.h>
-#include <zephyr/drivers/uart.h>
 #include <zephyr/drivers/rtc.h>
+#include <zephyr/drivers/uart.h>
 #include <zephyr/logging/log.h>
 #include <zephyr/sys/timeutil.h>
 

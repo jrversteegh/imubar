@@ -1,8 +1,7 @@
-#include <zephyr/kernel.h>
-#include <zephyr/sys/timeutil.h>
-#include <zephyr/logging/log.h>
 #include <time.h>
-
+#include <zephyr/kernel.h>
+#include <zephyr/logging/log.h>
+#include <zephyr/sys/timeutil.h>
 
 #include "clock.h"
 #include "errors.h"
@@ -15,7 +14,7 @@ static device const *const rtc = DEVICE_DT_GET(RTC_0);
 
 static time_t _uptime_offset = 0;
 
-bool set_rtc(rtc_time const& time) {
+bool set_rtc(rtc_time const &time) {
   auto ret = rtc_set_time(rtc, &time);
   if (ret < 0) {
     LOG_ERR("Failed to set RTC clock");
@@ -24,9 +23,7 @@ bool set_rtc(rtc_time const& time) {
   return true;
 }
 
-void set_clock(Time time) {
-  _uptime_offset = time - k_uptime_get();
-}
+void set_clock(Time time) { _uptime_offset = time - k_uptime_get(); }
 
 Time get_time() {
   static Time seen = 0;
@@ -34,8 +31,7 @@ Time get_time() {
   if (result < seen) {
     // Don't go back in time: return the latest time seen
     return seen;
-  }
-  else {
+  } else {
     seen = result;
     return result;
   }
