@@ -62,6 +62,7 @@ void test_display() {
   lv_style_set_text_font(&style6, &symbols_22);
   lv_style_set_text_color(&style6, lv_color_hex(0xFFFFFF));
 
+
   static lv_obj_t * rect1 = lv_obj_create(lv_scr_act());
   lv_obj_set_size(rect1, 160, 128);
   lv_obj_set_pos(rect1, 0, 0);
@@ -69,6 +70,7 @@ void test_display() {
 
   static lv_obj_t * rect2 = lv_obj_create(lv_scr_act());
   lv_obj_set_size(rect2, 144, 112);
+  lv_obj_set_style_pad_all(rect2, 5, 0);
   lv_obj_align(rect2, LV_ALIGN_CENTER, 0, 0);
   lv_obj_set_style_bg_color(rect2 , lv_color_hex(0xFF0000), 0);
 
@@ -80,13 +82,12 @@ void test_display() {
   static lv_obj_t *label2 = lv_label_create(rect2);
   lv_obj_add_style(label2, &style2, 0);
   lv_label_set_text(label2, "12345.67890");
-  lv_obj_align_to(label2, label1, LV_ALIGN_OUT_BOTTOM_MID, 0, 0);
+  lv_obj_align_to(label2, label1, LV_ALIGN_OUT_BOTTOM_MID, 0, -4);
 
   static lv_obj_t *label3 = lv_label_create(rect2);
   lv_obj_add_style(label3, &style3, 0);
   lv_label_set_text(label3, "12345.67890");
   lv_obj_align_to(label3, label2, LV_ALIGN_OUT_BOTTOM_MID, 0, 0);
-
 
   static lv_obj_t *label4 = lv_label_create(rect2);
   lv_obj_add_style(label4, &style4, 0);
