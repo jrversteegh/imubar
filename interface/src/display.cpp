@@ -8,6 +8,16 @@
 #include "errors.h"
 #include "display.h"
 
+LV_FONT_DECLARE(font_8);
+LV_FONT_DECLARE(font_12);
+LV_FONT_DECLARE(font_14);
+LV_FONT_DECLARE(font_14_bold);
+LV_FONT_DECLARE(font_18);
+LV_FONT_DECLARE(font_18_bold);
+LV_FONT_DECLARE(symbols_14);
+LV_FONT_DECLARE(symbols_18);
+LV_FONT_DECLARE(symbols_22);
+
 LOG_MODULE_DECLARE(imubar_interface);
 
 #define BACKLIGHT0_NODE DT_ALIAS(backlight0)
@@ -21,23 +31,77 @@ void set_backlight(uint8_t brightness) {
 
 
 void test_display() {
-  static lv_style_t style;
-  lv_style_init(&style);
-  lv_style_set_text_font(&style, &lv_font_montserrat_16);
-  lv_style_set_text_color(&style, lv_color_hex(0xFFFFFF));
-  static lv_obj_t * my_rect = lv_obj_create(lv_scr_act());
-  lv_obj_set_size(my_rect, 160, 128);
-  lv_obj_set_pos(my_rect, 0, 0);
-  lv_obj_set_style_bg_color(my_rect , lv_color_hex(0x00FFFF), 0);
-  static lv_obj_t * my_rect2 = lv_obj_create(lv_scr_act());
-  lv_obj_set_size(my_rect2, 144, 42);
-  lv_obj_align(my_rect2, LV_ALIGN_CENTER, 0, 0);
-  lv_obj_set_style_bg_color(my_rect2 , lv_color_hex(0xFF0000), 0);
-  static lv_obj_t *hello_world_label = lv_label_create(lv_scr_act());
-  lv_obj_add_style(hello_world_label, &style, 0);
-  //lv_label_set_text(hello_world_label, LV_SYMBOL_BATTERY_FULL);
-  lv_label_set_text(hello_world_label, "12345.67890");
-  lv_obj_align(hello_world_label, LV_ALIGN_CENTER, 0, 0);
+  static lv_style_t style1;
+  static lv_style_t style2;
+  static lv_style_t style3;
+  static lv_style_t style4;
+  static lv_style_t style5;
+  static lv_style_t style6;
+
+  lv_style_init(&style1);
+  lv_style_set_text_font(&style1, &font_8);
+  lv_style_set_text_color(&style1, lv_color_hex(0xFFFFFF));
+
+  lv_style_init(&style2);
+  lv_style_set_text_font(&style2, &font_12);
+  lv_style_set_text_color(&style2, lv_color_hex(0xFFFFFF));
+
+  lv_style_init(&style3);
+  lv_style_set_text_font(&style3, &font_14);
+  lv_style_set_text_color(&style3, lv_color_hex(0xFFFFFF));
+
+  lv_style_init(&style4);
+  lv_style_set_text_font(&style4, &symbols_14);
+  lv_style_set_text_color(&style4, lv_color_hex(0xFFFFFF));
+
+  lv_style_init(&style5);
+  lv_style_set_text_font(&style5, &symbols_18);
+  lv_style_set_text_color(&style5, lv_color_hex(0xFFFFFF));
+
+  lv_style_init(&style6);
+  lv_style_set_text_font(&style6, &symbols_22);
+  lv_style_set_text_color(&style6, lv_color_hex(0xFFFFFF));
+
+  static lv_obj_t * rect1 = lv_obj_create(lv_scr_act());
+  lv_obj_set_size(rect1, 160, 128);
+  lv_obj_set_pos(rect1, 0, 0);
+  lv_obj_set_style_bg_color(rect1 , lv_color_hex(0x00FFFF), 0);
+
+  static lv_obj_t * rect2 = lv_obj_create(lv_scr_act());
+  lv_obj_set_size(rect2, 144, 112);
+  lv_obj_align(rect2, LV_ALIGN_CENTER, 0, 0);
+  lv_obj_set_style_bg_color(rect2 , lv_color_hex(0xFF0000), 0);
+
+  static lv_obj_t *label1 = lv_label_create(rect2);
+  lv_obj_add_style(label1, &style1, 0);
+  lv_label_set_text(label1, "12345.67890");
+  lv_obj_align(label1, LV_ALIGN_TOP_MID, 0, 0);
+
+  static lv_obj_t *label2 = lv_label_create(rect2);
+  lv_obj_add_style(label2, &style2, 0);
+  lv_label_set_text(label2, "12345.67890");
+  lv_obj_align_to(label2, label1, LV_ALIGN_OUT_BOTTOM_MID, 0, 0);
+
+  static lv_obj_t *label3 = lv_label_create(rect2);
+  lv_obj_add_style(label3, &style3, 0);
+  lv_label_set_text(label3, "12345.67890");
+  lv_obj_align_to(label3, label2, LV_ALIGN_OUT_BOTTOM_MID, 0, 0);
+
+
+  static lv_obj_t *label4 = lv_label_create(rect2);
+  lv_obj_add_style(label4, &style4, 0);
+  lv_label_set_text(label4, LV_SYMBOL_BATTERY_2);
+  lv_obj_align_to(label4, label3, LV_ALIGN_OUT_BOTTOM_MID, 0, 0);
+
+  static lv_obj_t *label5 = lv_label_create(rect2);
+  lv_obj_add_style(label5, &style5, 0);
+  lv_label_set_text(label5, LV_SYMBOL_BATTERY_2);
+  lv_obj_align_to(label5, label4, LV_ALIGN_OUT_BOTTOM_MID, 0, 0);
+
+  static lv_obj_t *label6 = lv_label_create(rect2);
+  lv_obj_add_style(label6, &style6, 0);
+  lv_label_set_text(label6, LV_SYMBOL_BATTERY_2);
+  lv_obj_align_to(label6, label5, LV_ALIGN_OUT_BOTTOM_MID, 0, 0);
 }
 
 void initialize_display() {

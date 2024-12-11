@@ -18,7 +18,8 @@ find_package(Zephyr REQUIRED HINTS $ENV{ZEPHYR_BASE})
 
 project(imubar)
 
-FILE(GLOB app_sources src/*.cpp)
+FILE(GLOB app_sources src/fonts/*.c src/*.cpp)
 
+add_compile_definitions(LV_LVGL_H_INCLUDE_SIMPLE)
 
 target_sources(app PRIVATE ${app_sources})
