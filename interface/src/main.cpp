@@ -29,7 +29,7 @@ int main() {
     return 0;
   }
 
-  test_display();
+  //test_display();
 
   int i = 0;
   while (true) {
@@ -37,7 +37,7 @@ int main() {
     lv_task_handler();
     if (i % 100 == 0) {
       gpio_pin_toggle_dt(&led);
-      set_backlight((uint8_t)(i / 10));
+      update_backlight();
     }
     k_msleep(10);
   }

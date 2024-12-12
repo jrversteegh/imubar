@@ -58,6 +58,17 @@
   cs-gpios = <&xiao_d 2 GPIO_ACTIVE_LOW>;
 };
 
+
+&xiao_i2c {
+  clock-frequency = <I2C_BITRATE_FAST>;
+  status = "okay";
+  light_sensor: tsl2591@29 {
+    compatible = "ams,tsl2591";
+    reg = <0x29>;
+  };
+};
+
+
 &pinctrl {
   ledc0_default: ledc0_default {
      group1 {
