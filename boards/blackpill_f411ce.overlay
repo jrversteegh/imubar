@@ -145,3 +145,10 @@
         compatible = "gnss-nmea-generic";
     };
 };
+
+&usart6 {
+    pinctrl-0 = <&usart6_tx_pa11 &usart6_rx_pa12>;
+    pinctrl-names = "default";
+    status = "okay";
+    current-speed = <230400>;
+};

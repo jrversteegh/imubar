@@ -19,6 +19,7 @@ LOG_MODULE_REGISTER(imubar);
 #include "gps.h"
 #include "sensors.h"
 #include "storage.h"
+#include "interface.h"
 
 static const struct gpio_dt_spec sw0_gpio =
     GPIO_DT_SPEC_GET(DT_ALIAS(sw0), gpios);
@@ -208,6 +209,7 @@ int main(void) {
   initialize_buttons();
   initialize_storage();
   initialize_gnss();
+  initialize_interface();
   initialize_sensors();
 
   LOG_INF("IMUBar running...");

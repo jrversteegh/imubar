@@ -73,14 +73,14 @@ void update_backlight() {
   static int32_t light_value = 0;
   show_sensor_value(value);
   light_value = (light_value * 9 + value.val1) / 10;
-  if (light_value > 1744) {
+  if (light_value > 1696) {
     set_backlight(254);
   }
   else if (light_value > 256) {
-    set_backlight(light_value / 8 + 36);
+    set_backlight(light_value / 8 + 42);
   }
   else {
-    set_backlight(light_value / 4 + 4);
+    set_backlight(light_value / 4 + 10);
   }
 }
 
