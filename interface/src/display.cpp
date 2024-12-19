@@ -54,6 +54,11 @@ void show_sensor_value(sensor_value value) {
   lv_label_set_text(label, value_str);
 }
 
+void show_message(char const* msg) {
+  static lv_obj_t *label = create_label(lv_scr_act(), LV_ALIGN_BOTTOM_MID, &font_14);
+  lv_label_set_text(label, msg);
+}
+
 void set_backlight(uint8_t brightness) {
   pwm_set_dt(&backlight, 255000, 1000 * brightness);
 }
@@ -86,6 +91,12 @@ void update_backlight() {
 }
 
 void update_screen() {
+  char msg[32];
+  auto size = interface_read((uint8_t*)msg, 31);
+  msg[size] = '\0';
+  if (size > 0) {
+    show_message(msg);
+  }
 }
 
 void test_display() {

@@ -37,6 +37,29 @@ Time get_time() {
   }
 }
 
+std::string get_time_str(bool include_date) {
+  static constexpr char const *const short_fmt = "%H:%M:%S";
+  static constexpr char const *const long_fmt = "%m-%d %H:%M:%S";
+  static constexpr int short_fmt_len =
+      std::char_traits<char>::length(short_fmt);
+  static constexpr int short_fmt_size = short_fmt_len + 1;
+  static constexpr int long_fmt_len = std::char_traits<char>::length(long_fmt);
+  static constexpr int long_fmt_size = long_fmt_len + 1;
+  auto now = get_time() / clock_scaler;
+  auto time = gmtime(&now);
+  std::string result{};
+  if (include_date) {
+    result.resize(long_fmt_size);
+    strftime(&result[0], long_fmt_size, long_fmt, time);
+    result.resize(long_fmt_len);
+  } else {
+    result.resize(short_fmt_size);
+    strftime(&result[0], short_fmt_size, short_fmt, time);
+    result.resize(short_fmt_len);
+  }
+  return result;
+}
+
 void initialize_clock() {
   if (!device_is_ready(rtc)) {
     error(2, "RTC not ready.");
@@ -49,5 +72,5 @@ void initialize_clock() {
   }
 
   Time time = timeutil_timegm(rtc_time_to_tm(&rtctime));
-  set_clock(1000LL * time);
+  set_clock(clock_scaler * time);
 }

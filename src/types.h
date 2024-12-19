@@ -5,7 +5,10 @@
 #include <time.h>
 
 using Number = float;
-using Time = time_t;
+using Time = int64_t;
+
+// Represent time in milliseconds
+static constexpr Time const clock_scaler = 1000;
 
 struct Vector3 {
   Number x;
@@ -31,6 +34,8 @@ struct EnvSample : Sample {
 struct Position {
   Number latitude;
   Number longitude;
+  Number lat() const { return latitude; }
+  Number lon() const { return longitude; }
 };
 
 struct Velocity {

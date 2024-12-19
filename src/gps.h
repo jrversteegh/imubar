@@ -6,10 +6,10 @@
 extern void initialize_gnss();
 
 namespace gnss {
-  extern bool has_fix();
-  extern bool has_data();
-  extern Position get_position();
-  extern Velocity get_velocity();
-}
+extern bool has_fix();
+extern bool has_data();
+extern Position get_position();
+extern Velocity get_velocity();
+} // namespace gnss
 
 #endif

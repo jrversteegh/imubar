@@ -14,13 +14,13 @@
 
 LOG_MODULE_REGISTER(imubar);
 
+#include "battery.h"
 #include "clock.h"
 #include "errors.h"
 #include "gps.h"
+#include "interface.h"
 #include "sensors.h"
 #include "storage.h"
-#include "interface.h"
-#include "battery.h"
 
 static const struct gpio_dt_spec sw0_gpio =
     GPIO_DT_SPEC_GET(DT_ALIAS(sw0), gpios);
@@ -239,8 +239,28 @@ int main(void) {
       printk("Main thread duty cycle: %lld%%\n\n", duty_cycle);
       sum_rem = 0;
       auto battery_level = check_battery();
-      snprintf(msg, 16, "Batt: %.2f V", (double)battery_level);
-      interface_write((uint8_t*)msg, strlen(msg));
+      snprintf(msg, 16, "B %.2f V", (double)battery_level);
+      interface_write((uint8_t *)msg, strlen(msg));
+    }
+    if (i % 1000 == 250) {
+      char has_data = gnss::has_data() ? 'T' : 'F';
+      char has_fix = gnss::has_fix() ? 'T' : 'F';
+      auto pos = gnss::get_position();
+      snprintf(msg, 16, "G %c%c %.2f %.2f", has_data, has_fix,
+               (double)pos.lat(), (double)pos.lon());
+      interface_write((uint8_t *)msg, strlen(msg));
+    }
+    if (i % 1000 == 500) {
+      char has_data = gnss::has_data() ? 'T' : 'F';
+      char has_fix = gnss::has_fix() ? 'T' : 'F';
+      auto pos = gnss::get_position();
+      snprintf(msg, 16, "G %c%c %.2f %.2f", has_data, has_fix,
+               (double)pos.lat(), (double)pos.lon());
+      interface_write((uint8_t *)msg, strlen(msg));
+    }
+    if (i % 1000 == 750) {
+      auto time_str = get_time_str();
+      interface_write((uint8_t *)time_str.c_str(), time_str.length());
     }
 
     ++i;

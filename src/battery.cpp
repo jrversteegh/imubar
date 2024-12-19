@@ -4,9 +4,9 @@
 #include <zephyr/kernel.h>
 #include <zephyr/logging/log.h>
 
-#include "types.h"
 #include "battery.h"
 #include "errors.h"
+#include "types.h"
 
 LOG_MODULE_DECLARE(imubar);
 
@@ -23,13 +23,14 @@ LOG_MODULE_DECLARE(imubar);
 
 static constexpr float battery_level_multiplier = 0.00203;
 static const struct adc_dt_spec battery = ADC_DT_SPEC_GET(BATTERY);
-static const struct gpio_dt_spec off_switch = GPIO_DT_SPEC_GET(OFF_SWITCH, gpios);
+static const struct gpio_dt_spec off_switch =
+    GPIO_DT_SPEC_GET(OFF_SWITCH, gpios);
 
 static float get_battery_level() {
   uint16_t sample;
   struct adc_sequence sequence = {
-    .buffer = &sample,
-    .buffer_size = sizeof(sample),
+      .buffer = &sample,
+      .buffer_size = sizeof(sample),
   };
   adc_sequence_init_dt(&battery, &sequence);
   int err = adc_read_dt(&battery, &sequence);
@@ -66,7 +67,6 @@ static bool switch_off() {
   return true;
 }
 
-
 float check_battery() {
   auto battery_level = get_battery_level();
   if (battery_level < 3.45f) {
@@ -77,16 +77,14 @@ float check_battery() {
   return battery_level;
 }
 
-
 void initialize_battery() {
   if (!adc_is_ready_dt(&battery)) {
-    error(2,  "ADC device for battery level not ready");
+    error(2, "ADC device for battery level not ready");
   }
 
   int ret = adc_channel_setup_dt(&battery);
   if (ret) {
     error(2, "ADC channel setup for battery level failed: %d", ret);
-
   }
   if (!gpio_is_ready_dt(&off_switch)) {
     error(2, "GPIO not ready");

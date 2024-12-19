@@ -62,7 +62,7 @@ Position get_position() {
 
 Velocity get_velocity() { return Velocity(data_.speed, 1E-3 * data_.bearing); }
 
-}
+} // namespace gnss
 
 void initialize_gnss() {
   if (!device_is_ready(gnss_)) {
