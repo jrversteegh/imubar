@@ -39,6 +39,7 @@ int main() {
       gpio_pin_toggle_dt(&led);
       update_backlight();
     }
+    update_screen();
     k_msleep(10);
   }
   return 0;

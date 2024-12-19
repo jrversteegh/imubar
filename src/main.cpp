@@ -20,6 +20,7 @@ LOG_MODULE_REGISTER(imubar);
 #include "sensors.h"
 #include "storage.h"
 #include "interface.h"
+#include "battery.h"
 
 static const struct gpio_dt_spec sw0_gpio =
     GPIO_DT_SPEC_GET(DT_ALIAS(sw0), gpios);
@@ -211,11 +212,13 @@ int main(void) {
   initialize_gnss();
   initialize_interface();
   initialize_sensors();
+  initialize_battery();
 
   LOG_INF("IMUBar running...");
   int i = 0;
   auto time = k_uptime_get();
   int64_t sum_rem = 0;
+  char msg[16];
   while (true) {
     if (gpio_pin_get_dt(&sw0_gpio)) {
     }
@@ -235,6 +238,9 @@ int main(void) {
       auto duty_cycle = 100 - sum_rem / 100;
       printk("Main thread duty cycle: %lld%%\n\n", duty_cycle);
       sum_rem = 0;
+      auto battery_level = check_battery();
+      snprintf(msg, 16, "Batt: %.2f V", (double)battery_level);
+      interface_write((uint8_t*)msg, strlen(msg));
     }
 
     ++i;

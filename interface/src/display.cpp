@@ -9,6 +9,7 @@
 
 #include "errors.h"
 #include "display.h"
+#include "../../src/interface.h"
 
 
 LV_FONT_DECLARE(font_8);
@@ -82,6 +83,9 @@ void update_backlight() {
   else {
     set_backlight(light_value / 4 + 10);
   }
+}
+
+void update_screen() {
 }
 
 void test_display() {

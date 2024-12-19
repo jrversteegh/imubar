@@ -8,9 +8,7 @@
 
 LOG_MODULE_DECLARE(imubar);
 
-#define UART_6 DT_NODELABEL(usart6)
-
-static device const *const interface_uart = DEVICE_DT_GET(UART_6);
+static device const *const interface_uart = DEVICE_DT_GET(DT_NODELABEL(INTERFACE_UART));
 
 RING_BUF_DECLARE(interface_output, 1024);
 RING_BUF_DECLARE(interface_input, 1024);
@@ -29,7 +27,7 @@ int interface_read(uint8_t* data, size_t size) {
   return result;
 }
 
-void uart_cb(const struct device* dev, void* data) {
+static void uart_cb(const struct device* dev, void* data) {
   static constexpr int const buf_size = 8;
   if(!uart_irq_update(interface_uart)) {
     return;
@@ -57,12 +55,12 @@ void uart_cb(const struct device* dev, void* data) {
 
 void initialize_interface() {
   if (!device_is_ready(interface_uart)) {
-    error(2, "UART 6 not ready.");
+    error(2, "Interface UART not ready.");
   }
 
   auto ret = uart_irq_callback_user_data_set(interface_uart, &uart_cb, nullptr);
   if (ret < 0) {
-    error(2, "Failed to set UART 6 callback");
+    error(2, "Failed to set Interface UART callback");
   }
 
   uart_irq_rx_enable(interface_uart);

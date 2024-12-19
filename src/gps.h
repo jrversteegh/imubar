@@ -5,8 +5,11 @@
 
 extern void initialize_gnss();
 
-extern bool has_fix();
-extern Position get_position();
-extern Velocity get_velocity();
+namespace gnss {
+  extern bool has_fix();
+  extern bool has_data();
+  extern Position get_position();
+  extern Velocity get_velocity();
+}
 
 #endif

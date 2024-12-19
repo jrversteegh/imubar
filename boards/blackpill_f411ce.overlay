@@ -4,6 +4,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
+
 &i2c1 {
     clock-frequency = <I2C_BITRATE_FAST>;
 
@@ -151,4 +152,34 @@
     pinctrl-names = "default";
     status = "okay";
     current-speed = <230400>;
+};
+
+&adc1 {
+    status = "okay";
+    pinctrl-0 = <&adc1_in0_pa0>;
+    pinctrl-names = "default";
+    #address-cells = <1>;
+    #size-cells = <0>;
+
+    channel@0 {
+        reg = <0>;
+        zephyr,gain = "ADC_GAIN_1_4";
+        zephyr,reference = "ADC_REF_INTERNAL";
+        zephyr,acquisition-time = <ADC_ACQ_TIME_DEFAULT>;
+        zephyr,resolution = <12>;
+    };
+};
+
+/ {
+    battery: battery {
+        compatible = "analog-input";
+        io-channels = <&adc1 0>;
+        status = "okay";
+    };
+
+    off_switch: off_switch {
+        compatible = "power-switch";
+        gpios = <&gpiob 12 GPIO_ACTIVE_LOW>;
+        status = "okay";
+    };
 };
