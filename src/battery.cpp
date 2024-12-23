@@ -21,7 +21,7 @@ LOG_MODULE_DECLARE(imubar);
 #error "Power off switch gpio output not properly defined."
 #endif
 
-static constexpr float battery_level_multiplier = 0.00203;
+static constexpr float battery_level_multiplier = 0.00204;
 static const struct adc_dt_spec battery = ADC_DT_SPEC_GET(BATTERY);
 static const struct gpio_dt_spec off_switch =
     GPIO_DT_SPEC_GET(OFF_SWITCH, gpios);
@@ -29,8 +29,10 @@ static const struct gpio_dt_spec off_switch =
 static float get_battery_level() {
   uint16_t sample;
   struct adc_sequence sequence = {
+      .options = nullptr,
       .buffer = &sample,
       .buffer_size = sizeof(sample),
+      .calibrate = false,
   };
   adc_sequence_init_dt(&battery, &sequence);
   int err = adc_read_dt(&battery, &sequence);
@@ -50,28 +52,37 @@ static float get_battery_level() {
   return mean;
 }
 
-static bool switch_off() {
+static void switch_off() {
   LOG_INF("Enabling output...");
   int ret = gpio_pin_configure_dt(&off_switch, GPIO_OUTPUT);
   if (ret < 0) {
     LOG_ERR("Failed to configure offswitch to output");
-    return false;
+    return;
   }
   LOG_INF("Switching off...");
   ret = gpio_pin_set_dt(&off_switch, GPIO_OUTPUT_ACTIVE);
   if (ret < 0) {
     LOG_ERR("Failed to switch off");
-    return false;
+    return;
   }
   LOG_INF("Switched off!");
-  return true;
+  k_msleep(1000);
+  ret = gpio_pin_configure_dt(&off_switch, GPIO_DISCONNECTED);
+  if (ret < 0) {
+    LOG_ERR("Failed to release output");
+    return;
+  }
+  k_msleep(1000);
+  LOG_INF("Switch off ineffective...");
 }
 
 float check_battery() {
   auto battery_level = get_battery_level();
   if (battery_level < 3.45f) {
-    LOG_WRN("Low Battery!");
-    switch_off();
+    LOG_WRN("%.2f V. Low Battery!", (double)battery_level);
+    for (int i = 0; i < 3; ++i)
+      switch_off();
+    LOG_INF("Halting system...");
     k_fatal_halt(0);
   }
   return battery_level;
@@ -86,6 +97,13 @@ void initialize_battery() {
   if (ret) {
     error(2, "ADC channel setup for battery level failed: %d", ret);
   }
+
+  // Initialize adc and mean value for battery voltage
+  for (int i = 0; i < 20; ++i) {
+    get_battery_level();
+    k_msleep(5);
+  }
+
   if (!gpio_is_ready_dt(&off_switch)) {
     error(2, "GPIO not ready");
   }

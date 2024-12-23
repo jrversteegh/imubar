@@ -154,6 +154,11 @@
     current-speed = <230400>;
 };
 
+/* Move user button IO to free up pa0 for adc */
+&user_button {
+    gpios = <&gpiob 13 (GPIO_ACTIVE_LOW | GPIO_PULL_UP)>;
+};
+
 &adc1 {
     status = "okay";
     pinctrl-0 = <&adc1_in0_pa0>;
@@ -163,7 +168,7 @@
 
     channel@0 {
         reg = <0>;
-        zephyr,gain = "ADC_GAIN_1_4";
+        zephyr,gain = "ADC_GAIN_1";
         zephyr,reference = "ADC_REF_INTERNAL";
         zephyr,acquisition-time = <ADC_ACQ_TIME_DEFAULT>;
         zephyr,resolution = <12>;

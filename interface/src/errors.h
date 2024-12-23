@@ -3,16 +3,17 @@
 
 #include <zephyr/kernel.h>
 #include <zephyr/sys/printk.h>
-#include <zephyr/sys/reboot.h>
 
 // We don't have user input so OK with non literal format strings
 #pragma GCC diagnostic ignored "-Wformat-security"
+
+extern void halt_or_reboot();
 
 template <typename... Args>
 inline void error(int category, char const *const message, Args... args) {
   printk(message, args...);
   printk("\n");
-  k_sleep(K_SECONDS(1000000));
+  halt_or_reboot();
 }
 
 #endif

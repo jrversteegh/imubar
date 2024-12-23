@@ -22,16 +22,7 @@ LOG_MODULE_REGISTER(imubar);
 #include "sensors.h"
 #include "storage.h"
 
-static const struct gpio_dt_spec sw0_gpio =
-    GPIO_DT_SPEC_GET(DT_ALIAS(sw0), gpios);
 static const struct gpio_dt_spec led = GPIO_DT_SPEC_GET(DT_ALIAS(led0), gpios);
-
-static void button_pressed(const device *dev, gpio_callback *cb,
-                           uint32_t pins) {
-  if (pins & BIT(sw0_gpio.pin)) {
-    LOG_INF("Button pressed");
-  }
-}
 
 void fetch_envs(auto &envs) {
   for (auto &env : envs) {
@@ -105,23 +96,6 @@ void read_imus_bus0(bool print) {
 void read_imus_bus1(bool print) {
   auto &imus = get_imus_bus1();
   read_imus(imus, print);
-}
-
-static void initialize_buttons() {
-  static struct gpio_callback button_cb_data;
-
-  if (!gpio_is_ready_dt(&sw0_gpio)) {
-    error(0, "Button io not ready.");
-    return;
-  }
-
-  gpio_pin_configure_dt(&sw0_gpio, GPIO_INPUT);
-
-  gpio_pin_interrupt_configure_dt(&sw0_gpio, GPIO_INT_EDGE_TO_ACTIVE);
-
-  gpio_init_callback(&button_cb_data, button_pressed, BIT(sw0_gpio.pin));
-
-  gpio_add_callback(sw0_gpio.port, &button_cb_data);
 }
 
 static void initialize_led() {
@@ -207,7 +181,6 @@ int main(void) {
   LOG_INF("IMUBar initializing...");
   initialize_clock();
   initialize_led();
-  initialize_buttons();
   initialize_storage();
   initialize_gnss();
   initialize_interface();
@@ -220,9 +193,6 @@ int main(void) {
   int64_t sum_rem = 0;
   char msg[16];
   while (true) {
-    if (gpio_pin_get_dt(&sw0_gpio)) {
-    }
-
     bool on_second = i % 100 == 0;
     if (on_second) {
       toggle_led();
@@ -238,9 +208,6 @@ int main(void) {
       auto duty_cycle = 100 - sum_rem / 100;
       printk("Main thread duty cycle: %lld%%\n\n", duty_cycle);
       sum_rem = 0;
-      auto battery_level = check_battery();
-      snprintf(msg, 16, "B %.2f V", (double)battery_level);
-      interface_write((uint8_t *)msg, strlen(msg));
     }
     if (i % 1000 == 250) {
       char has_data = gnss::has_data() ? 'T' : 'F';
@@ -248,18 +215,18 @@ int main(void) {
       auto pos = gnss::get_position();
       snprintf(msg, 16, "G %c%c %.2f %.2f", has_data, has_fix,
                (double)pos.lat(), (double)pos.lon());
+      LOG_INF("%s", msg);
       interface_write((uint8_t *)msg, strlen(msg));
     }
     if (i % 1000 == 500) {
-      char has_data = gnss::has_data() ? 'T' : 'F';
-      char has_fix = gnss::has_fix() ? 'T' : 'F';
-      auto pos = gnss::get_position();
-      snprintf(msg, 16, "G %c%c %.2f %.2f", has_data, has_fix,
-               (double)pos.lat(), (double)pos.lon());
+      auto battery_level = check_battery();
+      snprintf(msg, 16, "B %.2f V", (double)battery_level);
+      LOG_INF("%s", msg);
       interface_write((uint8_t *)msg, strlen(msg));
     }
     if (i % 1000 == 750) {
       auto time_str = get_time_str();
+      LOG_INF("%s", time_str.c_str());
       interface_write((uint8_t *)time_str.c_str(), time_str.length());
     }
 

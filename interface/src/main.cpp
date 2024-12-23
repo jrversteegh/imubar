@@ -4,6 +4,8 @@
 #include <lvgl.h>
 
 #include "display.h"
+#include "errors.h"
+#include "../../src/interface.h"
 
 LOG_MODULE_REGISTER(imubar_interface);
 
@@ -16,6 +18,7 @@ LOG_MODULE_REGISTER(imubar_interface);
 static const struct gpio_dt_spec led = GPIO_DT_SPEC_GET(LED0_NODE, gpios);
 
 int main() {
+  initialize_interface();
   initialize_display();
 
   if (!gpio_is_ready_dt(&led)) {
@@ -32,14 +35,26 @@ int main() {
   //test_display();
 
   int i = 0;
+  char const* ping = "ping";
+  LOG_INF("Starting loop");
   while (true) {
     ++i;
+    LOG_INF("Task handler...");
     lv_task_handler();
+    LOG_INF("... done");
     if (i % 100 == 0) {
-      gpio_pin_toggle_dt(&led);
-      update_backlight();
+      LOG_INF("Toggle led...");
+      //gpio_pin_toggle_dt(&led);
+      LOG_INF("... done");
+      LOG_INF("Update  backlight...");
+      //update_backlight();
+      LOG_INF("... done");
     }
-    update_screen();
+    if (i % 1000 == 0) {
+      LOG_INF("%s", ping);
+      //interface_write((uint8_t*)ping, 4);
+    }
+    //update_screen();
     k_msleep(10);
   }
   return 0;

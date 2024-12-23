@@ -95,6 +95,7 @@ void update_screen() {
   auto size = interface_read((uint8_t*)msg, 31);
   msg[size] = '\0';
   if (size > 0) {
+    LOG_INF("Message: %s", msg);
     show_message(msg);
   }
 }
@@ -186,6 +187,8 @@ void initialize_display() {
   if (!device_is_ready(light_sensor)) {
     error(2, "Light sensor not ready.");
   }
+
+  show_message("No message");
 
   LOG_INF("Successful display init");
 }

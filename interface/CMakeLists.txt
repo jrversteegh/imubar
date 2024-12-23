@@ -18,7 +18,7 @@ find_package(Zephyr REQUIRED HINTS $ENV{ZEPHYR_BASE})
 project(imubar)
 
 FILE(GLOB app_sources src/fonts/*.c src/*.cpp)
-set(common_sources ../../src/interface.cpp)
+set(common_sources ${CMAKE_SOURCE_DIR}/../src/interface.cpp)
 
 add_compile_definitions(LV_LVGL_H_INCLUDE_SIMPLE)
 

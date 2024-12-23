@@ -67,9 +67,31 @@
   };
 };
 
+/*
+&pinctrl {
+        uart1_default: uart1_default {
+                group1 {
+                        pinmux = <UART1_TX_GPIO45>;
+                        output-high;
+                };
+                group2 {
+                        pinmux = <UART1_RX_GPIO46>;
+                        bias-pull-up;
+                };
+        };
+};
+
+&uart1 {
+        status = "okay";
+        current-speed = <230400>;
+        pinctrl-0 = <&uart1_default>;
+        pinctrl-names = "default";
+};
+*/
+
 &xiao_serial {
-  status = "okay";
-  current-speed = <230400>;
+        status = "okay";
+        current-speed = <230400>;
 };
 
 &pinctrl {
