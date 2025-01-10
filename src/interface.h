@@ -1,5 +1,5 @@
 #ifndef IMUBAR_INTERFACE_H__
-#define IMUBAR_INTERFACE
+#define IMUBAR_INTERFACE_H__
 
 #include "types.h"
 

@@ -22,7 +22,7 @@ LV_FONT_DECLARE(symbols_14);
 LV_FONT_DECLARE(symbols_18);
 LV_FONT_DECLARE(symbols_22);
 
-LOG_MODULE_DECLARE(imubar_interface);
+LOG_MODULE_DECLARE(imubar);
 
 #define BACKLIGHT0_NODE DT_ALIAS(backlight0)
 #define LIGHT_SENSOR DT_NODELABEL(light_sensor)

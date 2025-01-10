@@ -7,7 +7,7 @@
 #include "errors.h"
 #include "../../src/interface.h"
 
-LOG_MODULE_REGISTER(imubar_interface);
+LOG_MODULE_REGISTER(imubar);
 
 #define LED0_NODE DT_ALIAS(led0)
 
