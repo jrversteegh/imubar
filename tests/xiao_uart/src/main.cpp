@@ -14,23 +14,23 @@ static device const *const uart0 = DEVICE_DT_GET(DT_NODELABEL(uart0));
 static device const *const uart1 = DEVICE_DT_GET(DT_NODELABEL(uart1));
 static device const *const uart2 = DEVICE_DT_GET(DT_NODELABEL(uart2));
 
-RING_BUF_DECLARE(uart0_output, 1024);
 RING_BUF_DECLARE(uart0_input, 1024);
-RING_BUF_DECLARE(uart1_output, 1024);
+RING_BUF_DECLARE(uart0_output, 1024);
 RING_BUF_DECLARE(uart1_input, 1024);
-RING_BUF_DECLARE(uart2_output, 1024);
+RING_BUF_DECLARE(uart1_output, 1024);
 RING_BUF_DECLARE(uart2_input, 1024);
+RING_BUF_DECLARE(uart2_output, 1024);
 
 struct UartData {
-  ring_buf* output_buffer;
   ring_buf* input_buffer;
+  ring_buf* output_buffer;
   const char* name;
 };
 
 
-UartData uart0_data{&uart0_output, &uart0_input, "UART0"};
-UartData uart1_data{&uart1_output, &uart1_input, "UART1"};
-UartData uart2_data{&uart2_output, &uart2_input, "UART2"};
+UartData uart0_data{&uart0_input, &uart0_output, "UART0"};
+UartData uart1_data{&uart1_input, &uart1_output, "UART1"};
+UartData uart2_data{&uart2_input, &uart2_output, "UART2"};
 
 
 static void uart_cb(const struct device *dev, void *data) {
@@ -44,16 +44,16 @@ static void uart_cb(const struct device *dev, void *data) {
   if (uart_irq_rx_ready(dev) > 0) {
     uint8_t read_buf[buf_size];
     while (auto read = uart_fifo_read(dev, read_buf, buf_size) > 0) {
-      ring_buf_put(uart_data->output_buffer, read_buf, read);
+      ring_buf_put(uart_data->input_buffer, read_buf, read);
     }
   }
 
   if (uart_irq_tx_ready(dev) > 0) {
     uint8_t *write_buf;
-    auto to_write = ring_buf_get_claim(uart_data->input_buffer, &write_buf, buf_size);
+    auto to_write = ring_buf_get_claim(uart_data->output_buffer, &write_buf, buf_size);
     if (to_write > 0) {
       auto written = uart_fifo_fill(dev, write_buf, to_write);
-      ring_buf_get_finish(uart_data->input_buffer, written);
+      ring_buf_get_finish(uart_data->output_buffer, written);
     } else {
       uart_irq_tx_disable(dev);
     }
@@ -78,14 +78,14 @@ bool init_uart(device const* const uart, UartData const* uart_data) {
 
 int uart_write(device const* const uart, uint8_t const *data, size_t size, UartData* uart_data) {
   uart_irq_tx_disable(uart);
-  auto result = ring_buf_put(uart_data->input_buffer, data, size);
+  auto result = ring_buf_put(uart_data->output_buffer, data, size);
   uart_irq_tx_enable(uart);
   return result;
 }
 
 int uart_read(device const* const uart, uint8_t *data, size_t size, UartData* uart_data) {
   uart_irq_rx_disable(uart);
-  auto result = ring_buf_get(uart_data->output_buffer, data, size);
+  auto result = ring_buf_get(uart_data->input_buffer, data, size);
   uart_irq_rx_enable(uart);
   return result;
 }
@@ -124,9 +124,19 @@ int main() {
       gpio_pin_toggle_dt(&led);
       LOG_INF("... done");
       LOG_INF("Writing UARTS...");
-      uart_write(uart0, (uint8_t const*)"Hello from UART0", 16, &uart0_data);
-      uart_write(uart1, (uint8_t const*)"Hello from UART1", 16, &uart1_data);
-      uart_write(uart2, (uint8_t const*)"Hello from UART2", 16, &uart2_data);
+      char buf[32];
+      snprintf(buf, sizeof(buf), "Hello from UART0: %d\r\n", i);
+      uart_write(uart0, (uint8_t const*)buf, strlen(buf), &uart0_data);
+      snprintf(buf, sizeof(buf), "Hello from UART1: %d\r\n", i);
+      uart_write(uart1, (uint8_t const*)buf, strlen(buf), &uart1_data);
+      snprintf(buf, sizeof(buf), "Hello from UART2: %d\r\n", i);
+      uart_write(uart2, (uint8_t const*)buf, strlen(buf), &uart2_data);
+      char read_buf[32];
+      if (int l = uart_read(uart0, (uint8_t*)read_buf, sizeof(read_buf), &uart0_data)) {
+        snprintf(buf, sizeof(buf), "Got %d chars:\r\n", l);
+        uart_write(uart0, (uint8_t const*)buf, strlen(buf), &uart0_data);
+        uart_write(uart0, (uint8_t const*)read_buf, l, &uart0_data);
+      }
       LOG_INF("... done");
     }
     k_msleep(10);
