@@ -187,4 +187,8 @@
         gpios = <&gpiob 12 GPIO_ACTIVE_LOW>;
         status = "okay";
     };
+
+    aliases {
+        serial0 = &usart6;
+    };
 };

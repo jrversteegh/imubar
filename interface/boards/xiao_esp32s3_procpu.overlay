@@ -1,6 +1,6 @@
 #include <zephyr/dt-bindings/mipi_dbi/mipi_dbi.h>                                                    
 #include <zephyr/dt-bindings/pwm/pwm.h>
-                                                                                                     
+
 / {                                                                                                  
   backlight {
     compatible = "pwm-leds";
@@ -13,6 +13,7 @@
   aliases {
     pwm0 = &ledc0;
     backlight0 = &backlight0;
+    serial0 = &uart1;
   };
 
   chosen {                                                                                     
@@ -67,40 +68,42 @@
   };
 };
 
-/*
 &pinctrl {
-        uart1_default: uart1_default {
-                group1 {
-                        pinmux = <UART1_TX_GPIO45>;
-                        output-high;
-                };
-                group2 {
-                        pinmux = <UART1_RX_GPIO46>;
-                        bias-pull-up;
-                };
-        };
-};
+  uart0_default: uart0_default {
+          group1 {
+                  pinmux = <UART0_TX_GPIO33>;
+                  output-high;
+          };
+          group2 {
+                  pinmux = <UART0_RX_GPIO34>;
+                  bias-pull-up;
+          };
+  };
 
-&uart1 {
-        status = "okay";
-        current-speed = <230400>;
-        pinctrl-0 = <&uart1_default>;
-        pinctrl-names = "default";
-};
-*/
+  uart1_default: uart1_default {
+          group1 {
+                  pinmux = <UART1_TX_GPIO43>;
+                  output-high;
+          };
+          group2 {
+                  pinmux = <UART1_RX_GPIO44>;
+                  bias-pull-up;
+          };
+  };
 
-&xiao_serial {
-        status = "okay";
-        current-speed = <230400>;
-};
-
-&pinctrl {
   ledc0_default: ledc0_default {
     group1 {
       pinmux = <LEDC_CH0_GPIO4>;
       output-enable;
     };
   };
+};
+
+&uart1 {
+  status = "okay";
+  current-speed = <230400>;
+  pinctrl-0 = <&uart1_default>;
+  pinctrl-names = "default";
 };
 
 &ledc0 {
