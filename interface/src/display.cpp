@@ -3,7 +3,6 @@
 #include <zephyr/drivers/gpio.h>
 #include <zephyr/drivers/pwm.h>
 #include <zephyr/logging/log.h>
-#include <zephyr/drivers/sensor.h>
 #include <zephyr/device.h>
 #include <lvgl.h>
 
@@ -46,7 +45,7 @@ static lv_obj_t* create_label(lv_obj_t* parent, lv_align_t align, lv_font_t cons
   return result;
 }
 
-void show_sensor_value(sensor_value value) {
+void display_show_sensor_value(sensor_value value) {
   static lv_obj_t *label = create_label(lv_scr_act(), LV_ALIGN_CENTER, &font_14);
   char value_str[16];
   snprintf(value_str, sizeof(value_str), "%d", value.val1);
@@ -54,17 +53,17 @@ void show_sensor_value(sensor_value value) {
   lv_label_set_text(label, value_str);
 }
 
-void show_message(char const* msg) {
+void display_show_message(char const* msg) {
   static lv_obj_t *label = create_label(lv_scr_act(), LV_ALIGN_BOTTOM_MID, &font_14);
   lv_label_set_text(label, msg);
 }
 
-void set_backlight(uint8_t brightness) {
+void display_set_backlight(uint8_t brightness) {
   pwm_set_dt(&backlight, 255000, 1000 * brightness);
 }
 
 
-void update_backlight() {
+void display_update_backlight() {
   auto ret = sensor_sample_fetch(light_sensor);
   if (ret < 0) {
     LOG_ERR("Failed to fetch light sensor sample");
@@ -77,30 +76,24 @@ void update_backlight() {
     return;
   }
   static int32_t light_value = 0;
-  show_sensor_value(value);
+  display_show_sensor_value(value);
   light_value = (light_value * 9 + value.val1) / 10;
   if (light_value > 1696) {
-    set_backlight(254);
+    display_set_backlight(254);
   }
   else if (light_value > 256) {
-    set_backlight(light_value / 8 + 42);
+    display_set_backlight(light_value / 8 + 42);
   }
   else {
-    set_backlight(light_value / 4 + 10);
+    display_set_backlight(light_value / 4 + 10);
   }
 }
 
-void update_screen() {
-  char msg[32];
-  auto size = interface_read((uint8_t*)msg, 31);
-  msg[size] = '\0';
-  if (size > 0) {
-    LOG_INF("Message: %s", msg);
-    show_message(msg);
-  }
+void display_update() {
+  lv_task_handler();
 }
 
-void test_display() {
+void display_test() {
   static lv_style_t style1;
   static lv_style_t style2;
   static lv_style_t style3;
@@ -175,7 +168,7 @@ void test_display() {
   lv_obj_align_to(label6, label5, LV_ALIGN_OUT_BOTTOM_MID, 0, 0);
 }
 
-void initialize_display() {
+void display_init() {
   if (!device_is_ready(display_dev)) {
     error(2, "Display device not ready.");
   }
@@ -188,7 +181,7 @@ void initialize_display() {
     error(2, "Light sensor not ready.");
   }
 
-  show_message("No message");
+  display_show_message("No message");
 
   LOG_INF("Successful display init");
 }
