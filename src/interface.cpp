@@ -10,8 +10,8 @@ LOG_MODULE_DECLARE(imubar);
 static device const *const interface_uart =
     DEVICE_DT_GET(DT_NODELABEL(INTERFACE_UART));
 
-RING_BUF_DECLARE(interface_input, 1024);
-RING_BUF_DECLARE(interface_output, 1024);
+RING_BUF_DECLARE(interface_input, 256);
+RING_BUF_DECLARE(interface_output, 256);
 
 static UartData uart_data{&interface_input, &interface_output, "INTERFACE_UART"};
 
@@ -27,4 +27,6 @@ void initialize_interface() {
   if (!serial_init(interface_uart, &uart_data)) {
     error(2, "Interface UART not ready.");
   }
+
+  serial_write(interface_uart, (uint8_t*)"\r\nINTFINIT\r\n", 12, &uart_data);
 }
