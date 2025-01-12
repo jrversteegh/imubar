@@ -15,8 +15,8 @@
 
 LOG_MODULE_DECLARE(imubar);
 
-static constexpr char const *mtk_only_gprmc_and_baud_115200 =
-    "$PMTK314,0,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0*29\r\n"
+static constexpr char const *mtk_only_rmcgga_and_baud_115200 =
+    "$PMTK314,0,1,0,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0*28\r\n"
     "$PMTK251,115200*1F\r\n";
 
 static device const *const uart_2 = DEVICE_DT_GET(UART_2);
@@ -24,11 +24,11 @@ static device const *const gnss_ = DEVICE_DT_GET(GNSS_0);
 
 static navigation_data data_{};
 static bool has_fix_ = false;
-static bool has_data_ = false;
+static Time data_time_ = 0;
 
 static void handle_gnss_data(const device *dev, const gnss_data *data) {
   static bool time_set = false;
-  has_data_ = true;
+  data_time_ = get_time();
   data_ = data->nav_data;
   has_fix_ = data->info.fix_status > 0;
   if (!time_set && has_fix_) {
@@ -37,7 +37,7 @@ static void handle_gnss_data(const device *dev, const gnss_data *data) {
         .tm_min = data->utc.minute,
         .tm_hour = data->utc.hour,
         .tm_mday = data->utc.month_day,
-        .tm_mon = data->utc.month,
+        .tm_mon = data->utc.month - 1,
         .tm_year = 100 + data->utc.century_year,
         .tm_wday = -1,
         .tm_yday = -1,
@@ -54,7 +54,10 @@ namespace gnss {
 
 bool has_fix() { return has_fix_; }
 
-bool has_data() { return has_data_; }
+bool has_data() {
+  // Whether we have received data in the last 10 seconds
+  return (get_time() - data_time_) < (10 * clock_scaler);
+}
 
 Position get_position() {
   return Position(1E-9 * data_.latitude, 1E-9 * data_.longitude);
@@ -77,7 +80,7 @@ void initialize_gnss() {
   }
 
   // MTK init
-  for (const char *c = mtk_only_gprmc_and_baud_115200; *c != '\0'; ++c) {
+  for (const char *c = mtk_only_rmcgga_and_baud_115200; *c != '\0'; ++c) {
     uart_poll_out(uart_2, *c);
   }
 
