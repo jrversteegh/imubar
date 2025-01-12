@@ -96,7 +96,7 @@ Number read_sensor(device const *sensor, sensor_channel channel) {
   auto ret = sensor_channel_get(sensor, channel, &value);
   if (ret < 0) {
     error(2, "Cannot read sensor: %d", ret);
-    return result;
+    return 0;
   }
 
   return sensor_value_to<decltype(result)>(value);

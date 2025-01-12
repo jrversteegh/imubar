@@ -183,7 +183,7 @@ int main(void) {
   initialize_led();
   initialize_storage();
   initialize_gnss();
-  initialize_interface();
+  interface_init();
   initialize_sensors();
   initialize_battery();
 
