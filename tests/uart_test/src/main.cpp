@@ -96,11 +96,10 @@ int main() {
     LOG_ERR("Failed to configure led0");
     return 0;
   }
-/*
+
   if (!init_uart(uart, &uart_data)) {
     return -1;
   }
-  */
 
   int i = 0;
   LOG_INF("Starting loop");
@@ -110,7 +109,6 @@ int main() {
       LOG_INF("Toggle led...");
       gpio_pin_toggle_dt(&led);
       LOG_INF("... done");
-      /*
       LOG_INF("Writing uart...");
       char buf[32];
       snprintf(buf, sizeof(buf), "Hello from uart: %d\r\n", i);
@@ -121,7 +119,6 @@ int main() {
         uart_write(uart, (uint8_t const*)buf, strlen(buf), &uart_data);
         uart_write(uart, (uint8_t const*)read_buf, l, &uart_data);
       }
-      */
       LOG_INF("... done");
     }
     k_msleep(10);
