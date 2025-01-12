@@ -16,7 +16,7 @@ static void uart_cb(const struct device *dev, void *data) {
 
   if (uart_irq_rx_ready(dev) > 0) {
     uint8_t read_buf[buf_size];
-    while (auto read = uart_fifo_read(dev, read_buf, buf_size) > 0) {
+    while ((int read = uart_fifo_read(dev, read_buf, buf_size)) > 0) {
       ring_buf_put(uart_data->input_buffer, read_buf, read);
     }
   }
