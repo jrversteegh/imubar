@@ -1,0 +1,26 @@
+&pinctrl {
+        uart0_default: uart0_default {
+                group1 {
+                        pinmux = <UART0_TX_GPIO45>;
+                        output-high;
+                };
+                group2 {
+                        pinmux = <UART0_RX_GPIO46>;
+                        bias-pull-up;
+                };
+        };
+};
+
+
+&uart0 {
+        status = "okay";
+        current-speed = <230400>;
+        pinctrl-0 = <&uart0_default>;
+        pinctrl-names = "default";
+};
+
+/ {
+        aliases {
+           serial0 = &uart0;
+        };
+};

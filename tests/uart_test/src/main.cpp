@@ -7,19 +7,14 @@
 
 LOG_MODULE_REGISTER(xiao_uart_test);
 
-#define LED0_NODE DT_ALIAS(led0)
-static const struct gpio_dt_spec led = GPIO_DT_SPEC_GET(LED0_NODE, gpios);
+#define LED_NODE DT_ALIAS(led0)
+#define SERIAL_NODE DT_ALIAS(serial0)
 
-static device const *const uart0 = DEVICE_DT_GET(DT_NODELABEL(uart0));
-static device const *const uart1 = DEVICE_DT_GET(DT_NODELABEL(uart1));
-static device const *const uart2 = DEVICE_DT_GET(DT_NODELABEL(uart2));
+static const struct gpio_dt_spec led = GPIO_DT_SPEC_GET(LED_NODE, gpios);
+static device const *const uart = DEVICE_DT_GET(SERIAL_NODE);
 
-RING_BUF_DECLARE(uart0_input, 1024);
-RING_BUF_DECLARE(uart0_output, 1024);
-RING_BUF_DECLARE(uart1_input, 1024);
-RING_BUF_DECLARE(uart1_output, 1024);
-RING_BUF_DECLARE(uart2_input, 1024);
-RING_BUF_DECLARE(uart2_output, 1024);
+RING_BUF_DECLARE(uart_input, 128);
+RING_BUF_DECLARE(uart_output, 128);
 
 struct UartData {
   ring_buf* input_buffer;
@@ -28,13 +23,10 @@ struct UartData {
 };
 
 
-UartData uart0_data{&uart0_input, &uart0_output, "UART0"};
-UartData uart1_data{&uart1_input, &uart1_output, "UART1"};
-UartData uart2_data{&uart2_input, &uart2_output, "UART2"};
-
+UartData uart_data{&uart_input, &uart_output, "uart"};
 
 static void uart_cb(const struct device *dev, void *data) {
-  static constexpr int const buf_size = 8;
+  static constexpr int const buf_size = 32;
   UartData* uart_data = (UartData*)data;
 
   if (!uart_irq_update(dev)) {
@@ -43,7 +35,8 @@ static void uart_cb(const struct device *dev, void *data) {
 
   if (uart_irq_rx_ready(dev) > 0) {
     uint8_t read_buf[buf_size];
-    while (auto read = uart_fifo_read(dev, read_buf, buf_size) > 0) {
+    int read = 0;
+    while ((read = uart_fifo_read(dev, read_buf, buf_size)) > 0) {
       ring_buf_put(uart_data->input_buffer, read_buf, read);
     }
   }
@@ -52,7 +45,9 @@ static void uart_cb(const struct device *dev, void *data) {
     uint8_t *write_buf;
     auto to_write = ring_buf_get_claim(uart_data->output_buffer, &write_buf, buf_size);
     if (to_write > 0) {
+      LOG_INF("To write: %d %c", to_write, write_buf[0]);
       auto written = uart_fifo_fill(dev, write_buf, to_write);
+      LOG_INF("Written: %d", written);
       ring_buf_get_finish(uart_data->output_buffer, written);
     } else {
       uart_irq_tx_disable(dev);
@@ -101,42 +96,32 @@ int main() {
     LOG_ERR("Failed to configure led0");
     return 0;
   }
-
-  if (!init_uart(uart0, &uart0_data)) {
+/*
+  if (!init_uart(uart, &uart_data)) {
     return -1;
   }
-
-  if (!init_uart(uart1, &uart1_data)) {
-    return -1;
-  }
-
-  if (!init_uart(uart2, &uart2_data)) {
-    return -1;
-  }
+  */
 
   int i = 0;
-  char const* ping = "ping";
   LOG_INF("Starting loop");
   while (true) {
     ++i;
-    if (i % 100 == 0) {
+    if (i % 200 == 0) {
       LOG_INF("Toggle led...");
       gpio_pin_toggle_dt(&led);
       LOG_INF("... done");
-      LOG_INF("Writing UARTS...");
+      /*
+      LOG_INF("Writing uart...");
       char buf[32];
-      snprintf(buf, sizeof(buf), "Hello from UART0: %d\r\n", i);
-      uart_write(uart0, (uint8_t const*)buf, strlen(buf), &uart0_data);
-      snprintf(buf, sizeof(buf), "Hello from UART1: %d\r\n", i);
-      uart_write(uart1, (uint8_t const*)buf, strlen(buf), &uart1_data);
-      snprintf(buf, sizeof(buf), "Hello from UART2: %d\r\n", i);
-      uart_write(uart2, (uint8_t const*)buf, strlen(buf), &uart2_data);
+      snprintf(buf, sizeof(buf), "Hello from uart: %d\r\n", i);
+      uart_write(uart, (uint8_t const*)buf, strlen(buf), &uart_data);
       char read_buf[32];
-      if (int l = uart_read(uart0, (uint8_t*)read_buf, sizeof(read_buf), &uart0_data)) {
+      if (int l = uart_read(uart, (uint8_t*)read_buf, sizeof(read_buf), &uart_data)) {
         snprintf(buf, sizeof(buf), "Got %d chars:\r\n", l);
-        uart_write(uart0, (uint8_t const*)buf, strlen(buf), &uart0_data);
-        uart_write(uart0, (uint8_t const*)read_buf, l, &uart0_data);
+        uart_write(uart, (uint8_t const*)buf, strlen(buf), &uart_data);
+        uart_write(uart, (uint8_t const*)read_buf, l, &uart_data);
       }
+      */
       LOG_INF("... done");
     }
     k_msleep(10);
