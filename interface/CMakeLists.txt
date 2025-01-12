@@ -26,5 +26,4 @@ set(common_sources
 
 add_compile_definitions(LV_LVGL_H_INCLUDE_SIMPLE)
 
-target_sources(app PRIVATE ${app_sources} ${common_sources})
-add_compile_definitions(INTERFACE_UART=uart0)
+target_sources(app PRIVATE ${app_sources} ${common_sources} ${font_sources})

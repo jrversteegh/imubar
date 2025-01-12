@@ -38,4 +38,3 @@ set(driver_sources
   drivers/sensor/st/h3lis331dl/h3lis331dl.c
 )
 target_sources(app PRIVATE ${app_sources} ${driver_sources})
-add_compile_definitions(INTERFACE_UART=usart6)
