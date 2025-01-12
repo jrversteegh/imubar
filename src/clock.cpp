@@ -14,27 +14,37 @@ static device const *const rtc = DEVICE_DT_GET(RTC_0);
 
 static time_t _uptime_offset = 0;
 
-bool set_rtc(rtc_time const &time) {
+bool set_rtc(rtc_time &time) {
   auto ret = rtc_set_time(rtc, &time);
   if (ret < 0) {
     LOG_ERR("Failed to set RTC clock");
     return false;
   }
+  set_clock(time);
+  return true;
+}
+
+void set_clock(rtc_time &rtctime) {
+  Time time = timeutil_timegm(rtc_time_to_tm(&rtctime));
+  set_clock(clock_scaler * time);
+}
+
+bool set_clock_to_rtc() {
+  rtc_time rtctime;
+  auto ret = rtc_get_time(rtc, &rtctime);
+  if (ret < 0) {
+    LOG_ERR("Failed to get RTC time: %d", ret);
+    return false;
+  }
+  set_clock(rtctime);
   return true;
 }
 
 void set_clock(Time time) { _uptime_offset = time - k_uptime_get(); }
 
 Time get_time() {
-  static Time seen = 0;
   Time result = k_uptime_get() + _uptime_offset;
-  if (result < seen) {
-    // Don't go back in time: return the latest time seen
-    return seen;
-  } else {
-    seen = result;
-    return result;
-  }
+  return result;
 }
 
 std::string get_time_str(bool include_date) {
@@ -65,12 +75,5 @@ void initialize_clock() {
     error(2, "RTC not ready.");
   }
 
-  rtc_time rtctime;
-  auto ret = rtc_get_time(rtc, &rtctime);
-  if (ret < 0) {
-    error(2, "Failed to get RTC time: %d", ret);
-  }
-
-  Time time = timeutil_timegm(rtc_time_to_tm(&rtctime));
-  set_clock(clock_scaler * time);
+  set_clock_to_rtc();
 }

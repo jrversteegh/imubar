@@ -8,8 +8,10 @@
 #include "types.h"
 
 extern void initialize_clock();
-extern bool set_rtc(rtc_time const &time);
+extern bool set_rtc(rtc_time &time);
 extern void set_clock(Time const time);
+extern void set_clock(rtc_time &rtctime);
+extern bool set_clock_to_rtc();
 extern Time get_time();
 extern std::string get_time_str(bool include_date = true);
 
