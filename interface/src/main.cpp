@@ -1,7 +1,6 @@
 #include <zephyr/kernel.h>
 #include <zephyr/logging/log.h>
 #include <zephyr/drivers/gpio.h>
-#include <lvgl.h>
 
 #include "display.h"
 #include "errors.h"
@@ -17,9 +16,19 @@ LOG_MODULE_REGISTER(imubar);
  */
 static const struct gpio_dt_spec led = GPIO_DT_SPEC_GET(LED0_NODE, gpios);
 
+void update_display() {
+  char msg[32];
+  auto size = interface_read((uint8_t*)msg, 31);
+  msg[size] = '\0';
+  if (size > 0) {
+    LOG_INF("Message: %s", msg);
+    display_show_message(msg);
+  }
+}
+
 int main() {
-  initialize_interface();
-  initialize_display();
+  interface_init();
+  display_init();
 
   if (!gpio_is_ready_dt(&led)) {
     LOG_ERR("Led0 not ready");
@@ -32,29 +41,26 @@ int main() {
     return 0;
   }
 
-  //test_display();
-
   int i = 0;
-  char const* ping = "ping";
   LOG_INF("Starting loop");
   while (true) {
     ++i;
-    LOG_INF("Task handler...");
-    lv_task_handler();
-    LOG_INF("... done");
     if (i % 100 == 0) {
-      LOG_INF("Toggle led...");
-      //gpio_pin_toggle_dt(&led);
-      LOG_INF("... done");
-      LOG_INF("Update  backlight...");
-      //update_backlight();
-      LOG_INF("... done");
+      LOG_DBG("Toggle led...");
+      gpio_pin_toggle_dt(&led);
+      LOG_DBG("... done");
+      LOG_DBG("Update backlight...");
+      display_update_backlight();
+      LOG_DBG("... done");
+      LOG_DBG("Update display...");
+      update_display();
+      LOG_DBG("... done");
     }
     if (i % 1000 == 0) {
-      LOG_INF("%s", ping);
-      //interface_write((uint8_t*)ping, 4);
+      LOG_DBG("Ping");
+      interface_ping();
     }
-    //update_screen();
+    display_update();
     k_msleep(10);
   }
   return 0;
