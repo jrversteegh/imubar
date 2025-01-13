@@ -48,7 +48,7 @@ static float get_battery_level() {
   }
   float value = battery_level_multiplier * static_cast<float>(val);
   static float mean = value;
-  mean = 0.9f * mean + 0.1f * value;
+  mean = 0.97f * mean + 0.03f * value;
   return mean;
 }
 
