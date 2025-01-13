@@ -12,40 +12,70 @@ LOG_MODULE_DECLARE(imubar);
 
 static device const *const rtc = DEVICE_DT_GET(RTC_0);
 
-static time_t _uptime_offset = 0;
+static Time uptime_offset_ = 0;
+static Time clock_set_at_ = 0;
+static int32_t adjustment_ = 0;
 
-bool set_rtc(rtc_time &time) {
-  auto ret = rtc_set_time(rtc, &time);
+inline time_t rtc_time_to_time(rtc_time rtctime, bool include_millis = false) {
+  time_t time = timeutil_timegm(rtc_time_to_tm(&rtctime));
+  auto result = clock_scaler * time;
+  if (include_millis) {
+    result += rtctime.tm_nsec / 1000000;
+  }
+  return result;
+}
+
+bool set_rtc(rtc_time &rtctime) {
+  auto ret = rtc_set_time(rtc, &rtctime);
   if (ret < 0) {
     LOG_ERR("Failed to set RTC clock");
-    return false;
-  }
-  set_clock(time);
-  return true;
-}
-
-void set_clock(rtc_time &rtctime) {
-  Time time = timeutil_timegm(rtc_time_to_tm(&rtctime));
-  set_clock(clock_scaler * time);
-}
-
-bool set_clock_to_rtc() {
-  rtc_time rtctime;
-  auto ret = rtc_get_time(rtc, &rtctime);
-  if (ret < 0) {
-    LOG_ERR("Failed to get RTC time: %d", ret);
     return false;
   }
   set_clock(rtctime);
   return true;
 }
 
-void set_clock(Time time) { _uptime_offset = time - k_uptime_get(); }
-
-Time get_time() {
-  Time result = k_uptime_get() + _uptime_offset;
-  return result;
+void set_clock(Time time) {
+  clock_set_at_ = k_uptime_get();
+  uptime_offset_ = time - clock_set_at_;
 }
+
+void set_clock(rtc_time &rtctime) { set_clock(rtc_time_to_time(rtctime)); }
+
+bool set_clock_from_rtc(bool exact) {
+  rtc_time rtctime;
+  auto ret = rtc_get_time(rtc, &rtctime);
+  if (ret < 0) {
+    LOG_ERR("Failed to get RTC time: %d", ret);
+    return false;
+  }
+  if (exact) {
+    auto secs = rtctime.tm_sec;
+    while (rtctime.tm_sec == secs) {
+      ret = rtc_get_time(rtc, &rtctime);
+      if (ret < 0) {
+        LOG_ERR("Failed to get RTC time: %d", ret);
+        return false;
+      }
+      k_msleep(1);
+    }
+  }
+  set_clock(rtctime);
+  return true;
+}
+
+void adjust_clock(Time time) {
+  auto offset = time - k_uptime_get();
+  if (offset > uptime_offset_) {
+    uptime_offset_ += 1;
+    adjustment_ += 1;
+  } else if (offset < uptime_offset_) {
+    uptime_offset_ -= 1;
+    adjustment_ -= 1;
+  }
+}
+
+Time get_time() { return k_uptime_get() + uptime_offset_; }
 
 std::string get_time_str(bool include_date) {
   static constexpr char const *const short_fmt = "%H:%M:%S";
@@ -75,5 +105,5 @@ void initialize_clock() {
     error(2, "RTC not ready.");
   }
 
-  set_clock_to_rtc();
+  set_clock_from_rtc(true);
 }

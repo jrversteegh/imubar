@@ -12,17 +12,17 @@ LOG_MODULE_REGISTER(rtc_test);
 static device const *const rtc = DEVICE_DT_GET(RTC_0);
 static constexpr int clock_scaler = 1000;
 
-
 static time_t uptime_offset_ = 0;
+
+inline time_t rtc_time_to_time(rtc_time rtctime) {
+  time_t time = timeutil_timegm(rtc_time_to_tm(&rtctime));
+  return clock_scaler * time;
+}
 
 time_t get_time() {
   return k_uptime_get() + uptime_offset_;
 }
 
-time_t rtc_time_to_time(rtc_time rtctime) {
-  time_t time = timeutil_timegm(rtc_time_to_tm(&rtctime));
-  return clock_scaler * time + rtctime.tm_nsec / 1000000;
-}
 
 void set_clock(time_t time) {
   LOG_INF("Set time: %lld", time);
@@ -126,6 +126,8 @@ int main() {
   k_msleep(500);
 
   LOG_INF("Reset RTC");
+  // Check to see whether nanoseconds are ignored when setting.. They are!
+  starttime.tm_nsec = 500000000;
   if (!set_rtc(starttime)) {
     LOG_ERR("Failed to set RTC");
     return 1;
