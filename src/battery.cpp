@@ -80,6 +80,7 @@ float check_battery() {
   auto battery_level = get_battery_level();
   if (battery_level < 3.45f) {
     LOG_WRN("%.2f V. Low Battery!", (double)battery_level);
+    k_msleep(500);
     for (int i = 0; i < 3; ++i)
       switch_off();
     LOG_INF("Halting system...");
@@ -99,7 +100,7 @@ void initialize_battery() {
   }
 
   // Initialize adc and mean value for battery voltage
-  for (int i = 0; i < 20; ++i) {
+  for (int i = 0; i < 100; ++i) {
     get_battery_level();
     k_msleep(5);
   }
