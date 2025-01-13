@@ -21,7 +21,7 @@ LOG_MODULE_DECLARE(imubar);
 #error "Power off switch gpio output not properly defined."
 #endif
 
-static constexpr float battery_level_multiplier = 0.00202;
+static constexpr float battery_level_multiplier = 0.002025;
 static const struct adc_dt_spec battery = ADC_DT_SPEC_GET(BATTERY);
 static const struct gpio_dt_spec off_switch =
     GPIO_DT_SPEC_GET(OFF_SWITCH, gpios);
