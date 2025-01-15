@@ -189,17 +189,14 @@ int main(void) {
 
   LOG_INF("IMUBar running...");
   int i = 0;
-  auto time = k_uptime_get();
+  auto loop_time = k_uptime_get();
   int64_t sum_rem = 0;
   char msg[16];
   while (true) {
-    bool on_second = i % 100 == 0;
-    if (on_second) {
-      toggle_led();
-    }
-
-    time += 10;
-    auto rem = time - k_uptime_get();
+    auto [time, uptime] = get_time_and_uptime();
+    // Wait until next 10ms mark and align milliseconds with system clock
+    loop_time += 10 - (time % 10);
+    auto rem = loop_time - uptime;
     if (rem > 0) {
       k_sleep(K_MSEC(rem));
     }
@@ -209,7 +206,10 @@ int main(void) {
       printk("Main thread duty cycle: %lld%%\n\n", duty_cycle);
       sum_rem = 0;
     }
-    if (i % 1000 == 250) {
+
+    switch (time % 3000) {
+    case 0: {
+      toggle_led();
       char has_data = gnss::has_data() ? 'T' : 'F';
       char has_fix = gnss::has_fix() ? 'T' : 'F';
       auto pos = gnss::get_position();
@@ -217,17 +217,20 @@ int main(void) {
                (double)pos.lat(), (double)pos.lon());
       LOG_INF("%s", msg);
       interface_write((uint8_t *)msg, strlen(msg));
-    }
-    if (i % 1000 == 500) {
+    } break;
+    case 1000: {
+      toggle_led();
       auto battery_level = check_battery();
       snprintf(msg, 16, "B %.2f V", (double)battery_level);
       LOG_INF("%s", msg);
       interface_write((uint8_t *)msg, strlen(msg));
-    }
-    if (i % 1000 == 750) {
+    } break;
+    case 2000: {
+      toggle_led();
       auto time_str = get_time_str();
       LOG_INF("%s", time_str.c_str());
       interface_write((uint8_t *)time_str.c_str(), time_str.length());
+    } break;
     }
 
     ++i;

@@ -76,6 +76,10 @@ void adjust_clock(Time time) {
 }
 
 Time get_time() { return k_uptime_get() + uptime_offset_; }
+std::tuple<Time, Time> get_time_and_uptime() {
+  auto uptime = k_uptime_get();
+  return std::make_tuple(uptime, uptime + uptime_offset_);
+}
 
 std::string get_time_str(bool include_date) {
   static constexpr char const *const short_fmt = "%H:%M:%S";

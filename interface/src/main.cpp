@@ -16,7 +16,7 @@ LOG_MODULE_REGISTER(imubar);
  */
 static const struct gpio_dt_spec led = GPIO_DT_SPEC_GET(LED0_NODE, gpios);
 
-void update_display() {
+void check_show_messages() {
   char msg[32];
   auto size = interface_read((uint8_t*)msg, 31);
   msg[size] = '\0';
@@ -45,15 +45,17 @@ int main() {
   LOG_INF("Starting loop");
   while (true) {
     ++i;
+    if (i % 10 == 0) {
+      LOG_DBG("Update display...");
+      check_show_messages();
+      LOG_DBG("... done");
+    }
     if (i % 100 == 0) {
       LOG_DBG("Toggle led...");
       gpio_pin_toggle_dt(&led);
       LOG_DBG("... done");
       LOG_DBG("Update backlight...");
       display_update_backlight();
-      LOG_DBG("... done");
-      LOG_DBG("Update display...");
-      update_display();
       LOG_DBG("... done");
     }
     if (i % 1000 == 0) {

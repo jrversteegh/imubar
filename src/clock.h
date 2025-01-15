@@ -4,6 +4,7 @@
 #include <zephyr/drivers/rtc.h>
 
 #include <string>
+#include <tuple>
 
 #include "types.h"
 
@@ -14,6 +15,7 @@ extern void set_clock(rtc_time &rtctime);
 extern bool set_clock_from_rtc(bool exact = false);
 extern void adjust_clock(Time const time);
 extern Time get_time();
+extern std::tuple<Time, Time> get_time_and_uptime();
 extern std::string get_time_str(bool include_date = true);
 
 #endif
