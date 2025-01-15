@@ -8,11 +8,10 @@
 LOG_MODULE_DECLARE(imubar);
 
 #ifndef INTERFACE_UART
-#define INTERFACE_UART serial0
+#define INTERFACE_UART DT_ALIAS(uartinterface)
 #endif
 
-static device const *const interface_uart =
-    DEVICE_DT_GET(DT_ALIAS(INTERFACE_UART));
+static device const *const interface_uart = DEVICE_DT_GET(INTERFACE_UART);
 
 RING_BUF_DECLARE(interface_input, 256);
 RING_BUF_DECLARE(interface_output, 256);

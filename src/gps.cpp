@@ -10,8 +10,8 @@
 
 #include <time.h>
 
+#define UART_GNSS DT_ALIAS(uartgnss)
 #define GNSS_0 DT_NODELABEL(gnss_0)
-#define UART_2 DT_NODELABEL(usart2)
 
 LOG_MODULE_DECLARE(imubar);
 
@@ -19,7 +19,7 @@ static constexpr char const *mtk_only_rmcgga_and_baud_115200 =
     "$PMTK314,0,1,0,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0*28\r\n"
     "$PMTK251,115200*1F\r\n";
 
-static device const *const uart_2 = DEVICE_DT_GET(UART_2);
+static device const *const uart_gnss = DEVICE_DT_GET(UART_GNSS);
 static device const *const gnss_ = DEVICE_DT_GET(GNSS_0);
 
 static navigation_data data_{};
@@ -74,21 +74,21 @@ void initialize_gnss() {
 
   // Get current UART config
   uart_config config;
-  auto ret = uart_config_get(uart_2, &config);
+  auto ret = uart_config_get(uart_gnss, &config);
   if (ret < 0) {
     error(2, "Failed to get GNSS uart config.");
   }
 
   // MTK init
   for (const char *c = mtk_only_rmcgga_and_baud_115200; *c != '\0'; ++c) {
-    uart_poll_out(uart_2, *c);
+    uart_poll_out(uart_gnss, *c);
   }
 
   k_msleep(500);
 
   // Set UART config with updated baudrate
   config.baudrate = 115200;
-  ret = uart_configure(uart_2, &config);
+  ret = uart_configure(uart_gnss, &config);
   if (ret < 0) {
     error(2, "Failed to set GNSS uart config.");
   }
