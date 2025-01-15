@@ -12,31 +12,31 @@
 #include "types.h"
 
 extern void initialize_sensors();
-extern std::vector<device const *> get_sensors();
-extern int fetch_sensor(device const *sensor,
-                        sensor_channel channel = SENSOR_CHAN_ALL);
-extern Number read_sensor(device const *sensor, sensor_channel channel);
-extern Vector3 read_sensor_vector(device const *sensor, sensor_channel channel);
+extern std::vector<device const*> get_sensors();
+extern int fetch_sensor(device const* sensor, sensor_channel channel = SENSOR_CHAN_ALL);
+extern Number read_sensor(device const* sensor, sensor_channel channel);
+extern Vector3 read_sensor_vector(device const* sensor, sensor_channel channel);
 
 struct Sensor {
   Sensor(std::string const name) : name_(name) {}
 
-  int fetch_sensor_with_error_count(device const *sensor,
-                                    sensor_channel channel) {
+  int fetch_sensor_with_error_count(device const* sensor, sensor_channel channel) {
     int ret = 0;
     if ((ret = fetch_sensor(sensor, channel)) < 0) {
       ++error_counter_;
       if (error_counter_ > 10) {
-        error(2, "Permanent failure fetching from device: %s, code %d",
-              name_.c_str(), ret);
+        error(2, "Permanent failure fetching from device: %s, code %d", name_.c_str(), ret);
       }
-    } else {
+    }
+    else {
       error_counter_ = 0;
     }
     return ret;
   }
 
-  std::string get_name() { return name_; }
+  std::string get_name() {
+    return name_;
+  }
 
 private:
   std::string name_ = "";
@@ -44,14 +44,17 @@ private:
 };
 
 struct Imu : Sensor {
-  Imu(std::string const name, device const *const accel_device,
-      device const *const gyro_device, device const *const magn_device,
+  Imu(std::string const name,
+      device const* const accel_device,
+      device const* const gyro_device,
+      device const* const magn_device,
       int magn_rate_divisor = 1)
       : Sensor(name), accel_device_(accel_device), gyro_device_(gyro_device),
         magn_device_(magn_device), magn_rate_divisor_(magn_rate_divisor),
         fetch_gyro_(gyro_device != nullptr && gyro_device != accel_device),
-        fetch_magn_(magn_device != nullptr && magn_device != accel_device &&
-                    magn_device != gyro_device) {
+        fetch_magn_(
+            magn_device != nullptr && magn_device != accel_device &&
+            magn_device != gyro_device) {
     if (magn_rate_divisor != 1 && !fetch_magn_) {
       accel_channel_ = SENSOR_CHAN_ACCEL_XYZ;
       gyro_channel_ = SENSOR_CHAN_GYRO_XYZ;
@@ -86,12 +89,14 @@ struct Imu : Sensor {
     return read_sensor_vector(magn_device_, SENSOR_CHAN_MAGN_XYZ);
   }
 
-  Time get_time() { return time_; }
+  Time get_time() {
+    return time_;
+  }
 
 private:
-  device const *const accel_device_ = nullptr;
-  device const *const gyro_device_ = nullptr;
-  device const *const magn_device_ = nullptr;
+  device const* const accel_device_ = nullptr;
+  device const* const gyro_device_ = nullptr;
+  device const* const magn_device_ = nullptr;
   int magn_rate_divisor_ = 1;
   bool fetch_all = false;
   bool fetch_gyro_ = false;
@@ -105,7 +110,7 @@ private:
 };
 
 struct Env : Sensor {
-  Env(std::string name, device const *const press_device)
+  Env(std::string name, device const* const press_device)
       : Sensor(name), press_device_(press_device) {}
 
   Time fetch() {
@@ -123,18 +128,20 @@ struct Env : Sensor {
     return read_sensor(press_device_, SENSOR_CHAN_PRESS);
   }
 
-  Time get_time() { return time_; }
+  Time get_time() {
+    return time_;
+  }
 
 private:
-  device const *const press_device_ = nullptr;
+  device const* const press_device_ = nullptr;
   Time time_ = 0;
   sensor_channel press_channel_ = SENSOR_CHAN_PRESS;
   int fetch_counter_ = 0;
 };
 
-extern std::vector<std::unique_ptr<Imu>> &get_imus_bus0();
-extern std::vector<std::unique_ptr<Imu>> &get_imus_bus1();
-extern std::vector<std::unique_ptr<Env>> &get_envs_bus0();
-extern std::vector<std::unique_ptr<Env>> &get_envs_bus1();
+extern std::vector<std::unique_ptr<Imu>>& get_imus_bus0();
+extern std::vector<std::unique_ptr<Imu>>& get_imus_bus1();
+extern std::vector<std::unique_ptr<Env>>& get_envs_bus0();
+extern std::vector<std::unique_ptr<Env>>& get_envs_bus1();
 
 #endif

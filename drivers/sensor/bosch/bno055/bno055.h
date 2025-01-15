@@ -233,14 +233,14 @@ struct bno055_data {
   uint8_t temp;
   int gyr_div;
 
-  const struct device *dev;
+  const struct device* dev;
 #ifdef CONFIG_BNO055_TRIGGER
   struct gpio_callback gpio_cb;
 
-  const struct sensor_trigger *data_ready_trigger;
+  const struct sensor_trigger* data_ready_trigger;
   sensor_trigger_handler_t data_ready_handler;
 
-  const struct sensor_trigger *any_motion_trigger;
+  const struct sensor_trigger* any_motion_trigger;
   sensor_trigger_handler_t any_motion_handler;
 
 #if defined(CONFIG_BNO055_TRIGGER_OWN_THREAD)
@@ -262,11 +262,12 @@ struct bno055_config {
 };
 
 #ifdef CONFIG_BNO055_TRIGGER
-int bno055_trigger_set(const struct device *dev,
-                       const struct sensor_trigger *trig,
-                       sensor_trigger_handler_t handler);
+int bno055_trigger_set(
+    const struct device* dev,
+    const struct sensor_trigger* trig,
+    sensor_trigger_handler_t handler);
 
-int bno055_init_interrupt(const struct device *dev);
+int bno055_init_interrupt(const struct device* dev);
 #endif
 
 union opr_mode {
@@ -322,25 +323,13 @@ union unit_sel {
   } config;
 };
 
-enum unit_sel_angle_order_values {
-  angle_order_windows = 0,
-  angle_order_android = 1
-};
+enum unit_sel_angle_order_values { angle_order_windows = 0, angle_order_android = 1 };
 
-enum unit_sel_temperature_values {
-  temperature_celcius = 0,
-  temperature_fahrenheit = 1
-};
+enum unit_sel_temperature_values { temperature_celcius = 0, temperature_fahrenheit = 1 };
 
-enum unit_sel_euler_angles_values {
-  euler_angles_degrees = 0,
-  euler_angles_radians = 1
-};
+enum unit_sel_euler_angles_values { euler_angles_degrees = 0, euler_angles_radians = 1 };
 
-enum unit_sel_angular_rate_values {
-  angular_rate_dps = 0,
-  angular_rate_rps = 1
-};
+enum unit_sel_angular_rate_values { angular_rate_dps = 0, angular_rate_rps = 1 };
 
 enum unit_sel_acceleration_values { acceleration_ms2 = 0, acceleration_mg = 1 };
 
@@ -356,11 +345,7 @@ union axi_map_config {
   } config;
 };
 
-enum axis_map_values {
-  axis_map_x_axis = 0,
-  axis_map_y_axis = 1,
-  axis_map_z_axis = 2
-};
+enum axis_map_values { axis_map_x_axis = 0, axis_map_y_axis = 1, axis_map_z_axis = 2 };
 
 union axi_map_sign {
   uint8_t byte;

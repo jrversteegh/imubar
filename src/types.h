@@ -34,8 +34,12 @@ struct EnvSample : Sample {
 struct Position {
   Number latitude;
   Number longitude;
-  Number lat() const { return latitude; }
-  Number lon() const { return longitude; }
+  Number lat() const {
+    return latitude;
+  }
+  Number lon() const {
+    return longitude;
+  }
 };
 
 struct Velocity {

@@ -20,18 +20,19 @@ extern struct lsm9ds1_data lsm9ds1_data;
 
 LOG_MODULE_DECLARE(lsm9ds1, CONFIG_SENSOR_LOG_LEVEL);
 
-static inline void setup_drdy(const struct device *dev, bool enable) {
-  const struct lsm9ds1_config *cfg = dev->config;
+static inline void setup_drdy(const struct device* dev, bool enable) {
+  const struct lsm9ds1_config* cfg = dev->config;
 
   gpio_pin_interrupt_configure_dt(
       &cfg->int_gpio, enable ? GPIO_INT_EDGE_TO_ACTIVE : GPIO_INT_DISABLE);
 }
 
-int lsm9ds1_trigger_set(const struct device *dev,
-                        const struct sensor_trigger *trig,
-                        sensor_trigger_handler_t handler) {
-  struct lsm9ds1_data *data = dev->data;
-  const struct lsm9ds1_config *const config = dev->config;
+int lsm9ds1_trigger_set(
+    const struct device* dev,
+    const struct sensor_trigger* trig,
+    sensor_trigger_handler_t handler) {
+  struct lsm9ds1_data* data = dev->data;
+  const struct lsm9ds1_config* const config = dev->config;
   uint8_t state;
 
   if (!config->int_gpio.port) {
@@ -49,10 +50,11 @@ int lsm9ds1_trigger_set(const struct device *dev,
     data->handler_drdy = handler;
     data->trigger_drdy = trig;
 
-    if (i2c_reg_update_byte_dt(&config->i2c, lsm9ds1_REG_CTRL_REG3_G,
-                               lsm9ds1_MASK_CTRL_REG3_G_I2_DRDY,
-                               state << lsm9ds1_SHIFT_CTRL_REG3_G_I2_DRDY) <
-        0) {
+    if (i2c_reg_update_byte_dt(
+            &config->i2c,
+            lsm9ds1_REG_CTRL_REG3_G,
+            lsm9ds1_MASK_CTRL_REG3_G_I2_DRDY,
+            state << lsm9ds1_SHIFT_CTRL_REG3_G_I2_DRDY) < 0) {
       LOG_DBG("failed to set DRDY interrupt");
       return -EIO;
     }
@@ -64,22 +66,21 @@ int lsm9ds1_trigger_set(const struct device *dev,
   return -ENOTSUP;
 }
 
-static void lsm9ds1_gpio_drdy_callback(const struct device *dev,
-                                       struct gpio_callback *cb,
-                                       uint32_t pins) {
-  struct lsm9ds1_data *data = CONTAINER_OF(cb, struct lsm9ds1_data, gpio_cb);
+static void
+lsm9ds1_gpio_drdy_callback(const struct device* dev, struct gpio_callback* cb, uint32_t pins) {
+  struct lsm9ds1_data* data = CONTAINER_OF(cb, struct lsm9ds1_data, gpio_cb);
 
   setup_drdy(data->dev, false);
 
   k_sem_give(&data->sem);
 }
 
-static void lsm9ds1_thread_main(void *p1, void *p2, void *p3) {
+static void lsm9ds1_thread_main(void* p1, void* p2, void* p3) {
   ARG_UNUSED(p2);
   ARG_UNUSED(p3);
 
-  const struct device *dev = p1;
-  struct lsm9ds1_data *data = dev->data;
+  const struct device* dev = p1;
+  struct lsm9ds1_data* data = dev->data;
 
   while (1) {
     k_sem_take(&data->sem, K_FOREVER);
@@ -92,16 +93,24 @@ static void lsm9ds1_thread_main(void *p1, void *p2, void *p3) {
   }
 }
 
-int lsm9ds1_init_interrupt(const struct device *dev) {
-  const struct lsm9ds1_config *const config = dev->config;
-  struct lsm9ds1_data *data = dev->data;
+int lsm9ds1_init_interrupt(const struct device* dev) {
+  const struct lsm9ds1_config* const config = dev->config;
+  struct lsm9ds1_data* data = dev->data;
 
   data->dev = dev;
   k_sem_init(&data->sem, 0, K_SEM_MAX_LIMIT);
 
-  k_thread_create(&data->thread, data->thread_stack,
-                  CONFIG_lsm9ds1_THREAD_STACK_SIZE, lsm9ds1_thread_main,
-                  (void *)dev, NULL, NULL, K_PRIO_COOP(10), 0, K_NO_WAIT);
+  k_thread_create(
+      &data->thread,
+      data->thread_stack,
+      CONFIG_lsm9ds1_THREAD_STACK_SIZE,
+      lsm9ds1_thread_main,
+      (void*)dev,
+      NULL,
+      NULL,
+      K_PRIO_COOP(10),
+      0,
+      K_NO_WAIT);
 
   if (!gpio_is_ready_dt(&config->int_gpio)) {
     LOG_ERR("GPIO device not ready");
@@ -110,8 +119,7 @@ int lsm9ds1_init_interrupt(const struct device *dev) {
 
   gpio_pin_configure_dt(&config->int_gpio, GPIO_INPUT);
 
-  gpio_init_callback(&data->gpio_cb, lsm9ds1_gpio_drdy_callback,
-                     BIT(config->int_gpio.pin));
+  gpio_init_callback(&data->gpio_cb, lsm9ds1_gpio_drdy_callback, BIT(config->int_gpio.pin));
 
   if (gpio_add_callback(config->int_gpio.port, &data->gpio_cb) < 0) {
     LOG_DBG("failed to set gpio callback");

@@ -15,18 +15,18 @@
 
 LOG_MODULE_DECLARE(imubar);
 
-static constexpr char const *mtk_only_rmcgga_and_baud_115200 =
+static constexpr char const* mtk_only_rmcgga_and_baud_115200 =
     "$PMTK314,0,1,0,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0*28\r\n"
     "$PMTK251,115200*1F\r\n";
 
-static device const *const uart_gnss = DEVICE_DT_GET(UART_GNSS);
-static device const *const gnss_ = DEVICE_DT_GET(GNSS_0);
+static device const* const uart_gnss = DEVICE_DT_GET(UART_GNSS);
+static device const* const gnss_ = DEVICE_DT_GET(GNSS_0);
 
 static navigation_data data_{};
 static bool has_fix_ = false;
 static Time data_time_ = 0;
 
-static void handle_gnss_data(const device *dev, const gnss_data *data) {
+static void handle_gnss_data(device const* dev, gnss_data const* data) {
   static bool time_set = false;
   data_time_ = get_time();
   data_ = data->nav_data;
@@ -52,7 +52,9 @@ GNSS_DATA_CALLBACK_DEFINE(gnss_, handle_gnss_data);
 
 namespace gnss {
 
-bool has_fix() { return has_fix_; }
+bool has_fix() {
+  return has_fix_;
+}
 
 bool has_data() {
   // Whether we have received data in the last 10 seconds
@@ -63,7 +65,9 @@ Position get_position() {
   return Position(1E-9 * data_.latitude, 1E-9 * data_.longitude);
 }
 
-Velocity get_velocity() { return Velocity(data_.speed, 1E-3 * data_.bearing); }
+Velocity get_velocity() {
+  return Velocity(data_.speed, 1E-3 * data_.bearing);
+}
 
 } // namespace gnss
 
@@ -80,7 +84,7 @@ void initialize_gnss() {
   }
 
   // MTK init
-  for (const char *c = mtk_only_rmcgga_and_baud_115200; *c != '\0'; ++c) {
+  for (char const* c = mtk_only_rmcgga_and_baud_115200; *c != '\0'; ++c) {
     uart_poll_out(uart_gnss, *c);
   }
 

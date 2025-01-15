@@ -23,8 +23,7 @@
 
 #define LSM9DS1_REG_CTRL_REG1 0x10
 #define LSM9DS1_REG_CTRL_REG1_ODR_G_SHIFT 5
-#define LSM9DS1_REG_CTRL_REG1_ODR_G_MASK                                       \
-  (7 << LSM9DS1_REG_CTRL_REG1_ODR_G_SHIFT)
+#define LSM9DS1_REG_CTRL_REG1_ODR_G_MASK (7 << LSM9DS1_REG_CTRL_REG1_ODR_G_SHIFT)
 #define LSM9DS1_REG_CTRL_REG1_FS_G_SHIFT 3
 #define LSM9DS1_REG_CTRL_REG1_FS_G_MASK (3 << LSM9DS1_REG_CTRL_REG1_FS_G_SHIFT)
 #define LSM9DS1_REG_CTRL_REG1_BW_G_SHIFT 0
@@ -72,11 +71,9 @@
 
 #define LSM9DS1_REG_CTRL_REG2 0x11
 #define LSM9DS1_REG_CTRL_REG2_INT_SEL_SHIFT 2
-#define LSM9DS1_REG_CTRL_REG2_INT_SEL_MASK                                     \
-  (3 << LSM9DS1_REG_CTRL_REG2_INT_SEL_SHIFT)
+#define LSM9DS1_REG_CTRL_REG2_INT_SEL_MASK (3 << LSM9DS1_REG_CTRL_REG2_INT_SEL_SHIFT)
 #define LSM9DS1_REG_CTRL_REG2_OUT_SEL_SHIFT 0
-#define LSM9DS1_REG_CTRL_REG2_OUT_SEL_MASK                                     \
-  (3 << LSM9DS1_REG_CTRL_REG2_OUT_SEL_SHIFT)
+#define LSM9DS1_REG_CTRL_REG2_OUT_SEL_MASK (3 << LSM9DS1_REG_CTRL_REG2_OUT_SEL_SHIFT)
 
 #if defined(CONFIG_LSM9DS1_GYRO_SECOND_LPF_ENABLE)
 #define LSM9DS1_DEFAULT_OUT_SEL (2 << LSM9DS1_REG_CTRL_REG2_OUT_SEL_SHIFT)
@@ -86,14 +83,11 @@
 
 #define LSM9DS1_REG_CTRL_REG3 0x12
 #define LSM9DS1_REG_CTRL_REG3_LP_MODE_SHIFT 7
-#define LSM9DS1_REG_CTRL_REG3_LP_MODE_MASK                                     \
-  (1 << LSM9DS1_REG_CTRL_REG3_LP_MODE_SHIFT)
+#define LSM9DS1_REG_CTRL_REG3_LP_MODE_MASK (1 << LSM9DS1_REG_CTRL_REG3_LP_MODE_SHIFT)
 #define LSM9DS1_REG_CTRL_REG3_HPF_EN_SHIFT 6
-#define LSM9DS1_REG_CTRL_REG3_HPF_EN_MASK                                      \
-  (1 << LSM9DS1_REG_CTRL_REG3_HPF_EN_SHIFT)
+#define LSM9DS1_REG_CTRL_REG3_HPF_EN_MASK (1 << LSM9DS1_REG_CTRL_REG3_HPF_EN_SHIFT)
 #define LSM9DS1_REG_CTRL_REG3_HPF_CUTOFF_SHIFT 0
-#define LSM9DS1_REG_CTRL_REG3_HPF_CUTOFF_MASK                                  \
-  (15 << LSM9DS1_REG_CTRL_REG3_HPF_CUTOFF_SHIFT)
+#define LSM9DS1_REG_CTRL_REG3_HPF_CUTOFF_MASK (15 << LSM9DS1_REG_CTRL_REG3_HPF_CUTOFF_SHIFT)
 
 #if defined(CONFIG_LSM9DS1_GYRO_HPF_ENABLE)
 #define LSM9DS1_DEFAULT_HPF_ENABLE (1 << LSM9DS1_REG_CTRL_REG3_HPF_EN_SHIFT)
@@ -127,17 +121,13 @@
 
 #define LSM9DS1_REG_ORIENT_CFG 0x13
 #define LSM9DS1_REG_ORIENT_CFG_SIGN_X_SHIFT 5
-#define LSM9DS1_REG_ORIENT_CFG_SIGN_X_MASK                                     \
-  (1 << LSM9DS1_REG_ORIENT_CFG_SIGN_X_SHIFT)
+#define LSM9DS1_REG_ORIENT_CFG_SIGN_X_MASK (1 << LSM9DS1_REG_ORIENT_CFG_SIGN_X_SHIFT)
 #define LSM9DS1_REG_ORIENT_CFG_SIGN_Y_SHIFT 4
-#define LSM9DS1_REG_ORIENT_CFG_SIGN_Y_MASK                                     \
-  (1 << LSM9DS1_REG_ORIENT_CFG_SIGN_Y_SHIFT)
+#define LSM9DS1_REG_ORIENT_CFG_SIGN_Y_MASK (1 << LSM9DS1_REG_ORIENT_CFG_SIGN_Y_SHIFT)
 #define LSM9DS1_REG_ORIENT_CFG_SIGN_Z_SHIFT 3
-#define LSM9DS1_REG_ORIENT_CFG_SIGN_Z_MASK                                     \
-  (1 << LSM9DS1_REG_ORIENT_CFG_SIGN_Z_SHIFT)
+#define LSM9DS1_REG_ORIENT_CFG_SIGN_Z_MASK (1 << LSM9DS1_REG_ORIENT_CFG_SIGN_Z_SHIFT)
 #define LSM9DS1_REG_ORIENT_CFG_ORIENT_SHIFT 0
-#define LSM9DS1_REG_ORIENT_CFG_ORIENT_MASK                                     \
-  (1 << LSM9DS1_REG_ORIENT_CFG_ORIENT_SHIFT)
+#define LSM9DS1_REG_ORIENT_CFG_ORIENT_MASK (1 << LSM9DS1_REG_ORIENT_CFG_ORIENT_SHIFT)
 
 #define LSM9DS1_REG_INT_GEN_SRC 0x14
 
@@ -158,17 +148,13 @@
 
 #define LSM9DS1_REG_CTRL_REG6 0x20
 #define LSM9DS1_REG_CTRL_REG6_ODR_XL_SHIFT 5
-#define LSM9DS1_REG_CTRL_REG6_ODR_XL_MASK                                      \
-  (7 << LSM9DS1_REG_CTRL_REG6_ODR_XL_SHIFT)
+#define LSM9DS1_REG_CTRL_REG6_ODR_XL_MASK (7 << LSM9DS1_REG_CTRL_REG6_ODR_XL_SHIFT)
 #define LSM9DS1_REG_CTRL_REG6_FS_XL_SHIFT 3
-#define LSM9DS1_REG_CTRL_REG6_FS_XL_MASK                                       \
-  (3 << LSM9DS1_REG_CTRL_REG6_FS_XL_SHIFT)
+#define LSM9DS1_REG_CTRL_REG6_FS_XL_MASK (3 << LSM9DS1_REG_CTRL_REG6_FS_XL_SHIFT)
 #define LSM9DS1_REG_CTRL_REG6_BW_SCAL_ODR_SHIFT 2
-#define LSM9DS1_REG_CTRL_REG6_BW_SCAL_ODR_MASK                                 \
-  (1 << LSM9DS1_REG_CTRL_REG6_BW_SCAL_ODR_SHIFT)
+#define LSM9DS1_REG_CTRL_REG6_BW_SCAL_ODR_MASK (1 << LSM9DS1_REG_CTRL_REG6_BW_SCAL_ODR_SHIFT)
 #define LSM9DS1_REG_CTRL_REG6_BW_XL_SHIFT 0
-#define LSM9DS1_REG_CTRL_REG6_BW_XL_MASK                                       \
-  (3 << LSM9DS1_REG_CTRL_REG6_BW_XL_SHIFT)
+#define LSM9DS1_REG_CTRL_REG6_BW_XL_MASK (3 << LSM9DS1_REG_CTRL_REG6_BW_XL_SHIFT)
 
 #ifndef CONFIG_LSM9DS1_ACCEL_ENABLE
 #define LSM9DS1_DEFAULT_ODR_XL (0 << LSM9DS1_REG_CTRL_REG6_ODR_XL_SHIFT)
@@ -208,17 +194,13 @@
 #endif
 
 #if defined(LSM9DS1_ACCEL_BW_FILTER_408)
-#define LSM9DS1_DEFAULT_BW_FILTER_SETTING                                      \
-  (0 << LSM9DS1_REG_CTRL_REG6_BW_XL_SHIFT)
+#define LSM9DS1_DEFAULT_BW_FILTER_SETTING (0 << LSM9DS1_REG_CTRL_REG6_BW_XL_SHIFT)
 #elif defined(LSM9DS1_ACCEL_BW_FILTER_211)
-#define LSM9DS1_DEFAULT_BW_FILTER_SETTING                                      \
-  (1 << LSM9DS1_REG_CTRL_REG6_BW_XL_SHIFT)
+#define LSM9DS1_DEFAULT_BW_FILTER_SETTING (1 << LSM9DS1_REG_CTRL_REG6_BW_XL_SHIFT)
 #elif defined(LSM9DS1_ACCEL_BW_FILTER_105)
-#define LSM9DS1_DEFAULT_BW_FILTER_SETTING                                      \
-  (2 << LSM9DS1_REG_CTRL_REG6_BW_XL_SHIFT)
+#define LSM9DS1_DEFAULT_BW_FILTER_SETTING (2 << LSM9DS1_REG_CTRL_REG6_BW_XL_SHIFT)
 #elif defined(LSM9DS1_ACCEL_BW_FILTER_50)
-#define LSM9DS1_DEFAULT_BW_FILTER_SETTING                                      \
-  (3 << LSM9DS1_REG_CTRL_REG6_BW_XL_SHIFT)
+#define LSM9DS1_DEFAULT_BW_FILTER_SETTING (3 << LSM9DS1_REG_CTRL_REG6_BW_XL_SHIFT)
 #endif
 
 #define LSM9DS1_REG_CTRL_REG7 0x21
@@ -276,10 +258,10 @@ struct lsm9ds1_data {
 #if defined(CONFIG_LSM9DS1_TRIGGER_OWN_THREAD)
   K_KERNEL_STACK_MEMBER(thread_stack, CONFIG_LSM9DS1_THREAD_STACK_SIZE);
   struct k_thread thread;
-  const struct device *dev;
+  const struct device* dev;
 
   struct gpio_callback gpio_cb;
-  const struct sensor_trigger *trigger_drdy;
+  const struct sensor_trigger* trigger_drdy;
   sensor_trigger_handler_t handler_drdy;
 #endif
 
@@ -292,11 +274,12 @@ struct lsm9ds1_data {
 };
 
 #if !defined(CONFIG_LSM9DS1_TRIGGER_NONE)
-int lsm9ds1_trigger_set(const struct device *dev,
-                        const struct sensor_trigger *trig,
-                        sensor_trigger_handler_t handler);
+int lsm9ds1_trigger_set(
+    const struct device* dev,
+    const struct sensor_trigger* trig,
+    sensor_trigger_handler_t handler);
 
-int lsm9ds1_init_interrupt(const struct device *dev);
+int lsm9ds1_init_interrupt(const struct device* dev);
 #endif
 
 #endif /* ZEPHYR_DRIVERS_SENSOR_lsm9ds1_LSMDS1_H_ */

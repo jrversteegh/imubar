@@ -88,7 +88,7 @@ enum bmp085_fetch_state {
 struct bmp085_data {
   uint16_t temperature;
   uint32_t pressure;
-  const struct device *dev;
+  const struct device* dev;
   union bmp085_calibration calibration;
   enum bmp085_fetch_state fetch_state;
 };

@@ -32,9 +32,8 @@
 #define H3LIS331DL_X_AXIS_ENABLE 0x01
 #define H3LIS331DL_Y_AXIS_ENABLE 0x02
 #define H3LIS331DL_Z_AXIS_ENABLE 0x04
-#define H3LIS331DL_AXES_ENABLE                                                 \
-  (H3LIS331DL_X_AXIS_ENABLE | H3LIS331DL_Y_AXIS_ENABLE |                       \
-   H3LIS331DL_Z_AXIS_ENABLE)
+#define H3LIS331DL_AXES_ENABLE                                                                 \
+  (H3LIS331DL_X_AXIS_ENABLE | H3LIS331DL_Y_AXIS_ENABLE | H3LIS331DL_Z_AXIS_ENABLE)
 #define H3LIS331DL_AXES_SHIFT 0
 #define H3LIS331DL_ODR_SHIFT 3
 #define H3LIS331DL_PM_NORMAL 0x01

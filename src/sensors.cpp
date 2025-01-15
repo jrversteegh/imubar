@@ -32,63 +32,73 @@ LOG_MODULE_DECLARE(imubar);
 #define ICM20948_0 DT_NODELABEL(icm20948_0)
 #define H3LIS331DL_0 DT_NODELABEL(h3lis331dl_0)
 
-static device const *const imu_mpu9250 = DEVICE_DT_GET(MPU9250_0);
-static device const *const imu_fxos8700 = DEVICE_DT_GET(FXOS8700_0);
-static device const *const imu_fxas21002 = DEVICE_DT_GET(FXAS21002_0);
-static device const *const imu_lsm303accel = DEVICE_DT_GET(LSM303ACCEL_0);
-static device const *const imu_lsm303magn = DEVICE_DT_GET(LSM303MAGN_0);
-static device const *const imu_l3gd20h = DEVICE_DT_GET(L3GD20H_0);
-static device const *const imu_bno055 = DEVICE_DT_GET(BNO055_0);
-static device const *const imu_lsm9ds1ag = DEVICE_DT_GET(LSM9DS1AG_0);
-static device const *const imu_lsm9ds1magn = DEVICE_DT_GET(LSM9DS1MAGN_0);
-static device const *const env_bmp180 = DEVICE_DT_GET(BMP180_0);
+static device const* const imu_mpu9250 = DEVICE_DT_GET(MPU9250_0);
+static device const* const imu_fxos8700 = DEVICE_DT_GET(FXOS8700_0);
+static device const* const imu_fxas21002 = DEVICE_DT_GET(FXAS21002_0);
+static device const* const imu_lsm303accel = DEVICE_DT_GET(LSM303ACCEL_0);
+static device const* const imu_lsm303magn = DEVICE_DT_GET(LSM303MAGN_0);
+static device const* const imu_l3gd20h = DEVICE_DT_GET(L3GD20H_0);
+static device const* const imu_bno055 = DEVICE_DT_GET(BNO055_0);
+static device const* const imu_lsm9ds1ag = DEVICE_DT_GET(LSM9DS1AG_0);
+static device const* const imu_lsm9ds1magn = DEVICE_DT_GET(LSM9DS1MAGN_0);
+static device const* const env_bmp180 = DEVICE_DT_GET(BMP180_0);
 
-static device const *const imu_hmc5883l = DEVICE_DT_GET(HMC5883L_0);
-static device const *const imu_bma180 = DEVICE_DT_GET(BMA180_0);
-static device const *const imu_itg3205 = DEVICE_DT_GET(ITG3205_0);
-static device const *const env_bmp085 = DEVICE_DT_GET(BMP085_0);
-static device const *const imu_icm20948 = DEVICE_DT_GET(ICM20948_0);
-static device const *const imu_h3lis331dl = DEVICE_DT_GET(H3LIS331DL_0);
+static device const* const imu_hmc5883l = DEVICE_DT_GET(HMC5883L_0);
+static device const* const imu_bma180 = DEVICE_DT_GET(BMA180_0);
+static device const* const imu_itg3205 = DEVICE_DT_GET(ITG3205_0);
+static device const* const env_bmp085 = DEVICE_DT_GET(BMP085_0);
+static device const* const imu_icm20948 = DEVICE_DT_GET(ICM20948_0);
+static device const* const imu_h3lis331dl = DEVICE_DT_GET(H3LIS331DL_0);
 
 struct None {};
 
-template <typename T> inline T sensor_value_to(sensor_value const &value) {
+template <typename T>
+inline T sensor_value_to(sensor_value const& value) {
   static_assert(std::is_same_v<T, None>, "Conversion not supported");
   return 0;
 }
 
-template <> inline float sensor_value_to<float>(sensor_value const &value) {
+template <>
+inline float sensor_value_to<float>(sensor_value const& value) {
   return sensor_value_to_float(&value);
 }
 
-template <> inline double sensor_value_to<double>(sensor_value const &value) {
+template <>
+inline double sensor_value_to<double>(sensor_value const& value) {
   return sensor_value_to_double(&value);
 }
 
-std::vector<device const *> get_sensors() {
+std::vector<device const*> get_sensors() {
   return {
-      imu_mpu9250,    imu_fxos8700, imu_fxas21002, imu_lsm303accel, imu_l3gd20h,
-      imu_lsm303magn, imu_bno055,   imu_lsm9ds1ag, imu_lsm9ds1magn,
+      imu_mpu9250,
+      imu_fxos8700,
+      imu_fxas21002,
+      imu_lsm303accel,
+      imu_l3gd20h,
+      imu_lsm303magn,
+      imu_bno055,
+      imu_lsm9ds1ag,
+      imu_lsm9ds1magn,
   };
 }
 
-int fetch_sensor(device const *sensor, sensor_channel channel) {
+int fetch_sensor(device const* sensor, sensor_channel channel) {
   if (sensor == nullptr)
     return 0;
   auto ret = sensor_sample_fetch_chan(sensor, channel);
   if (ret < 0) {
     switch (ret) {
-    case -EBADMSG:
-      LOG_ERR("I2C communication error: %d", ret);
-      break;
-    default:
-      LOG_ERR("Sensor fetch error: %d", ret);
+      case -EBADMSG:
+        LOG_ERR("I2C communication error: %d", ret);
+        break;
+      default:
+        LOG_ERR("Sensor fetch error: %d", ret);
     }
   }
   return ret;
 }
 
-Number read_sensor(device const *sensor, sensor_channel channel) {
+Number read_sensor(device const* sensor, sensor_channel channel) {
   if (sensor == nullptr)
     return Number{};
   struct sensor_value value;
@@ -102,7 +112,7 @@ Number read_sensor(device const *sensor, sensor_channel channel) {
   return sensor_value_to<decltype(result)>(value);
 }
 
-Vector3 read_sensor_vector(device const *sensor, sensor_channel channel) {
+Vector3 read_sensor_vector(device const* sensor, sensor_channel channel) {
   if (sensor == nullptr)
     return Vector3{};
   struct sensor_value values[3];
@@ -129,8 +139,8 @@ void initialize_sensors() {
     error(2, "FXOS8700 not ready.");
   }
   struct sensor_value odr = {.val1 = 100, .val2 = 0};
-  if (sensor_attr_set(imu_fxos8700, SENSOR_CHAN_ALL,
-                      SENSOR_ATTR_SAMPLING_FREQUENCY, &odr) != 0) {
+  if (sensor_attr_set(imu_fxos8700, SENSOR_CHAN_ALL, SENSOR_ATTR_SAMPLING_FREQUENCY, &odr) !=
+      0) {
     error(2, "Failed to set FXOS8700 odr.");
   }
   if (!device_is_ready(imu_fxas21002)) {
@@ -181,37 +191,37 @@ void initialize_sensors() {
   }
 }
 
-std::vector<std::unique_ptr<Imu>> &get_imus_bus0() {
+std::vector<std::unique_ptr<Imu>>& get_imus_bus0() {
   static std::vector<std::unique_ptr<Imu>> imus{};
   if (imus.size() == 0) {
-    imus.push_back(std::make_unique<Imu>("adafruit_nxp_fx", imu_fxos8700,
-                                         imu_fxas21002, imu_fxos8700));
-    imus.push_back(std::make_unique<Imu>("sparkfun_mpu9250", imu_mpu9250,
-                                         imu_mpu9250, imu_mpu9250, 12));
-    imus.push_back(std::make_unique<Imu>("ada_lsm303_l3gd20", imu_lsm303accel,
-                                         imu_l3gd20h, imu_lsm303magn, 25));
-    imus.push_back(std::make_unique<Imu>("sparkfun_lsm9ds1", imu_lsm9ds1ag,
-                                         imu_lsm9ds1ag, imu_lsm9ds1magn, 10));
+    imus.push_back(
+        std::make_unique<Imu>("adafruit_nxp_fx", imu_fxos8700, imu_fxas21002, imu_fxos8700));
+    imus.push_back(
+        std::make_unique<Imu>("sparkfun_mpu9250", imu_mpu9250, imu_mpu9250, imu_mpu9250, 12));
+    imus.push_back(std::make_unique<Imu>(
+        "ada_lsm303_l3gd20", imu_lsm303accel, imu_l3gd20h, imu_lsm303magn, 25));
+    imus.push_back(std::make_unique<Imu>(
+        "sparkfun_lsm9ds1", imu_lsm9ds1ag, imu_lsm9ds1ag, imu_lsm9ds1magn, 10));
   }
   return imus;
 }
 
-std::vector<std::unique_ptr<Imu>> &get_imus_bus1() {
+std::vector<std::unique_ptr<Imu>>& get_imus_bus1() {
   static std::vector<std::unique_ptr<Imu>> imus{};
   if (imus.size() == 0) {
-    imus.push_back(std::make_unique<Imu>("nameless_10dof", imu_bma180,
-                                         imu_itg3205, imu_hmc5883l, 7));
-    imus.push_back(std::make_unique<Imu>("adafruit_bno055", imu_bno055,
-                                         imu_bno055, imu_bno055));
-    imus.push_back(std::make_unique<Imu>("pimoroni_icm20948", imu_icm20948,
-                                         imu_icm20948, imu_icm20948));
-    imus.push_back(std::make_unique<Imu>("sparkfun_h3lis331dl", imu_h3lis331dl,
-                                         nullptr, nullptr));
+    imus.push_back(
+        std::make_unique<Imu>("nameless_10dof", imu_bma180, imu_itg3205, imu_hmc5883l, 7));
+    imus.push_back(
+        std::make_unique<Imu>("adafruit_bno055", imu_bno055, imu_bno055, imu_bno055));
+    imus.push_back(
+        std::make_unique<Imu>("pimoroni_icm20948", imu_icm20948, imu_icm20948, imu_icm20948));
+    imus.push_back(
+        std::make_unique<Imu>("sparkfun_h3lis331dl", imu_h3lis331dl, nullptr, nullptr));
   }
   return imus;
 }
 
-std::vector<std::unique_ptr<Env>> &get_envs_bus0() {
+std::vector<std::unique_ptr<Env>>& get_envs_bus0() {
   static std::vector<std::unique_ptr<Env>> envs{};
   if (envs.size() == 0) {
     envs.push_back(std::make_unique<Env>("adafruit_bmp180", env_bmp180));
@@ -219,7 +229,7 @@ std::vector<std::unique_ptr<Env>> &get_envs_bus0() {
   return envs;
 }
 
-std::vector<std::unique_ptr<Env>> &get_envs_bus1() {
+std::vector<std::unique_ptr<Env>>& get_envs_bus1() {
   static std::vector<std::unique_ptr<Env>> envs{};
   if (envs.size() == 0) {
     envs.push_back(std::make_unique<Env>("nameless_bmp085", env_bmp085));

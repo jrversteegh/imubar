@@ -24,24 +24,24 @@ LOG_MODULE_REGISTER(imubar);
 
 static const struct gpio_dt_spec led = GPIO_DT_SPEC_GET(DT_ALIAS(led0), gpios);
 
-void fetch_envs(auto &envs) {
-  for (auto &env : envs) {
+void fetch_envs(auto& envs) {
+  for (auto& env : envs) {
     env->fetch();
   }
 }
 
 void fetch_envs_bus0() {
-  auto &envs = get_envs_bus0();
+  auto& envs = get_envs_bus0();
   fetch_envs(envs);
 }
 
 void fetch_envs_bus1() {
-  auto &envs = get_envs_bus1();
+  auto& envs = get_envs_bus1();
   fetch_envs(envs);
 }
 
-void read_envs(auto &envs, bool print) {
-  for (auto &env : envs) {
+void read_envs(auto& envs, bool print) {
+  for (auto& env : envs) {
     auto name = env->get_name();
     double uptime = env->get_time() / 1000.0;
     auto temperature = env->get_temperature();
@@ -56,20 +56,20 @@ void read_envs(auto &envs, bool print) {
 }
 
 void read_envs_bus0(bool print) {
-  auto &envs = get_envs_bus0();
+  auto& envs = get_envs_bus0();
   read_envs(envs, print);
 }
 
 void read_envs_bus1(bool print) {
-  auto &envs = get_envs_bus1();
+  auto& envs = get_envs_bus1();
   read_envs(envs, print);
 }
 
-void read_imus(auto &imus, bool print) {
+void read_imus(auto& imus, bool print) {
   if (print) {
     printk("-----\n");
   }
-  for (auto &imu : imus) {
+  for (auto& imu : imus) {
     auto name = imu->get_name();
     double uptime = imu->fetch() / 1000.0;
     auto accel = imu->get_acceleration();
@@ -78,23 +78,32 @@ void read_imus(auto &imus, bool print) {
     if (print) {
       printk("%8.3f  ", uptime);
       printk("%20.20s  ", name.c_str());
-      printk("A: %8.4f, %8.4f, %8.4f  ", static_cast<double>(accel.x),
-             static_cast<double>(accel.y), static_cast<double>(accel.z));
-      printk("R: %7.4f, %7.4f, %7.4f  ", static_cast<double>(gyro.x),
-             static_cast<double>(gyro.y), static_cast<double>(gyro.z));
-      printk("M: %7.4f, %7.4f, %7.4f\n", static_cast<double>(magn.x),
-             static_cast<double>(magn.y), static_cast<double>(magn.z));
+      printk(
+          "A: %8.4f, %8.4f, %8.4f  ",
+          static_cast<double>(accel.x),
+          static_cast<double>(accel.y),
+          static_cast<double>(accel.z));
+      printk(
+          "R: %7.4f, %7.4f, %7.4f  ",
+          static_cast<double>(gyro.x),
+          static_cast<double>(gyro.y),
+          static_cast<double>(gyro.z));
+      printk(
+          "M: %7.4f, %7.4f, %7.4f\n",
+          static_cast<double>(magn.x),
+          static_cast<double>(magn.y),
+          static_cast<double>(magn.z));
     }
   }
 }
 
 void read_imus_bus0(bool print) {
-  auto &imus = get_imus_bus0();
+  auto& imus = get_imus_bus0();
   read_imus(imus, print);
 }
 
 void read_imus_bus1(bool print) {
-  auto &imus = get_imus_bus1();
+  auto& imus = get_imus_bus1();
   read_imus(imus, print);
 }
 
@@ -118,7 +127,7 @@ static void toggle_led() {
   led_state = !led_state;
 }
 
-void bus0_loop(void *arg1, void *arg2, void *arg3) {
+void bus0_loop(void* arg1, void* arg2, void* arg3) {
   int i = 0;
   auto time = k_uptime_get();
   int64_t sum_rem = 0;
@@ -145,7 +154,7 @@ void bus0_loop(void *arg1, void *arg2, void *arg3) {
   }
 }
 
-void bus1_loop(void *arg1, void *arg2, void *arg3) {
+void bus1_loop(void* arg1, void* arg2, void* arg3) {
   int i = 0;
   auto time = k_uptime_get();
   int64_t sum_rem = 0;
@@ -172,10 +181,8 @@ void bus1_loop(void *arg1, void *arg2, void *arg3) {
   }
 }
 
-K_THREAD_DEFINE(bus0_thread, 2048, bus0_loop, NULL, NULL, NULL, -1, K_FP_REGS,
-                1000);
-K_THREAD_DEFINE(bus1_thread, 2048, bus1_loop, NULL, NULL, NULL, -1, K_FP_REGS,
-                1500);
+K_THREAD_DEFINE(bus0_thread, 2048, bus0_loop, NULL, NULL, NULL, -1, K_FP_REGS, 1000);
+K_THREAD_DEFINE(bus1_thread, 2048, bus1_loop, NULL, NULL, NULL, -1, K_FP_REGS, 1500);
 
 int main(void) {
   LOG_INF("IMUBar initializing...");
@@ -208,29 +215,35 @@ int main(void) {
     }
 
     switch (time % 3000) {
-    case 0: {
-      toggle_led();
-      char has_data = gnss::has_data() ? 'T' : 'F';
-      char has_fix = gnss::has_fix() ? 'T' : 'F';
-      auto pos = gnss::get_position();
-      snprintf(msg, 16, "G %c%c %.2f %.2f", has_data, has_fix,
-               (double)pos.lat(), (double)pos.lon());
-      LOG_INF("%s", msg);
-      interface_write((uint8_t *)msg, strlen(msg));
-    } break;
-    case 1000: {
-      toggle_led();
-      auto battery_level = check_battery();
-      snprintf(msg, 16, "B %.2f V", (double)battery_level);
-      LOG_INF("%s", msg);
-      interface_write((uint8_t *)msg, strlen(msg));
-    } break;
-    case 2000: {
-      toggle_led();
-      auto time_str = get_time_str();
-      LOG_INF("%s", time_str.c_str());
-      interface_write((uint8_t *)time_str.c_str(), time_str.length());
-    } break;
+      case 0: {
+        toggle_led();
+        char has_data = gnss::has_data() ? 'T' : 'F';
+        char has_fix = gnss::has_fix() ? 'T' : 'F';
+        auto pos = gnss::get_position();
+        snprintf(
+            msg,
+            16,
+            "G %c%c %.2f %.2f",
+            has_data,
+            has_fix,
+            (double)pos.lat(),
+            (double)pos.lon());
+        LOG_INF("%s", msg);
+        interface_write((uint8_t*)msg, strlen(msg));
+      } break;
+      case 1000: {
+        toggle_led();
+        auto battery_level = check_battery();
+        snprintf(msg, 16, "B %.2f V", (double)battery_level);
+        LOG_INF("%s", msg);
+        interface_write((uint8_t*)msg, strlen(msg));
+      } break;
+      case 2000: {
+        toggle_led();
+        auto time_str = get_time_str();
+        LOG_INF("%s", time_str.c_str());
+        interface_write((uint8_t*)time_str.c_str(), time_str.length());
+      } break;
     }
 
     ++i;

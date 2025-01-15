@@ -10,7 +10,7 @@
 extern void halt_or_reboot();
 
 template <typename... Args>
-inline void error(int category, char const *const message, Args... args) {
+inline void error(int category, char const* const message, Args... args) {
   printk(message, args...);
   printk("\n");
   halt_or_reboot();
