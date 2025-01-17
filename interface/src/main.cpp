@@ -46,9 +46,7 @@ int main() {
   while (true) {
     ++i;
     if (i % 10 == 0) {
-      LOG_DBG("Update display...");
       check_show_messages();
-      LOG_DBG("... done");
     }
     if (i % 100 == 0) {
       LOG_DBG("Toggle led...");
