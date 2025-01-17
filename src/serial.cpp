@@ -10,6 +10,8 @@ static void uart_cb(const struct device* dev, void* data) {
   static constexpr int const buf_size = 8;
   UartData* uart_data = (UartData*)data;
 
+  LOG_DBG("UART callback");
+
   if (!uart_irq_update(dev)) {
     return;
   }
@@ -33,6 +35,7 @@ static void uart_cb(const struct device* dev, void* data) {
       uart_irq_tx_disable(dev);
     }
   }
+  LOG_DBG("Done");
 }
 
 bool serial_init(device const* const uart, UartData const* uart_data) {
@@ -53,15 +56,19 @@ bool serial_init(device const* const uart, UartData const* uart_data) {
 
 int serial_write(
     device const* const uart, uint8_t const* data, size_t size, UartData* uart_data) {
+  LOG_DBG("Serial write...");
   uart_irq_tx_disable(uart);
   auto result = ring_buf_put(uart_data->output_buffer, data, size);
   uart_irq_tx_enable(uart);
+  LOG_DBG("Done");
   return result;
 }
 
 int serial_read(device const* const uart, uint8_t* data, size_t size, UartData* uart_data) {
+  LOG_DBG("Serial read...");
   uart_irq_rx_disable(uart);
   auto result = ring_buf_get(uart_data->input_buffer, data, size);
   uart_irq_rx_enable(uart);
+  LOG_DBG("Done");
   return result;
 }

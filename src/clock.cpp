@@ -5,6 +5,7 @@
 
 #include "clock.h"
 #include "errors.h"
+#include "gps.h"
 
 LOG_MODULE_DECLARE(imubar);
 
@@ -16,7 +17,16 @@ static Time uptime_offset_ = 0;
 static Time clock_set_at_ = 0;
 static int32_t adjustment_ = 0;
 
-inline time_t rtc_time_to_time(rtc_time rtctime, bool include_millis = false) {
+static rtc_time rtctime_to_set{};
+void set_rtc_delayed(struct k_timer* dummy) {
+  if (!set_rtc(rtctime_to_set)) {
+    LOG_ERR("Failed to set RTC");
+  }
+}
+
+K_TIMER_DEFINE(rtc_set_timer, set_rtc_delayed, NULL);
+
+time_t rtc_time_to_time(rtc_time rtctime, bool include_millis) {
   time_t time = timeutil_timegm(rtc_time_to_tm(&rtctime));
   auto result = clock_scaler * time;
   if (include_millis) {
@@ -26,10 +36,19 @@ inline time_t rtc_time_to_time(rtc_time rtctime, bool include_millis = false) {
 }
 
 bool set_rtc(rtc_time& rtctime) {
-  auto ret = rtc_set_time(rtc, &rtctime);
-  if (ret < 0) {
-    LOG_ERR("Failed to set RTC clock");
-    return false;
+  if (rtctime.tm_nsec == 0) {
+    auto ret = rtc_set_time(rtc, &rtctime);
+    if (ret < 0) {
+      LOG_ERR("Failed to set RTC clock");
+      return false;
+    }
+  }
+  else {
+    rtctime_to_set = rtctime;
+    rtctime_to_set.tm_sec += 1;
+    rtctime_to_set.tm_nsec = 0;
+    auto delay = 1000 - rtctime.tm_nsec / 1000000;
+    k_timer_start(&rtc_set_timer, K_MSEC(delay), K_NO_WAIT);
   }
   set_clock(rtctime);
   return true;
@@ -78,12 +97,42 @@ void adjust_clock(Time time) {
   }
 }
 
+void adjust_clock(rtc_time& rtctime) {
+  adjust_clock(rtc_time_to_time(rtctime));
+}
+
+/**
+ * Call multiple times a second to get accurate results. This is
+ * because the RTC only has 1 second resolution and so we'll need
+ * to poll the rtc often to get close to the second increment
+ */
+void adjust_clock_from_rtc() {
+  // Only do any of this if there's no GPS fix.
+  // When there is, the GPS will sync the clock
+  if (!gnss::has_fix()) {
+    rtc_time rtctime;
+    auto ret = rtc_get_time(rtc, &rtctime);
+    if (ret < 0) {
+      LOG_ERR("Failed to get RTC time: %d", ret);
+      return;
+    }
+    static Time last_time_from_rtc = 0;
+    Time time_from_rtc = rtc_time_to_time(rtctime, false);
+    // Do this on each minute mark only and when we ticked exactly 1 second
+    if ((rtctime.tm_sec == 0) && ((time_from_rtc - last_time_from_rtc) == second)) {
+      adjust_clock(time_from_rtc);
+    }
+    last_time_from_rtc = time_from_rtc;
+  }
+}
+
 Time get_time() {
   return k_uptime_get() + uptime_offset_;
 }
+
 std::tuple<Time, Time> get_time_and_uptime() {
   auto uptime = k_uptime_get();
-  return std::make_tuple(uptime, uptime + uptime_offset_);
+  return std::make_tuple(uptime + uptime_offset_, uptime);
 }
 
 std::string get_time_str(bool include_date) {

@@ -26,25 +26,44 @@ static navigation_data data_{};
 static bool has_fix_ = false;
 static Time data_time_ = 0;
 
+constexpr int gps_reception_delay = 250000000;
+
 static void handle_gnss_data(device const* dev, gnss_data const* data) {
-  static bool time_set = false;
+  static int time_set_day = 0;
   data_time_ = get_time();
   data_ = data->nav_data;
   has_fix_ = data->info.fix_status > 0;
-  if (!time_set && has_fix_) {
-    rtc_time caltime = {
-        .tm_sec = data->utc.millisecond / 1000,
-        .tm_min = data->utc.minute,
-        .tm_hour = data->utc.hour,
-        .tm_mday = data->utc.month_day,
-        .tm_mon = data->utc.month - 1,
-        .tm_year = 100 + data->utc.century_year,
-        .tm_wday = -1,
-        .tm_yday = -1,
-        .tm_isdst = false,
-        .tm_nsec = (data->utc.millisecond % 1000) * 1000000,
-    };
-    time_set = set_rtc(caltime);
+  if (has_fix_) {
+    auto const& utc = data->utc;
+    auto seconds = utc.millisecond / 1000;
+    auto nanos = (utc.millisecond % 1000) * 1000000;
+    // Do clock setting and adjusting only on the minute mark
+    if (seconds == 0 && nanos == 0) {
+      // The GPS data can have between a 50ms to 400ms delay to be received.
+      // We'd need to generate an interrupt from the GPS PPS signal to do better.
+      // The PPS is not broken out on the board we have unfortunately.
+      // We'll guess a 250ms reception delay
+      rtc_time gpstime = {
+          .tm_sec = 0,
+          .tm_min = utc.minute,
+          .tm_hour = utc.hour,
+          .tm_mday = utc.month_day,
+          .tm_mon = utc.month - 1,
+          .tm_year = 100 + utc.century_year,
+          .tm_wday = -1,
+          .tm_yday = -1,
+          .tm_isdst = false,
+          .tm_nsec = gps_reception_delay,
+      };
+      if (utc.month_day != time_set_day) {
+        if (set_rtc(gpstime)) {
+          time_set_day = utc.month_day;
+        }
+      }
+      else {
+        adjust_clock(gpstime);
+      }
+    }
   }
 }
 

@@ -201,8 +201,7 @@ int main(void) {
   char msg[16];
   while (true) {
     auto [time, uptime] = get_time_and_uptime();
-    // Wait until next 10ms mark and align milliseconds with system clock
-    loop_time += 10 - (time % 10);
+    loop_time += 10;
     auto rem = loop_time - uptime;
     if (rem > 0) {
       k_sleep(K_MSEC(rem));
@@ -214,7 +213,7 @@ int main(void) {
       sum_rem = 0;
     }
 
-    switch (time % 3000) {
+    switch ((time / 10) % 300) {
       case 0: {
         toggle_led();
         char has_data = gnss::has_data() ? 'T' : 'F';
@@ -231,21 +230,21 @@ int main(void) {
         LOG_INF("%s", msg);
         interface_write((uint8_t*)msg, strlen(msg));
       } break;
-      case 1000: {
+      case 100: {
         toggle_led();
         auto battery_level = check_battery();
         snprintf(msg, 16, "B %.2f V", (double)battery_level);
         LOG_INF("%s", msg);
         interface_write((uint8_t*)msg, strlen(msg));
       } break;
-      case 2000: {
+      case 200: {
         toggle_led();
         auto time_str = get_time_str();
         LOG_INF("%s", time_str.c_str());
         interface_write((uint8_t*)time_str.c_str(), time_str.length());
       } break;
     }
-
+    adjust_clock_from_rtc();
     ++i;
   }
 
