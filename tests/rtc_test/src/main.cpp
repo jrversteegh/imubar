@@ -133,6 +133,7 @@ int main() {
     return 1;
   }
   LOG_INF("Done");
+  starttime.tm_nsec = 0;
 
   i = 0;
   while (i < 200) {
@@ -160,6 +161,24 @@ int main() {
     ++i;
     k_msleep(10);
   }
+
+  if (!set_rtc(starttime)) {
+    LOG_ERR("Failed to set RTC");
+    return 1;
+  }
+  time_t start = get_time();
+  time_t last = get_rtc();
+  i = 0;
+  while (true) {
+    time_t now = get_rtc();
+    if (now != last) {
+      break;
+    }
+    k_msleep(10);
+    ++i;
+  }
+  LOG_INF("Time to next: %lld, %d loops", get_time() - start, i);
+
 
   LOG_INF("Finished");
   return 0;

@@ -21,6 +21,7 @@ LOG_MODULE_REGISTER(imubar);
 #include "interface.h"
 #include "sensors.h"
 #include "storage.h"
+#include "work.h"
 
 static const struct gpio_dt_spec led = GPIO_DT_SPEC_GET(DT_ALIAS(led0), gpios);
 
@@ -196,6 +197,7 @@ int main(void) {
 
   LOG_INF("IMUBar running...");
   int i = 0;
+  int64_t last_sec = 0;
   auto loop_time = k_uptime_get();
   int64_t sum_rem = 0;
   char msg[16];
@@ -213,36 +215,46 @@ int main(void) {
       sum_rem = 0;
     }
 
-    switch ((time / 10) % 300) {
-      case 0: {
-        toggle_led();
-        char has_data = gnss::has_data() ? 'T' : 'F';
-        char has_fix = gnss::has_fix() ? 'T' : 'F';
-        auto pos = gnss::get_position();
-        snprintf(
-            msg,
-            16,
-            "G %c%c %.2f %.2f",
-            has_data,
-            has_fix,
-            (double)pos.lat(),
-            (double)pos.lon());
-        LOG_INF("%s", msg);
-        interface_write((uint8_t*)msg, strlen(msg));
-      } break;
-      case 100: {
-        toggle_led();
-        auto battery_level = check_battery();
-        snprintf(msg, 16, "B %.2f V", (double)battery_level);
-        LOG_INF("%s", msg);
-        interface_write((uint8_t*)msg, strlen(msg));
-      } break;
-      case 200: {
-        toggle_led();
-        auto time_str = get_time_str();
-        LOG_INF("%s", time_str.c_str());
-        interface_write((uint8_t*)time_str.c_str(), time_str.length());
-      } break;
+    auto sec = time / clock_scaler;
+    if (sec != last_sec) {
+      last_sec = sec;
+
+      toggle_led();
+
+      switch (sec % 4) {
+        case 0: {
+          auto time_str = get_time_str();
+          LOG_INF("%s", time_str.c_str());
+          interface_write((uint8_t*)time_str.c_str(), time_str.length());
+        } break;
+        case 1: {
+          char has_data = gnss::has_data() ? 'T' : 'F';
+          char has_fix = gnss::has_fix() ? 'T' : 'F';
+          auto pos = gnss::get_position();
+          snprintf(
+              msg,
+              16,
+              "%c%c %.2f %.2f",
+              has_data,
+              has_fix,
+              (double)pos.lat(),
+              (double)pos.lon());
+          LOG_INF("%s", msg);
+          interface_write((uint8_t*)msg, strlen(msg));
+        } break;
+        case 2: {
+          auto battery_level = check_battery();
+          snprintf(msg, 16, "Batt %.2f V", (double)battery_level);
+          LOG_INF("%s", msg);
+          interface_write((uint8_t*)msg, strlen(msg));
+        } break;
+        case 3: {
+          auto adjustment = get_clock_adjustment();
+          snprintf(msg, 16, "Adj %d ms", adjustment);
+          LOG_INF("%s", msg);
+          interface_write((uint8_t*)msg, strlen(msg));
+        } break;
+      }
     }
     adjust_clock_from_rtc();
     ++i;

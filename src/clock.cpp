@@ -17,14 +17,20 @@ static Time uptime_offset_ = 0;
 static Time clock_set_at_ = 0;
 static int32_t adjustment_ = 0;
 
+int32_t get_clock_adjustment() {
+  return adjustment_;
+}
+
 static rtc_time rtctime_to_set{};
-void set_rtc_delayed(struct k_timer* dummy) {
-  if (!set_rtc(rtctime_to_set)) {
+static k_work_delayable rtc_set_work{};
+
+void set_rtc_delayed(struct k_work* work) {
+  if (!set_rtc(rtctime_to_set, false)) {
     LOG_ERR("Failed to set RTC");
+    adjustment_ = -600000;
   }
 }
 
-K_TIMER_DEFINE(rtc_set_timer, set_rtc_delayed, NULL);
 
 time_t rtc_time_to_time(rtc_time rtctime, bool include_millis) {
   time_t time = timeutil_timegm(rtc_time_to_tm(&rtctime));
@@ -35,7 +41,7 @@ time_t rtc_time_to_time(rtc_time rtctime, bool include_millis) {
   return result;
 }
 
-bool set_rtc(rtc_time& rtctime) {
+bool set_rtc(rtc_time& rtctime, bool do_set_clock) {
   if (rtctime.tm_nsec == 0) {
     auto ret = rtc_set_time(rtc, &rtctime);
     if (ret < 0) {
@@ -47,16 +53,32 @@ bool set_rtc(rtc_time& rtctime) {
     rtctime_to_set = rtctime;
     rtctime_to_set.tm_sec += 1;
     rtctime_to_set.tm_nsec = 0;
-    auto delay = 1000 - rtctime.tm_nsec / 1000000;
-    k_timer_start(&rtc_set_timer, K_MSEC(delay), K_NO_WAIT);
+    if (rtctime_to_set.tm_sec > 59) {
+      rtctime_to_set.tm_min += 1;
+      rtctime_to_set.tm_sec = 0;
+    }
+    if (rtctime_to_set.tm_min > 59) {
+      rtctime_to_set.tm_hour += 1;
+      rtctime_to_set.tm_min = 0;
+    }
+    auto delay = 1000 - (rtctime.tm_nsec / 1000000);
+    if (delay > 20) {
+      // Deduct some time to compensate for delay in 
+      // rtc setting and getting
+      delay -= 10;
+    }
+    k_work_schedule(&rtc_set_work, K_MSEC(delay));
   }
-  set_clock(rtctime);
+  if (do_set_clock) {
+    set_clock(rtctime);
+  }
   return true;
 }
 
 void set_clock(Time time) {
   clock_set_at_ = k_uptime_get();
   uptime_offset_ = time - clock_set_at_;
+  adjustment_ = 0;
 }
 
 void set_clock(rtc_time& rtctime) {
@@ -70,7 +92,7 @@ bool set_clock_from_rtc(bool exact) {
     LOG_ERR("Failed to get RTC time: %d", ret);
     return false;
   }
-  if (exact) {
+  if (exact && (rtctime.tm_nsec == 0)) {
     auto secs = rtctime.tm_sec;
     while (rtctime.tm_sec == secs) {
       ret = rtc_get_time(rtc, &rtctime);
@@ -78,7 +100,7 @@ bool set_clock_from_rtc(bool exact) {
         LOG_ERR("Failed to get RTC time: %d", ret);
         return false;
       }
-      k_msleep(1);
+      k_msleep(5);
     }
   }
   set_clock(rtctime);
@@ -86,14 +108,25 @@ bool set_clock_from_rtc(bool exact) {
 }
 
 void adjust_clock(Time time) {
+  static int drift_dir = 0;
   auto offset = time - k_uptime_get();
   if (offset > uptime_offset_) {
-    uptime_offset_ += 1;
-    adjustment_ += 1;
+    if (drift_dir < 60) {
+      drift_dir += 1;
+    }
+    if (drift_dir > 0) {
+      uptime_offset_ += 1;
+      adjustment_ += 1;
+    }
   }
   else if (offset < uptime_offset_) {
-    uptime_offset_ -= 1;
-    adjustment_ -= 1;
+    if (drift_dir > -60) {
+      drift_dir -= 1;
+    }
+    if (drift_dir < 0) {
+      uptime_offset_ -= 1;
+      adjustment_ -= 1;
+    }
   }
 }
 
@@ -119,7 +152,7 @@ void adjust_clock_from_rtc() {
     static Time last_time_from_rtc = 0;
     Time time_from_rtc = rtc_time_to_time(rtctime, false);
     // Do this on each minute mark only and when we ticked exactly 1 second
-    if ((rtctime.tm_sec == 0) && ((time_from_rtc - last_time_from_rtc) == second)) {
+    if ((rtctime.tm_sec == 0) && ((time_from_rtc - last_time_from_rtc) == 1_s)) {
       adjust_clock(time_from_rtc);
     }
     last_time_from_rtc = time_from_rtc;
@@ -162,6 +195,8 @@ void initialize_clock() {
   if (!device_is_ready(rtc)) {
     error(2, "RTC not ready.");
   }
+
+  k_work_init_delayable(&rtc_set_work, &set_rtc_delayed);
 
   set_clock_from_rtc(true);
 }

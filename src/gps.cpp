@@ -26,7 +26,7 @@ static navigation_data data_{};
 static bool has_fix_ = false;
 static Time data_time_ = 0;
 
-constexpr int gps_reception_delay = 250000000;
+constexpr int gps_reception_delay = 200_rtcms;
 
 static void handle_gnss_data(device const* dev, gnss_data const* data) {
   static int time_set_day = 0;

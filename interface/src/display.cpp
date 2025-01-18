@@ -47,15 +47,17 @@ static lv_obj_t* create_label(lv_obj_t* parent, lv_align_t align, lv_font_t cons
 
 void display_show_sensor_value(sensor_value value) {
   static lv_obj_t *label = create_label(lv_scr_act(), LV_ALIGN_CENTER, &font_14);
-  char value_str[16];
+  static char value_str[16];
   snprintf(value_str, sizeof(value_str), "%d", value.val1);
-
-  lv_label_set_text(label, value_str);
+  lv_label_set_text_static(label, value_str);
 }
 
 void display_show_message(char const* msg) {
   static lv_obj_t *label = create_label(lv_scr_act(), LV_ALIGN_BOTTOM_MID, &font_14);
-  lv_label_set_text(label, msg);
+  static char label_text[32];
+  strncpy(label_text, msg, 32);
+  label_text[31] = '\0';
+  lv_label_set_text_static(label, label_text);
 }
 
 void display_set_backlight(uint8_t brightness) {
