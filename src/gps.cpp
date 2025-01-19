@@ -36,15 +36,15 @@ static void handle_gnss_data(device const* dev, gnss_data const* data) {
   if (has_fix_) {
     auto const& utc = data->utc;
     auto seconds = utc.millisecond / 1000;
-    auto nanos = (utc.millisecond % 1000) * 1000000;
-    // Do clock setting and adjusting only on the minute mark
-    if (seconds == 0 && nanos == 0) {
+    // auto nanos = (utc.millisecond % 1000) * 1000000;
+    //  Do clock setting and adjusting only on 10s boundaries
+    if ((seconds % 10) == 0) {
       // The GPS data can have between a 50ms to 400ms delay to be received.
       // We'd need to generate an interrupt from the GPS PPS signal to do better.
       // The PPS is not broken out on the board we have unfortunately.
       // We'll guess a 250ms reception delay
       rtc_time gpstime = {
-          .tm_sec = 0,
+          .tm_sec = seconds,
           .tm_min = utc.minute,
           .tm_hour = utc.hour,
           .tm_mday = utc.month_day,

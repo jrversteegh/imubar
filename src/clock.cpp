@@ -63,7 +63,7 @@ bool set_rtc(rtc_time& rtctime, bool do_set_clock) {
     }
     auto delay = 1000 - (rtctime.tm_nsec / 1000000);
     if (delay > 20) {
-      // Deduct some time to compensate for delay in 
+      // Deduct some time to compensate for delay in
       // rtc setting and getting
       delay -= 10;
     }
@@ -151,8 +151,8 @@ void adjust_clock_from_rtc() {
     }
     static Time last_time_from_rtc = 0;
     Time time_from_rtc = rtc_time_to_time(rtctime, false);
-    // Do this on each minute mark only and when we ticked exactly 1 second
-    if ((rtctime.tm_sec == 0) && ((time_from_rtc - last_time_from_rtc) == 1_s)) {
+    // Do this each on each 10s mark only and when we ticked exactly 1 second
+    if (((rtctime.tm_sec % 10) == 0) && ((time_from_rtc - last_time_from_rtc) == 1_s)) {
       adjust_clock(time_from_rtc);
     }
     last_time_from_rtc = time_from_rtc;
