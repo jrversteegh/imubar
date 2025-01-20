@@ -3,13 +3,19 @@
 
 #include <zephyr/drivers/sensor.h>
 
-extern void display_set_backlight(uint8_t brightness);
-extern void display_update_backlight();
-extern void display_update();
-extern void display_show_sensor_value(sensor_value value);
-extern void display_show_message(char const* msg);
-extern void display_init();
+namespace imubar {
+namespace display {
+
+extern void set_backlight(uint8_t brightness);
+extern void update_backlight();
+extern void update();
+extern void show_sensor_value(sensor_value value);
+extern void show_message(char const* msg);
+extern void initialize();
 
 extern void display_test();
+
+}  // namespace display
+}  // namespace imubar
 
 #endif
