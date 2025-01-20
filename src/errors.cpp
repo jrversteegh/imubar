@@ -1,5 +1,3 @@
-#include <zephyr/sys/reboot.h>
-
 #include "errors.h"
 
 void halt_or_reboot() {

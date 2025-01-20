@@ -6,6 +6,12 @@
 
 #include "types.h"
 
-extern void initialize_storage();
+namespace imubar {
+namespace storage {
+
+extern void initialize();
+
+} // namespace storage
+} // namespace imubar
 
 #endif

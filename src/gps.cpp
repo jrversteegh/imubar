@@ -1,19 +1,19 @@
-#include "gps.h"
-#include "clock.h"
-#include "errors.h"
-
 #include <zephyr/drivers/gnss.h>
 #include <zephyr/drivers/rtc.h>
 #include <zephyr/drivers/uart.h>
 #include <zephyr/logging/log.h>
-#include <zephyr/sys/timeutil.h>
 
-#include <time.h>
+#include "clock.h"
+#include "errors.h"
+#include "gps.h"
 
 #define UART_GNSS DT_ALIAS(uartgnss)
 #define GNSS_0 DT_NODELABEL(gnss_0)
 
 LOG_MODULE_DECLARE(imubar);
+
+namespace imubar {
+namespace gnss {
 
 static constexpr char const* mtk_only_rmcgga_and_baud_115200 =
     "$PMTK314,0,1,0,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0*28\r\n"
@@ -30,7 +30,7 @@ constexpr int gps_reception_delay = 200_rtcms;
 
 static void handle_gnss_data(device const* dev, gnss_data const* data) {
   static int time_set_day = 0;
-  data_time_ = get_time();
+  data_time_ = clock::get_time();
   data_ = data->nav_data;
   has_fix_ = data->info.fix_status > 0;
   if (has_fix_) {
@@ -56,12 +56,12 @@ static void handle_gnss_data(device const* dev, gnss_data const* data) {
           .tm_nsec = gps_reception_delay,
       };
       if (utc.month_day != time_set_day) {
-        if (set_rtc(gpstime)) {
+        if (clock::set_rtc(gpstime)) {
           time_set_day = utc.month_day;
         }
       }
       else {
-        adjust_clock(gpstime);
+        clock::adjust(gpstime);
       }
     }
   }
@@ -69,15 +69,13 @@ static void handle_gnss_data(device const* dev, gnss_data const* data) {
 
 GNSS_DATA_CALLBACK_DEFINE(gnss_, handle_gnss_data);
 
-namespace gnss {
-
 bool has_fix() {
   return has_fix_;
 }
 
 bool has_data() {
   // Whether we have received data in the last 10 seconds
-  return (get_time() - data_time_) < (10 * clock_scaler);
+  return (clock::get_time() - data_time_) < (10 * clock_scaler);
 }
 
 Position get_position() {
@@ -88,9 +86,8 @@ Velocity get_velocity() {
   return Velocity(data_.speed, 1E-3 * data_.bearing);
 }
 
-} // namespace gnss
 
-void initialize_gnss() {
+void initialize() {
   if (!device_is_ready(gnss_)) {
     error(2, "GNSS not ready.");
   }
@@ -116,3 +113,6 @@ void initialize_gnss() {
     error(2, "Failed to set GNSS uart config.");
   }
 }
+
+} // namespace gnss
+} // namespace imubar

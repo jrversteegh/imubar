@@ -3,13 +3,17 @@
 
 #include "types.h"
 
-extern void initialize_gnss();
+namespace imubar {
 
 namespace gnss {
+
+extern void initialize();
 extern bool has_fix();
 extern bool has_data();
 extern Position get_position();
 extern Velocity get_velocity();
+
 } // namespace gnss
+} // namespace imubar
 
 #endif

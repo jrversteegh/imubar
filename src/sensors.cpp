@@ -32,6 +32,9 @@ LOG_MODULE_DECLARE(imubar);
 #define ICM20948_0 DT_NODELABEL(icm20948_0)
 #define H3LIS331DL_0 DT_NODELABEL(h3lis331dl_0)
 
+namespace imubar {
+namespace sensors {
+
 static device const* const imu_mpu9250 = DEVICE_DT_GET(MPU9250_0);
 static device const* const imu_fxos8700 = DEVICE_DT_GET(FXOS8700_0);
 static device const* const imu_fxas21002 = DEVICE_DT_GET(FXAS21002_0);
@@ -68,7 +71,7 @@ inline double sensor_value_to<double>(sensor_value const& value) {
   return sensor_value_to_double(&value);
 }
 
-std::vector<device const*> get_sensors() {
+std::vector<device const*> get() {
   return {
       imu_mpu9250,
       imu_fxos8700,
@@ -82,7 +85,7 @@ std::vector<device const*> get_sensors() {
   };
 }
 
-int fetch_sensor(device const* sensor, sensor_channel channel) {
+int fetch(device const* sensor, sensor_channel channel) {
   if (sensor == nullptr)
     return 0;
   auto ret = sensor_sample_fetch_chan(sensor, channel);
@@ -98,7 +101,7 @@ int fetch_sensor(device const* sensor, sensor_channel channel) {
   return ret;
 }
 
-Number read_sensor(device const* sensor, sensor_channel channel) {
+Number read(device const* sensor, sensor_channel channel) {
   if (sensor == nullptr)
     return Number{};
   struct sensor_value value;
@@ -112,7 +115,7 @@ Number read_sensor(device const* sensor, sensor_channel channel) {
   return sensor_value_to<decltype(result)>(value);
 }
 
-Vector3 read_sensor_vector(device const* sensor, sensor_channel channel) {
+Vector3 read_vector(device const* sensor, sensor_channel channel) {
   if (sensor == nullptr)
     return Vector3{};
   struct sensor_value values[3];
@@ -130,7 +133,7 @@ Vector3 read_sensor_vector(device const* sensor, sensor_channel channel) {
   return result;
 }
 
-void initialize_sensors() {
+void initialize() {
   // I2C Bus 0
   if (!device_is_ready(imu_mpu9250)) {
     error(2, "MPU9250 9dof not ready.");
@@ -167,7 +170,7 @@ void initialize_sensors() {
   if (!device_is_ready(env_bmp180)) {
     error(2, "BMP180 pressure not ready.");
   }
-  fetch_sensor(env_bmp180, SENSOR_CHAN_ALL);
+  fetch(env_bmp180, SENSOR_CHAN_ALL);
 
   // I2C Bus 1
   if (!device_is_ready(imu_hmc5883l)) {
@@ -182,7 +185,7 @@ void initialize_sensors() {
   if (!device_is_ready(env_bmp085)) {
     error(2, "BMP085 pressure not ready.");
   }
-  fetch_sensor(env_bmp085, SENSOR_CHAN_ALL);
+  fetch(env_bmp085, SENSOR_CHAN_ALL);
   if (!device_is_ready(imu_icm20948)) {
     error(2, "ICM20948 9dof not ready.");
   }
@@ -236,3 +239,6 @@ std::vector<std::unique_ptr<Env>>& get_envs_bus1() {
   }
   return envs;
 }
+
+} // namespace sensors
+} // namespace imubar

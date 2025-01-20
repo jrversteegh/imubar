@@ -11,33 +11,39 @@ LOG_MODULE_DECLARE(imubar);
 #define INTERFACE_UART DT_ALIAS(uartinterface)
 #endif
 
+namespace imubar {
+namespace interface {
+
 static device const* const interface_uart = DEVICE_DT_GET(INTERFACE_UART);
 
 RING_BUF_DECLARE(interface_input, 256);
 RING_BUF_DECLARE(interface_output, 256);
 
-static UartData uart_data{&interface_input, &interface_output, "INTERFACE_UART"};
+static serial::UartData uart_data{&interface_input, &interface_output, "INTERFACE_UART"};
 
-static constexpr char const* const ping = "INTFPING\r\n";
-static constexpr char const* const pong = "INTFPONG\r\n";
+static constexpr char const* const ping_ = "INTFPING\r\n";
+static constexpr char const* const pong_ = "INTFPONG\r\n";
+static constexpr char const* const init_ = "INTFINIT\r\n";
 
-int interface_write(uint8_t const* data, size_t size) {
-  return serial_write(interface_uart, data, size, &uart_data);
+int write(uint8_t const* data, size_t size) {
+  return serial::write(interface_uart, data, size, &uart_data);
 }
 
-int interface_read(uint8_t* data, size_t size) {
-  return serial_read(interface_uart, data, size, &uart_data);
+int read(uint8_t* data, size_t size) {
+  return serial::read(interface_uart, data, size, &uart_data);
 }
 
-void interface_ping() {
-  static int const ping_len = strlen(ping);
-  interface_write((uint8_t*)ping, ping_len);
+void ping() {
+  write((uint8_t*)ping_, strlen(ping_));
 }
 
-void interface_init() {
-  if (!serial_init(interface_uart, &uart_data)) {
+void initialize() {
+  if (!serial::initialize(interface_uart, &uart_data)) {
     error(2, "Interface UART not ready.");
   }
 
-  serial_write(interface_uart, (uint8_t*)"\r\nINTFINIT\r\n", 12, &uart_data);
+  serial::write(interface_uart, (uint8_t*)init_, strlen(init_), &uart_data);
 }
+
+} // namespace interface
+} // namespace imubar

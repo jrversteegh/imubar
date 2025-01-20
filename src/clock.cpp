@@ -1,15 +1,17 @@
-#include <time.h>
-#include <zephyr/kernel.h>
-#include <zephyr/logging/log.h>
-#include <zephyr/sys/timeutil.h>
-
 #include "clock.h"
 #include "errors.h"
 #include "gps.h"
 
+#include <zephyr/logging/log.h>
+#include <zephyr/sys/timeutil.h>
+
+
 LOG_MODULE_DECLARE(imubar);
 
 #define RTC_0 DT_NODELABEL(rtc_0)
+
+namespace imubar {
+namespace clock {
 
 static device const* const rtc = DEVICE_DT_GET(RTC_0);
 
@@ -17,7 +19,8 @@ static Time uptime_offset_ = 0;
 static Time clock_set_at_ = 0;
 static int32_t adjustment_ = 0;
 
-int32_t get_clock_adjustment() {
+
+int32_t get_adjustment() {
   return adjustment_;
 }
 
@@ -31,8 +34,7 @@ void set_rtc_delayed(struct k_work* work) {
   }
 }
 
-
-time_t rtc_time_to_time(rtc_time rtctime, bool include_millis) {
+Time rtc_time_to_time(rtc_time rtctime, bool include_millis) {
   time_t time = timeutil_timegm(rtc_time_to_tm(&rtctime));
   auto result = clock_scaler * time;
   if (include_millis) {
@@ -41,8 +43,9 @@ time_t rtc_time_to_time(rtc_time rtctime, bool include_millis) {
   return result;
 }
 
-bool set_rtc(rtc_time& rtctime, bool do_set_clock) {
-  if (rtctime.tm_nsec == 0) {
+bool set_rtc(rtc_time& rtctime, bool set_clock) {
+  auto delay = 1000 - (rtctime.tm_nsec / 1000000) - 10;
+  if (rtctime.tm_nsec == 0 || delay <= 0) {
     auto ret = rtc_set_time(rtc, &rtctime);
     if (ret < 0) {
       LOG_ERR("Failed to set RTC clock");
@@ -61,31 +64,25 @@ bool set_rtc(rtc_time& rtctime, bool do_set_clock) {
       rtctime_to_set.tm_hour += 1;
       rtctime_to_set.tm_min = 0;
     }
-    auto delay = 1000 - (rtctime.tm_nsec / 1000000);
-    if (delay > 20) {
-      // Deduct some time to compensate for delay in
-      // rtc setting and getting
-      delay -= 10;
-    }
     k_work_schedule(&rtc_set_work, K_MSEC(delay));
   }
-  if (do_set_clock) {
-    set_clock(rtctime);
+  if (set_clock) {
+    set(rtctime);
   }
   return true;
 }
 
-void set_clock(Time time) {
+void set(Time time) {
   clock_set_at_ = k_uptime_get();
   uptime_offset_ = time - clock_set_at_;
   adjustment_ = 0;
 }
 
-void set_clock(rtc_time& rtctime) {
-  set_clock(rtc_time_to_time(rtctime));
+void set(rtc_time& rtctime) {
+  set(rtc_time_to_time(rtctime));
 }
 
-bool set_clock_from_rtc(bool exact) {
+bool set_from_rtc(bool exact) {
   rtc_time rtctime;
   auto ret = rtc_get_time(rtc, &rtctime);
   if (ret < 0) {
@@ -103,11 +100,11 @@ bool set_clock_from_rtc(bool exact) {
       k_msleep(5);
     }
   }
-  set_clock(rtctime);
+  set(rtctime);
   return true;
 }
 
-void adjust_clock(Time time) {
+void adjust(Time time) {
   static int drift_dir = 0;
   auto offset = time - k_uptime_get();
   if (offset > uptime_offset_) {
@@ -130,8 +127,8 @@ void adjust_clock(Time time) {
   }
 }
 
-void adjust_clock(rtc_time& rtctime) {
-  adjust_clock(rtc_time_to_time(rtctime));
+void adjust(rtc_time& rtctime) {
+  adjust(rtc_time_to_time(rtctime));
 }
 
 /**
@@ -139,7 +136,7 @@ void adjust_clock(rtc_time& rtctime) {
  * because the RTC only has 1 second resolution and so we'll need
  * to poll the rtc often to get close to the second increment
  */
-void adjust_clock_from_rtc() {
+void adjust_from_rtc() {
   // Only do any of this if there's no GPS fix.
   // When there is, the GPS will sync the clock
   if (!gnss::has_fix()) {
@@ -153,7 +150,7 @@ void adjust_clock_from_rtc() {
     Time time_from_rtc = rtc_time_to_time(rtctime, false);
     // Do this each on each 10s mark only and when we ticked exactly 1 second
     if (((rtctime.tm_sec % 10) == 0) && ((time_from_rtc - last_time_from_rtc) == 1_s)) {
-      adjust_clock(time_from_rtc);
+      adjust(time_from_rtc);
     }
     last_time_from_rtc = time_from_rtc;
   }
@@ -191,12 +188,16 @@ std::string get_time_str(bool include_date) {
   return result;
 }
 
-void initialize_clock() {
+void initialize() {
   if (!device_is_ready(rtc)) {
     error(2, "RTC not ready.");
   }
 
   k_work_init_delayable(&rtc_set_work, &set_rtc_delayed);
 
-  set_clock_from_rtc(true);
+  set_from_rtc(true);
 }
+
+
+} // namespace clock
+} // namespace imubar

@@ -2,7 +2,8 @@
 #define IMUBAR_TYPES_H__
 
 #include <cstdint>
-#include <time.h>
+
+namespace imubar {
 
 using Number = float;
 using Time = int64_t;
@@ -46,5 +47,7 @@ struct Velocity {
   Number speed;
   Number bearing;
 };
+
+} // namespace imubar
 
 #endif

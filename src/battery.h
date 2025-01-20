@@ -1,7 +1,13 @@
 #ifndef IMUBAR_BATTERY_H__
 #define IMUBAR_BATTERY_H__
 
-extern void initialize_battery();
-extern float check_battery();
+namespace imubar {
+namespace battery {
+
+extern void initialize();
+extern float check();
+
+} // namespace battery
+} // namespace imubar
 
 #endif

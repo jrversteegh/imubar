@@ -11,18 +11,21 @@
 #include "functions.h"
 #include "types.h"
 
-extern void initialize_sensors();
-extern std::vector<device const*> get_sensors();
-extern int fetch_sensor(device const* sensor, sensor_channel channel = SENSOR_CHAN_ALL);
-extern Number read_sensor(device const* sensor, sensor_channel channel);
-extern Vector3 read_sensor_vector(device const* sensor, sensor_channel channel);
+namespace imubar {
+namespace sensors {
+
+extern void initialize();
+extern std::vector<device const*> get();
+extern int fetch(device const* sensor, sensor_channel channel = SENSOR_CHAN_ALL);
+extern Number read(device const* sensor, sensor_channel channel);
+extern Vector3 read_vector(device const* sensor, sensor_channel channel);
 
 struct Sensor {
   Sensor(std::string const name) : name_(name) {}
 
-  int fetch_sensor_with_error_count(device const* sensor, sensor_channel channel) {
+  int fetch_with_error_count(device const* sensor, sensor_channel channel) {
     int ret = 0;
-    if ((ret = fetch_sensor(sensor, channel)) < 0) {
+    if ((ret = fetch(sensor, channel)) < 0) {
       ++error_counter_;
       if (error_counter_ > 10) {
         error(2, "Permanent failure fetching from device: %s, code %d", name_.c_str(), ret);
@@ -65,28 +68,28 @@ struct Imu : Sensor {
   }
 
   Time fetch() {
-    fetch_sensor_with_error_count(accel_device_, accel_channel_);
+    fetch_with_error_count(accel_device_, accel_channel_);
     if (fetch_gyro_) {
-      fetch_sensor_with_error_count(gyro_device_, gyro_channel_);
+      fetch_with_error_count(gyro_device_, gyro_channel_);
     }
     if (fetch_magn_ && (fetch_counter_ % magn_rate_divisor_ == 0)) {
-      fetch_sensor_with_error_count(magn_device_, magn_channel_);
+      fetch_with_error_count(magn_device_, magn_channel_);
     }
-    time_ = ::get_time();
+    time_ = clock::get_time();
     ++fetch_counter_;
     return time_;
   }
 
   Vector3 get_acceleration() {
-    return read_sensor_vector(accel_device_, SENSOR_CHAN_ACCEL_XYZ);
+    return read_vector(accel_device_, SENSOR_CHAN_ACCEL_XYZ);
   }
 
   Vector3 get_rotation() {
-    return read_sensor_vector(gyro_device_, SENSOR_CHAN_GYRO_XYZ);
+    return read_vector(gyro_device_, SENSOR_CHAN_GYRO_XYZ);
   }
 
   Vector3 get_magfield() {
-    return read_sensor_vector(magn_device_, SENSOR_CHAN_MAGN_XYZ);
+    return read_vector(magn_device_, SENSOR_CHAN_MAGN_XYZ);
   }
 
   Time get_time() {
@@ -114,18 +117,18 @@ struct Env : Sensor {
       : Sensor(name), press_device_(press_device) {}
 
   Time fetch() {
-    fetch_sensor_with_error_count(press_device_, press_channel_);
-    time_ = ::get_time();
+    fetch_with_error_count(press_device_, press_channel_);
+    time_ = clock::get_time();
     ++fetch_counter_;
     return time_;
   }
 
   Number get_temperature() {
-    return read_sensor(press_device_, SENSOR_CHAN_AMBIENT_TEMP);
+    return read(press_device_, SENSOR_CHAN_AMBIENT_TEMP);
   }
 
   Number get_pressure() {
-    return read_sensor(press_device_, SENSOR_CHAN_PRESS);
+    return read(press_device_, SENSOR_CHAN_PRESS);
   }
 
   Time get_time() {
@@ -143,5 +146,8 @@ extern std::vector<std::unique_ptr<Imu>>& get_imus_bus0();
 extern std::vector<std::unique_ptr<Imu>>& get_imus_bus1();
 extern std::vector<std::unique_ptr<Env>>& get_envs_bus0();
 extern std::vector<std::unique_ptr<Env>>& get_envs_bus1();
+
+} // namespace sensors
+} // namespace imubar
 
 #endif

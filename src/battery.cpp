@@ -21,11 +21,16 @@ LOG_MODULE_DECLARE(imubar);
 #error "Power off switch gpio output not properly defined."
 #endif
 
+namespace imubar {
+
 static constexpr float battery_level_multiplier = 0.002025;
+
+namespace battery {
+
 static const struct adc_dt_spec battery = ADC_DT_SPEC_GET(BATTERY);
 static const struct gpio_dt_spec off_switch = GPIO_DT_SPEC_GET(OFF_SWITCH, gpios);
 
-static float get_battery_level() {
+static float get_level() {
   uint16_t sample;
   struct adc_sequence sequence = {
       .options = nullptr,
@@ -75,8 +80,8 @@ static void switch_off() {
   LOG_INF("Switch off ineffective...");
 }
 
-float check_battery() {
-  auto battery_level = get_battery_level();
+float check() {
+  auto battery_level = get_level();
   if (battery_level < 3.45f) {
     LOG_WRN("%.2f V. Low Battery!", (double)battery_level);
     k_msleep(500);
@@ -88,7 +93,7 @@ float check_battery() {
   return battery_level;
 }
 
-void initialize_battery() {
+void initialize() {
   if (!adc_is_ready_dt(&battery)) {
     error(2, "ADC device for battery level not ready");
   }
@@ -100,7 +105,7 @@ void initialize_battery() {
 
   // Initialize adc and mean value for battery voltage
   for (int i = 0; i < 100; ++i) {
-    get_battery_level();
+    get_level();
     k_msleep(5);
   }
 
@@ -113,3 +118,6 @@ void initialize_battery() {
     error(2, "Failed to configure offswitch to disconnected");
   }
 }
+
+} // namespace battery
+} // namespace imubar

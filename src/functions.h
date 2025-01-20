@@ -6,6 +6,8 @@
 
 #include "types.h"
 
+namespace imubar {
+
 static constexpr Number pi = std::numbers::pi_v<Number>;
 
 inline Number angle_mod(Number const angle) {
@@ -23,5 +25,7 @@ inline Number angle_mod_signed(Number const angle) {
 inline Number angle_diff(Number const angle1, Number const angle2) {
   return angle_mod_signed(angle1 - angle2);
 }
+
+} // namespace imubar
 
 #endif

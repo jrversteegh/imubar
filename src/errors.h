@@ -2,7 +2,7 @@
 #define IMUBAR_ERRORS_H__
 
 #include <zephyr/kernel.h>
-#include <zephyr/sys/printk.h>
+#include <zephyr/sys/reboot.h>
 
 // We don't have user input so OK with non literal format strings
 #pragma GCC diagnostic ignored "-Wformat-security"

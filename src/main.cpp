@@ -23,6 +23,8 @@ LOG_MODULE_REGISTER(imubar);
 #include "storage.h"
 #include "work.h"
 
+using namespace imubar;
+
 static const struct gpio_dt_spec led = GPIO_DT_SPEC_GET(DT_ALIAS(led0), gpios);
 
 void fetch_envs(auto& envs) {
@@ -32,12 +34,12 @@ void fetch_envs(auto& envs) {
 }
 
 void fetch_envs_bus0() {
-  auto& envs = get_envs_bus0();
+  auto& envs = sensors::get_envs_bus0();
   fetch_envs(envs);
 }
 
 void fetch_envs_bus1() {
-  auto& envs = get_envs_bus1();
+  auto& envs = sensors::get_envs_bus1();
   fetch_envs(envs);
 }
 
@@ -57,12 +59,12 @@ void read_envs(auto& envs, bool print) {
 }
 
 void read_envs_bus0(bool print) {
-  auto& envs = get_envs_bus0();
+  auto& envs = sensors::get_envs_bus0();
   read_envs(envs, print);
 }
 
 void read_envs_bus1(bool print) {
-  auto& envs = get_envs_bus1();
+  auto& envs = sensors::get_envs_bus1();
   read_envs(envs, print);
 }
 
@@ -99,12 +101,12 @@ void read_imus(auto& imus, bool print) {
 }
 
 void read_imus_bus0(bool print) {
-  auto& imus = get_imus_bus0();
+  auto& imus = sensors::get_imus_bus0();
   read_imus(imus, print);
 }
 
 void read_imus_bus1(bool print) {
-  auto& imus = get_imus_bus1();
+  auto& imus = sensors::get_imus_bus1();
   read_imus(imus, print);
 }
 
@@ -187,13 +189,13 @@ K_THREAD_DEFINE(bus1_thread, 2048, bus1_loop, NULL, NULL, NULL, -1, K_FP_REGS, 1
 
 int main(void) {
   LOG_INF("IMUBar initializing...");
-  initialize_clock();
   initialize_led();
-  initialize_storage();
-  initialize_gnss();
-  interface_init();
-  initialize_sensors();
-  initialize_battery();
+  clock::initialize();
+  storage::initialize();
+  gnss::initialize();
+  interface::initialize();
+  sensors::initialize();
+  battery::initialize();
 
   LOG_INF("IMUBar running...");
   int i = 0;
@@ -202,7 +204,7 @@ int main(void) {
   int64_t sum_rem = 0;
   char msg[16];
   while (true) {
-    auto [time, uptime] = get_time_and_uptime();
+    auto [time, uptime] = clock::get_time_and_uptime();
     loop_time += 10;
     auto rem = loop_time - uptime;
     if (rem > 0) {
@@ -223,9 +225,9 @@ int main(void) {
 
       switch (sec % 4) {
         case 0: {
-          auto time_str = get_time_str();
+          auto time_str = clock::get_time_str();
           LOG_INF("%s", time_str.c_str());
-          interface_write((uint8_t*)time_str.c_str(), time_str.length());
+          interface::write((uint8_t*)time_str.c_str(), time_str.length());
         } break;
         case 1: {
           char has_data = gnss::has_data() ? 'T' : 'F';
@@ -240,23 +242,23 @@ int main(void) {
               (double)pos.lat(),
               (double)pos.lon());
           LOG_INF("%s", msg);
-          interface_write((uint8_t*)msg, strlen(msg));
+          interface::write((uint8_t*)msg, strlen(msg));
         } break;
         case 2: {
-          auto battery_level = check_battery();
+          auto battery_level = battery::check();
           snprintf(msg, 16, "Batt %.2f V", (double)battery_level);
           LOG_INF("%s", msg);
-          interface_write((uint8_t*)msg, strlen(msg));
+          interface::write((uint8_t*)msg, strlen(msg));
         } break;
         case 3: {
-          auto adjustment = get_clock_adjustment();
+          auto adjustment = clock::get_adjustment();
           snprintf(msg, 16, "Adj %d ms", adjustment);
           LOG_INF("%s", msg);
-          interface_write((uint8_t*)msg, strlen(msg));
+          interface::write((uint8_t*)msg, strlen(msg));
         } break;
       }
     }
-    adjust_clock_from_rtc();
+    clock::adjust_from_rtc();
     ++i;
   }
 
