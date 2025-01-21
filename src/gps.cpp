@@ -29,7 +29,7 @@ static Time data_time_ = 0;
 constexpr int gps_reception_delay = 200_rtcms;
 
 static void handle_gnss_data(device const* dev, gnss_data const* data) {
-  static int time_set_day = 0;
+  static int time_set_day = -1;
   data_time_ = clock::get_time();
   data_ = data->nav_data;
   has_fix_ = data->info.fix_status > 0;
@@ -56,12 +56,9 @@ static void handle_gnss_data(device const* dev, gnss_data const* data) {
           .tm_nsec = gps_reception_delay,
       };
       if (utc.month_day != time_set_day) {
-        if (clock::set_rtc(gpstime)) {
+        if (clock::set_rtc(gpstime, time_set_day < 0)) {
           time_set_day = utc.month_day;
         }
-      }
-      else {
-        clock::adjust(gpstime);
       }
     }
   }

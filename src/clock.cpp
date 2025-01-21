@@ -137,23 +137,19 @@ void adjust(rtc_time& rtctime) {
  * to poll the rtc often to get close to the second increment
  */
 void adjust_from_rtc() {
-  // Only do any of this if there's no GPS fix.
-  // When there is, the GPS will sync the clock
-  if (!gnss::has_fix()) {
-    rtc_time rtctime;
-    auto ret = rtc_get_time(rtc, &rtctime);
-    if (ret < 0) {
-      LOG_ERR("Failed to get RTC time: %d", ret);
-      return;
-    }
-    static Time last_time_from_rtc = 0;
-    Time time_from_rtc = rtc_time_to_time(rtctime, false);
-    // Do this each on each 10s mark only and when we ticked exactly 1 second
-    if (((rtctime.tm_sec % 10) == 0) && ((time_from_rtc - last_time_from_rtc) == 1_s)) {
-      adjust(time_from_rtc);
-    }
-    last_time_from_rtc = time_from_rtc;
+  rtc_time rtctime;
+  auto ret = rtc_get_time(rtc, &rtctime);
+  if (ret < 0) {
+    LOG_ERR("Failed to get RTC time: %d", ret);
+    return;
   }
+  static Time last_time_from_rtc = 0;
+  Time time_from_rtc = rtc_time_to_time(rtctime, false);
+  // Do this each on each 10s mark only and when we ticked exactly 1 second
+  if (((rtctime.tm_sec % 10) == 0) && ((time_from_rtc - last_time_from_rtc) == 1_s)) {
+    adjust(time_from_rtc);
+  }
+  last_time_from_rtc = time_from_rtc;
 }
 
 Time get_time() {
