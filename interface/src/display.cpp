@@ -26,6 +26,9 @@ LOG_MODULE_DECLARE(imubar);
 #define BACKLIGHT0_NODE DT_ALIAS(backlight0)
 #define LIGHT_SENSOR DT_NODELABEL(light_sensor)
 
+namespace imubar {
+namespace display {
+
 static const struct pwm_dt_spec backlight = PWM_DT_SPEC_GET(BACKLIGHT0_NODE);
 static const struct device *display_dev = DEVICE_DT_GET(DT_CHOSEN(zephyr_display));
 static const struct device *light_sensor = DEVICE_DT_GET(LIGHT_SENSOR);
@@ -45,14 +48,14 @@ static lv_obj_t* create_label(lv_obj_t* parent, lv_align_t align, lv_font_t cons
   return result;
 }
 
-void display_show_sensor_value(sensor_value value) {
+void show_sensor_value(sensor_value value) {
   static lv_obj_t *label = create_label(lv_scr_act(), LV_ALIGN_CENTER, &font_14);
   static char value_str[16];
   snprintf(value_str, sizeof(value_str), "%d", value.val1);
   lv_label_set_text_static(label, value_str);
 }
 
-void display_show_message(char const* msg) {
+void show_message(char const* msg) {
   static lv_obj_t *label = create_label(lv_scr_act(), LV_ALIGN_BOTTOM_MID, &font_14);
   static char label_text[32];
   strncpy(label_text, msg, 32);
@@ -60,12 +63,12 @@ void display_show_message(char const* msg) {
   lv_label_set_text_static(label, label_text);
 }
 
-void display_set_backlight(uint8_t brightness) {
+void set_backlight(uint8_t brightness) {
   pwm_set_dt(&backlight, 255000, 1000 * brightness);
 }
 
 
-void display_update_backlight() {
+void update_backlight() {
   auto ret = sensor_sample_fetch(light_sensor);
   if (ret < 0) {
     LOG_ERR("Failed to fetch light sensor sample");
@@ -78,24 +81,24 @@ void display_update_backlight() {
     return;
   }
   static int32_t light_value = 0;
-  display_show_sensor_value(value);
+  show_sensor_value(value);
   light_value = (light_value * 9 + value.val1) / 10;
   if (light_value > 1696) {
-    display_set_backlight(254);
+    set_backlight(254);
   }
   else if (light_value > 256) {
-    display_set_backlight(light_value / 8 + 42);
+    set_backlight(light_value / 8 + 42);
   }
   else {
-    display_set_backlight(light_value / 4 + 10);
+    set_backlight(light_value / 4 + 10);
   }
 }
 
-void display_update() {
+void update() {
   lv_task_handler();
 }
 
-void display_test() {
+void test() {
   static lv_style_t style1;
   static lv_style_t style2;
   static lv_style_t style3;
@@ -170,7 +173,7 @@ void display_test() {
   lv_obj_align_to(label6, label5, LV_ALIGN_OUT_BOTTOM_MID, 0, 0);
 }
 
-void display_init() {
+void initialize() {
   if (!device_is_ready(display_dev)) {
     error(2, "Display device not ready.");
   }
@@ -183,7 +186,10 @@ void display_init() {
     error(2, "Light sensor not ready.");
   }
 
-  display_show_message("No message");
+  show_message("No message");
 
   LOG_INF("Successful display init");
 }
+
+}  // namespace display
+}  // namespace imubar

@@ -4,6 +4,7 @@
 
 #include "display.h"
 #include "errors.h"
+#include "watchdog.h"
 #include "../../src/interface.h"
 
 LOG_MODULE_REGISTER(imubar);
@@ -24,13 +25,14 @@ void check_show_messages() {
   msg[size] = '\0';
   if (size > 0) {
     LOG_INF("Message: %s", msg);
-    display_show_message(msg);
+    display::show_message(msg);
   }
 }
 
 int main() {
   interface::initialize();
-  display_init();
+  display::initialize();
+  watchdog::initialize();
 
   if (!gpio_is_ready_dt(&led)) {
     LOG_ERR("Led0 not ready");
@@ -55,14 +57,15 @@ int main() {
       gpio_pin_toggle_dt(&led);
       LOG_DBG("... done");
       LOG_DBG("Update backlight...");
-      display_update_backlight();
+      display::update_backlight();
       LOG_DBG("... done");
     }
     if (i % 1000 == 0) {
       LOG_DBG("Ping");
       interface::ping();
     }
-    display_update();
+    display::update();
+    watchdog::feed();
     k_msleep(10);
   }
   return 0;

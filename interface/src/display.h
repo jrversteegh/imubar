@@ -13,7 +13,7 @@ extern void show_sensor_value(sensor_value value);
 extern void show_message(char const* msg);
 extern void initialize();
 
-extern void display_test();
+extern void test();
 
 }  // namespace display
 }  // namespace imubar
