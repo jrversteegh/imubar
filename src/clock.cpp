@@ -2,6 +2,7 @@
 #include "errors.h"
 #include "gps.h"
 
+#include <zephyr/kernel.h>
 #include <zephyr/logging/log.h>
 #include <zephyr/sys/timeutil.h>
 
@@ -25,9 +26,10 @@ int32_t get_adjustment() {
 }
 
 static rtc_time rtctime_to_set{};
-static k_work_delayable rtc_set_work{};
+static k_work_delayable rtc_set{};
+static k_work clock_update{};
 
-void set_rtc_delayed(struct k_work* work) {
+void set_rtc_delayed(k_work* work) {
   if (!set_rtc(rtctime_to_set, false)) {
     LOG_ERR("Failed to set RTC");
     adjustment_ = -600000;
@@ -64,7 +66,7 @@ bool set_rtc(rtc_time& rtctime, bool set_clock) {
       rtctime_to_set.tm_hour += 1;
       rtctime_to_set.tm_min = 0;
     }
-    k_work_schedule(&rtc_set_work, K_MSEC(delay));
+    k_work_schedule(&rtc_set, K_MSEC(delay));
   }
   if (set_clock) {
     set(rtctime);
@@ -106,8 +108,8 @@ bool set_from_rtc(bool exact) {
 
 void adjust(Time time) {
   static int drift_dir = 0;
-  auto offset = time - k_uptime_get();
-  if (offset > uptime_offset_) {
+  auto offset = time - get_time();
+  if (offset > 10) {
     if (drift_dir < 60) {
       drift_dir += 1;
     }
@@ -116,7 +118,7 @@ void adjust(Time time) {
       adjustment_ += 1;
     }
   }
-  else if (offset < uptime_offset_) {
+  else if (offset < -10) {
     if (drift_dir > -60) {
       drift_dir -= 1;
     }
@@ -131,12 +133,7 @@ void adjust(rtc_time& rtctime) {
   adjust(rtc_time_to_time(rtctime));
 }
 
-/**
- * Call multiple times a second to get accurate results. This is
- * because the RTC only has 1 second resolution and so we'll need
- * to poll the rtc often to get close to the second increment
- */
-void adjust_from_rtc() {
+static void update_clock(k_work* work) {
   rtc_time rtctime;
   auto ret = rtc_get_time(rtc, &rtctime);
   if (ret < 0) {
@@ -150,6 +147,15 @@ void adjust_from_rtc() {
     adjust(time_from_rtc);
   }
   last_time_from_rtc = time_from_rtc;
+}
+
+/**
+ * Call multiple times a second to get accurate results. This is
+ * because the RTC only has 1 second resolution and so we'll need
+ * to poll the rtc often to get close to the second increment
+ */
+void adjust_from_rtc() {
+  k_work_submit(&clock_update);
 }
 
 Time get_time() {
@@ -189,7 +195,8 @@ void initialize() {
     error(2, "RTC not ready.");
   }
 
-  k_work_init_delayable(&rtc_set_work, &set_rtc_delayed);
+  k_work_init_delayable(&rtc_set, &set_rtc_delayed);
+  k_work_init(&clock_update, &update_clock);
 
   set_from_rtc(true);
 }
