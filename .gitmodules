@@ -1,0 +1,3 @@
+[submodule "depends/attitude"]
+	path = depends/attitude
+	url = git@github.com:jrversteegh/attitude.git

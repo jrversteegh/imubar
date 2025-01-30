@@ -38,3 +38,36 @@ set(driver_sources
   drivers/sensor/st/h3lis331dl/h3lis331dl.c
 )
 target_sources(app PRIVATE ${app_sources} ${driver_sources})
+
+zephyr_get_include_directories_for_lang_as_string(       C includes)
+zephyr_get_system_include_directories_for_lang_as_string(C system_includes)
+zephyr_get_compile_definitions_for_lang_as_string(       C definitions)
+zephyr_get_compile_options_for_lang_as_string(           C options)
+
+if(DEFINED CMAKE_C_COMPILER_TARGET)
+  set(target_flag "--target=${CMAKE_C_COMPILER_TARGET}")
+endif()
+
+set(external_project_cflags
+  "${target_flag} ${includes} ${definitions} ${options} ${system_includes}"
+)
+
+include(ExternalProject)
+
+set(ATTITUDE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/depends/attitude)
+set(ATTITUDE_INCLUDE_DIR ${ATTITUDE_DIR}/include)
+set(ATTITUDE_BUILD_DIR ${CMAKE_CURRENT_BINARY_DIR}/attitude)
+
+ExternalProject_Add(
+  attitude
+  PREFIX ${ATTITUDE_BUILD_DIR}
+  SOURCE_DIR ${ATTITUDE_DIR}
+  CMAKE_ARGS ${CMAKE_FLAGS} --build
+)
+
+add_library(attitude_lib STATIC IMPORTED GLOBAL)
+add_dependencies(attitude_lib attitude)
+set_target_properties(attitude_lib PROPERTIES IMPORTED_LOCATION             ${ATTITUDE_BUILD_DIR}/libattitude.a)
+set_target_properties(attitude_lib PROPERTIES INTERFACE_INCLUDE_DIRECTORIES ${ATTITUDE_INCLUDE_DIR})
+
+target_link_libraries(app PUBLIC attitude_lib)
