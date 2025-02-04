@@ -39,35 +39,45 @@ set(driver_sources
 )
 target_sources(app PRIVATE ${app_sources} ${driver_sources})
 
-zephyr_get_include_directories_for_lang_as_string(       C includes)
-zephyr_get_system_include_directories_for_lang_as_string(C system_includes)
-zephyr_get_compile_definitions_for_lang_as_string(       C definitions)
-zephyr_get_compile_options_for_lang_as_string(           C options)
-
-if(DEFINED CMAKE_C_COMPILER_TARGET)
-  set(target_flag "--target=${CMAKE_C_COMPILER_TARGET}")
-endif()
-
-set(external_project_cflags
-  "${target_flag} ${includes} ${definitions} ${options} ${system_includes}"
-)
-
 include(ExternalProject)
 
 set(ATTITUDE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/depends/attitude)
 set(ATTITUDE_INCLUDE_DIR ${ATTITUDE_DIR}/include)
 set(ATTITUDE_BUILD_DIR ${CMAKE_CURRENT_BINARY_DIR}/attitude)
+set(ATTITUDE_LIB ${ATTITUDE_BUILD_DIR}/libattitude.a)
+
+zephyr_get_include_directories_for_lang_as_string(       CPP CXX_INCLUDES)
+zephyr_get_system_include_directories_for_lang_as_string(CPP CXX_SYSTEM_INCLUDES)
+zephyr_get_compile_definitions_for_lang_as_string(       CPP CXX_DEFINITIONS)
+zephyr_get_compile_options_for_lang_as_string(           CPP CXX_OPTIONS)
+
+
+message("Compiler: ${CMAKE_CXX_COMPILER}")
 
 ExternalProject_Add(
-  attitude
-  PREFIX ${ATTITUDE_BUILD_DIR}
+  attitude_src
   SOURCE_DIR ${ATTITUDE_DIR}
-  CMAKE_ARGS ${CMAKE_FLAGS} --build
+  PREFIX ${ATTITUDE_BUILD_DIR}
+  BINARY_DIR ${ATTITUDE_BUILD_DIR}
+  BUILD_BYPRODUCTS ${ATTITUDE_LIB}
+  CMAKE_ARGS 
+    -DCMAKE_TRY_COMPILE_TARGET_TYPE=STATIC_LIBRARY
+    -DCMAKE_SYSTEM_NAME=Generic
+    -DCMAKE_CROSSCOMPILING=1
+    -DCMAKE_C_COMPILER=${CMAKE_C_COMPILER}
+    -DCMAKE_C_COMPILER_WORKS=1
+    -DCMAKE_CXX_COMPILER=${CMAKE_CXX_COMPILER}
+    -DCMAKE_CXX_FLAGS=${CXX_OPTIONS}
+  INSTALL_COMMAND ""
 )
 
 add_library(attitude_lib STATIC IMPORTED GLOBAL)
-add_dependencies(attitude_lib attitude)
-set_target_properties(attitude_lib PROPERTIES IMPORTED_LOCATION             ${ATTITUDE_BUILD_DIR}/libattitude.a)
+add_dependencies(attitude_lib attitude_src)
+
+
+add_dependencies(app attitude_lib)
+set_target_properties(attitude_lib PROPERTIES IMPORTED_LOCATION             ${ATTITUDE_LIB}) 
 set_target_properties(attitude_lib PROPERTIES INTERFACE_INCLUDE_DIRECTORIES ${ATTITUDE_INCLUDE_DIR})
 
 target_link_libraries(app PUBLIC attitude_lib)
+target_include_directories(app PUBLIC ${ATTITUDE_INCLUDE_DIR})
