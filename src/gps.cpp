@@ -36,7 +36,9 @@ static void handle_gnss_data(device const* dev, gnss_data const* data) {
   if (has_fix_) {
     auto const& utc = data->utc;
     auto seconds = utc.millisecond / 1000;
-    // auto nanos = (utc.millisecond % 1000) * 1000000;
+    auto nanos = (utc.millisecond % 1000) * 1'000'000 + gps_reception_delay;
+    seconds += nanos / 1'000'000'000;
+    nanos = nanos % 1'000'000'000;
     //  Do clock setting and adjusting only on 10s boundaries
     if ((seconds % 10) == 0) {
       // The GPS data can have between a 50ms to 400ms delay to be received.
@@ -53,7 +55,7 @@ static void handle_gnss_data(device const* dev, gnss_data const* data) {
           .tm_wday = -1,
           .tm_yday = -1,
           .tm_isdst = false,
-          .tm_nsec = gps_reception_delay,
+          .tm_nsec = nanos,
       };
       if (utc.month_day != time_set_day) {
         if (clock::set_rtc(gpstime, time_set_day < 0)) {

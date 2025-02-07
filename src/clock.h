@@ -35,7 +35,7 @@ inline constexpr Time operator""_ms(unsigned long long int literal) {
   return literal;
 }
 inline constexpr int operator""_rtcms(unsigned long long int literal) {
-  return (literal % 1000) * 1000000;
+  return literal * 1'000'000;
 }
 
 } // namespace imubar
