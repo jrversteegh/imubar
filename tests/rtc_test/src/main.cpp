@@ -90,10 +90,10 @@ int main() {
   k_msleep(1500);
   rtc_time starttime = {
         .tm_sec = 0,
-        .tm_min = 0,
-        .tm_hour = 0,
-        .tm_mday = 1,
-        .tm_mon = 0,
+        .tm_min = 59,
+        .tm_hour = 23,
+        .tm_mday = 28,
+        .tm_mon = 1,
         .tm_year = 125,
         .tm_wday = -1,
         .tm_yday = -1,
@@ -112,12 +112,18 @@ int main() {
 
   int i = 0;
 
-  while (i < 200) {
+  while (i < 10000) {
     time_t time = get_time();
     time_t rtctime = get_rtc();
+    auto now = time / clock_scaler;
+    auto time_s = gmtime(&now);
+    char date[64];
+    strftime(date, sizeof(date), "%Y-%m-%d %H:%M:%S", time_s);
+
     if (i % 10 == 0) {
       LOG_INF("TIME: %lld", time);
       LOG_INF(" RTC: %lld", rtctime);
+      LOG_INF("DATE: %s", date);
     }
     ++i;
     k_msleep(10);
