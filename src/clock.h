@@ -22,6 +22,7 @@ extern void adjust_from_rtc();
 extern Time get_time();
 extern std::tuple<Time, Time> get_time_and_uptime();
 extern std::string get_time_str(bool include_date = true);
+extern std::string get_date_str();
 extern Time rtc_time_to_time(rtc_time rtctime, bool include_millis = true);
 extern int32_t get_adjustment();
 

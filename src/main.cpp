@@ -207,7 +207,7 @@ int main(void) {
   battery::initialize();
 
   LOG_INF("IMUBar running...");
-  int i = (int)test_quaternion().a();
+  int i = (int)test_quaternion().r();
   int64_t last_sec = 0;
   auto loop_time = k_uptime_get();
   int64_t sum_rem = 0;
@@ -232,13 +232,18 @@ int main(void) {
 
       toggle_led();
 
-      switch (sec % 4) {
+      switch (sec % 5) {
         case 0: {
           auto time_str = clock::get_time_str();
           LOG_INF("%s", time_str.c_str());
           interface::write((uint8_t*)time_str.c_str(), time_str.length());
         } break;
         case 1: {
+          auto date_str = clock::get_date_str();
+          LOG_INF("%s", date_str.c_str());
+          interface::write((uint8_t*)date_str.c_str(), date_str.length());
+        } break;
+        case 2: {
           char has_data = gnss::has_data() ? 'T' : 'F';
           char has_fix = gnss::has_fix() ? 'T' : 'F';
           auto pos = gnss::get_position();
@@ -253,13 +258,13 @@ int main(void) {
           LOG_INF("%s", msg);
           interface::write((uint8_t*)msg, strlen(msg));
         } break;
-        case 2: {
+        case 3: {
           auto battery_level = battery::check();
           snprintf(msg, 16, "Batt %.2f V", (double)battery_level);
           LOG_INF("%s", msg);
           interface::write((uint8_t*)msg, strlen(msg));
         } break;
-        case 3: {
+        case 4: {
           auto adjustment = clock::get_adjustment();
           snprintf(msg, 16, "Adj %d ms", adjustment);
           LOG_INF("%s", msg);

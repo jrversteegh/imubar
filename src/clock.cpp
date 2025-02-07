@@ -170,23 +170,29 @@ std::tuple<Time, Time> get_time_and_uptime() {
 std::string get_time_str(bool include_date) {
   static constexpr char const* const short_fmt = "%H:%M:%S";
   static constexpr char const* const long_fmt = "%m-%d %H:%M:%S";
-  static constexpr int short_fmt_len = std::char_traits<char>::length(short_fmt);
-  static constexpr int short_fmt_size = short_fmt_len + 1;
-  static constexpr int long_fmt_len = std::char_traits<char>::length(long_fmt);
-  static constexpr int long_fmt_size = long_fmt_len + 1;
   auto now = get_time() / clock_scaler;
   auto time = gmtime(&now);
   std::string result{};
+  result.resize(24);
   if (include_date) {
-    result.resize(long_fmt_size);
-    strftime(&result[0], long_fmt_size, long_fmt, time);
-    result.resize(long_fmt_len);
+    auto s = strftime(&result[0], result.size(), long_fmt, time);
+    result.resize(s);
   }
   else {
-    result.resize(short_fmt_size);
-    strftime(&result[0], short_fmt_size, short_fmt, time);
-    result.resize(short_fmt_len);
+    auto s = strftime(&result[0], result.size(), short_fmt, time);
+    result.resize(s);
   }
+  return result;
+}
+
+std::string get_date_str() {
+  static constexpr char const* const fmt = "%Y-%m-%d %W %a";
+  auto now = get_time() / clock_scaler;
+  auto time = gmtime(&now);
+  std::string result{};
+  result.resize(20);
+  auto s = strftime(&result[0], result.size(), fmt, time);
+  result.resize(s);
   return result;
 }
 
