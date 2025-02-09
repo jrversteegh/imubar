@@ -189,12 +189,6 @@ void bus1_loop(void* arg1, void* arg2, void* arg3) {
 K_THREAD_DEFINE(bus0_thread, 2048, bus0_loop, NULL, NULL, NULL, -1, K_FP_REGS, 1000);
 K_THREAD_DEFINE(bus1_thread, 2048, bus1_loop, NULL, NULL, NULL, -1, K_FP_REGS, 1500);
 
-auto test_quaternion() {
-  attitude::Quaternion q1{}, q2{};
-  auto m1 = q1 * q2;
-  auto m2 = q1.mul(q2);
-  return m2;
-}
 
 int main(void) {
   LOG_INF("IMUBar initializing...");
@@ -207,7 +201,7 @@ int main(void) {
   battery::initialize();
 
   LOG_INF("IMUBar running...");
-  int i = (int)test_quaternion().r();
+  int i = 0;
   int64_t last_sec = 0;
   auto loop_time = k_uptime_get();
   int64_t sum_rem = 0;
