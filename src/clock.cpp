@@ -6,6 +6,8 @@
 #include <zephyr/logging/log.h>
 #include <zephyr/sys/timeutil.h>
 
+#include <ctime>
+
 
 LOG_MODULE_DECLARE(imubar);
 
@@ -175,23 +177,23 @@ std::string get_time_str(bool include_date) {
   std::string result{};
   result.resize(24);
   if (include_date) {
-    auto s = strftime(&result[0], result.size(), long_fmt, time);
+    auto s = std::strftime(&result[0], result.size(), long_fmt, time);
     result.resize(s);
   }
   else {
-    auto s = strftime(&result[0], result.size(), short_fmt, time);
+    auto s = std::strftime(&result[0], result.size(), short_fmt, time);
     result.resize(s);
   }
   return result;
 }
 
 std::string get_date_str() {
-  static constexpr char const* const fmt = "%Y-%m-%d %W %a";
+  static constexpr char const* const fmt = "%Y-%m-%d %V %a";
   auto now = get_time() / clock_scaler;
   auto time = gmtime(&now);
   std::string result{};
   result.resize(20);
-  auto s = strftime(&result[0], result.size(), fmt, time);
+  auto s = std::strftime(&result[0], result.size(), fmt, time);
   result.resize(s);
   return result;
 }
